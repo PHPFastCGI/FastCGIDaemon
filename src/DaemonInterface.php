@@ -1,6 +1,6 @@
 <?php
 
-namespace PHPFastCGI\FastCGI;
+namespace PHPFastCGI\FastCGIDaemon;
 
 use PHPFastCGI\FastCGIDaemon\Exception\ConnectionException;
 use PHPFastCGI\FastCGIDaemon\Http\Request;

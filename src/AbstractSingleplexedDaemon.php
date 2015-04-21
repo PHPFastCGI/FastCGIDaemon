@@ -1,6 +1,6 @@
 <?php
 
-namespace PHPFastCGI\FastCGI;
+namespace PHPFastCGI\FastCGIDaemon;
 
 use PHPFastCGI\FastCGIDaemon\Connection\ConnectionPoolInterface;
 use PHPFastCGI\FastCGIDaemon\ConnectionHandler\SingleplexedConnectionHandlerFactoryInterface;
