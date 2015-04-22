@@ -8,9 +8,9 @@ class SocketConnectionPool implements ConnectionPoolInterface
 
     protected $socket = false;
 
-    public function __construct($port)
+    public function __construct($port, $backlog = 128)
     {
-        $this->socket = socket_create_listen($port);
+        $this->socket = socket_create_listen($port, $backlog);
 
         if (false === $this->socket) {
             throw $this->createExceptionFromLastError('socket_create_listen');

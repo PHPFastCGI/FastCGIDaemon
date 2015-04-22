@@ -2,6 +2,8 @@
 
 namespace PHPFastCGI\FastCGIDaemon\Connection;
 
+use PHPFastCGI\FastCGIDaemon\DaemonInterface;
+
 class StreamSocketConnectionPool implements ConnectionPoolInterface
 {
     use StreamSocketExceptionTrait;
@@ -9,10 +11,8 @@ class StreamSocketConnectionPool implements ConnectionPoolInterface
     protected $socket = false;
     protected $url;
 
-    public function __construct($url)
+    public function __construct()
     {
-        $this->url = $url;
-
         $this->connect();
     }
 
@@ -29,7 +29,7 @@ class StreamSocketConnectionPool implements ConnectionPoolInterface
     public function accept()
     {
         while (1) {
-            $acceptedSocket = stream_socket_accept($this->socket);
+            $acceptedSocket = @stream_socket_accept($this->socket);
 
             if (false === $acceptedSocket) {
                 $this->close();
@@ -57,12 +57,10 @@ class StreamSocketConnectionPool implements ConnectionPoolInterface
             $this->close();
         }
 
-        $this->socket = stream_socket_server($this->url, $errorNumber,
-            $errorString, STREAM_SERVER_LISTEN);
+        $this->socket = fopen('php://fd/' . DaemonInterface::FCGI_LISTENSOCK_FILENO, 'r');
 
         if (false === $this->socket) {
-            throw $this->createExceptionFromLastError('stream_socket_server',
-                $errorNumber, $errorString);
+            throw $this->createExceptionFromLastError('fopen');
         }
     }
 }

@@ -10,13 +10,13 @@ class StreamSocketDaemon extends AbstractSingleplexedDaemon implements DaemonInt
     /**
      * Start the daemon listening on a socket stream
      * 
-     * @param string $url The socket stream URL
+     * @param string $path The path to the socket file
      * 
      * @throws ConnectionException If the daemon cannot listen on this stream
      */
-    public function __construct($url)
+    public function __construct()
     {
-        $connectionPool           = new StreamSocketConnectionPool($url);
+        $connectionPool           = new StreamSocketConnectionPool();
         $connectionHandlerFactory = new SingleplexedResponderConnectionHandlerFactory();
 
         parent::__construct($connectionPool, $connectionHandlerFactory);
