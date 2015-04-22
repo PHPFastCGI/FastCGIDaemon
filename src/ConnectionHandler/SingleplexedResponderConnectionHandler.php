@@ -2,18 +2,13 @@
 
 namespace PHPFastCGI\FastCGIDaemon\ConnectionHandler;
 
+use PHPFastCGI\FastCGIDaemon\DaemonInterface;
 use PHPFastCGI\FastCGIDaemon\Exception\AbstractRequestException;
 use PHPFastCGI\FastCGIDaemon\Exception\ConnectionException;
 use PHPFastCGI\FastCGIDaemon\Exception\MultiplexingUnsupportedException;
 use PHPFastCGI\FastCGIDaemon\Exception\ProtocolException;
 use PHPFastCGI\FastCGIDaemon\Exception\UnknownRoleException;
 use PHPFastCGI\FastCGIDaemon\Http\Request;
-use PHPFastCGI\FastCGIDaemon\Record\BeginRequestRecord;
-use PHPFastCGI\FastCGIDaemon\Record\EndRequestRecord;
-use PHPFastCGI\FastCGIDaemon\Record\ParamRecord;
-use PHPFastCGI\FastCGIDaemon\Record\Record;
-use PHPFastCGI\FastCGIDaemon\Record\StdinRecord;
-use PHPFastCGI\FastCGIDaemon\Record\StdoutRecord;
 
 class SingleplexedResponderConnectionHandler implements
     SingleplexedConnectionHandlerInterface
@@ -25,10 +20,9 @@ class SingleplexedResponderConnectionHandler implements
     const STATE_DEAD               = 2;
 
     protected $state              = self::STATE_READY_FOR_REQUEST;
-    protected $beginRequestRecord = null;
     protected $requestId          = null;
-    protected $stdinRecords       = array();
-    protected $paramRecords       = array();
+    protected $stdin              = '';
+    protected $params             = array();
     protected $gotLastStdinRecord = false;
     protected $gotLastParamRecord = false;
 
@@ -39,84 +33,103 @@ class SingleplexedResponderConnectionHandler implements
 
     protected function createRequest()
     {
-        $server = array();
-
-        foreach ($this->paramRecords as $record) {
-            $server[$record->getName()] = $record->getValue();
-        }
-
-        $this->paramRecords = null; // clear up memory
-
-        $content = '';
-
-        foreach ($this->stdinRecords as $record) {
-            $content .= $record->getContent();
-        }
-
-        $this->stdinRecords = null; // clear up memory
-
         $this->state = self::STATE_READY_FOR_RESPONSE;
 
-        return new Request($this, $this->requestId, $server, $content);
+        return new Request($this, $this->requestId, $this->params, $this->stdin);
+    }
+
+    protected function readRecord()
+    {
+        $headerData = $this->connection->read(8);
+
+        $headerFormat = 'Cversion/Ctype/nrequestId/ncontentLength/' .
+            'CpaddingLength/x';
+
+        $record = unpack($headerFormat, $headerData);
+
+        $record['contentData'] = $this->connection->read($record['contentLength']);
+        $this->connection->read($record['paddingLength']);
+
+        return $record;
     }
 
     protected function readBeginRequestRecord()
     {
-        $this->beginRequestRecord = Record::readFromConnection(
-            $this->connection);
+        $record = $this->readRecord();
 
-        if (!$this->beginRequestRecord instanceof BeginRequestRecord) {
+        if (DaemonInterface::FCGI_BEGIN_REQUEST !== $record['type']) {
             throw new ProtocolException('Expected begin request record');
         }
 
-        $this->requestId = $this->beginRequestRecord->getHeader()
-            ->getRequestId();
+        $this->requestId = $record['requestId'];
 
-        if ($this->beginRequestRecord->keepConnection()) {
-            $exception = new MultiplexingUnsupportedException;
-            $exception->setRequestId($this->requestId);
-            throw $exception;
+        $contentFormat = 'nrole/Cflags/x5';
+
+        $content = unpack($contentFormat, $record['contentData']);
+
+        if (DaemonInterface::FCGI_KEEP_CONNECTION & $content['flags']) {
+            throw new MultiplexingUnsupportedException;
         }
 
-        if ($this->beginRequestRecord->getRole() !==
-            BeginRequestRecord::FCGI_RESPONDER) {
-            $exception = new UnknownRoleException;
-            $exception->setRequestId($this->requestId);
-            throw $exception;
-        }
-    }
-
-    protected function addParamRecord(ParamRecord $record)
-    {
-        if ($record->isEndRecord()) {
-            $this->gotLastParamRecord = true;
-        } else {
-            $this->paramRecords[] = $record;
-        }
-    }
-
-    protected function addStdinRecord(StdinRecord $record)
-    {
-        if ($record->isEndRecord()) {
-            $this->gotLastStdinRecord = true;
-        } else {
-            $this->stdinRecords[] = $record;
+        if (DaemonInterface::FCGI_RESPONDER !== $content['role']) {
+            throw new UnknownRoleException;
         }
     }
 
     protected function readNextRecord()
     {
-        $record = Record::readFromConnection($this->connection);
+        $record = $this->readRecord();
 
-        $this->validateRequestId($record, $this->requestId);
+        if ($this->requestId !== $record['requestId']) {
+            throw new ProtocolException('Received invalid request id');
+        }
 
-        if ($record instanceof ParamRecord) {
-            $this->addParamRecord($record);
-        } elseif ($record instanceof StdinRecord) {
-            $this->addStdinRecord($record);
-        } else {
-            throw new ProtocolException(
-                'Unrecognised record for responder role');
+        switch ($record['type']) {
+            case DaemonInterface::FCGI_PARAMS:
+                if (0 === $record['contentLength']) {
+                    $this->gotLastParamRecord = true;
+                } else {
+                    $initialBytes = unpack('C5', $record['contentData']);
+
+                    $extendedLengthName  = $initialBytes[1] & 0x80;
+                    $extendedLengthValue = $extendedLengthName ?
+                        $initialBytes[2] & 0x80 : $initialBytes[5] & 0x80;
+
+                    $structureFormat = (
+                        ($extendedLengthName  ? 'N' : 'C') . 'nameLength/' .
+                        ($extendedLengthValue ? 'N' : 'C') . 'valueLength'
+                    );
+
+                    $structure = unpack($structureFormat, $record['contentData']);
+
+                    $skipLength = ($extendedLengthName ? 4 : 1) +
+                        ($extendedLengthValue ? 4 : 1);
+
+                    $contentFormat = (
+                        'x' . $skipLength               . '/'     .
+                        'a' . $structure['nameLength']  . 'name/' .
+                        'a' . $structure['valueLength'] . 'value/'
+                    );
+
+                    $content = unpack($contentFormat, $record['contentData']);
+
+                    $this->params[$content['name']] = $content['value'];
+                }
+
+                break;
+
+            case DaemonInterface::FCGI_STDIN:
+                if (0 === $record['contentLength']) {
+                    $this->gotLastStdinRecord = true;
+                } else {
+                    $this->stdin .= $record['contentData'];
+                }
+
+                break;
+
+            default:
+                throw new ProtocolException(
+                    'Unrecognised record for responder role');
         }
     }
 
@@ -133,22 +146,37 @@ class SingleplexedResponderConnectionHandler implements
             $this->readBeginRequestRecord();
 
             do {
-                $record = $this->readNextRecord();
+                $this->readNextRecord();
             } while (!$this->ready());
 
             return $this->createRequest();
         } catch (ProtocolException $protocolException) {
             if ($protocolException instanceof AbstractRequestException) {
-                $requestId      = $protocolException->getRequestId();
                 $protocolStatus = $protocolException->getProtocolStatus();
-                $record = new EndRequestRecord($requestId, 0, $protocolStatus);
-                $record->writeToConnection($this->connection);
+                $this->writeEndRequestRecord(0, $protocolStatus);
             }
 
+            echo $protocolException->getMessage() . PHP_EOL;
             $this->connection->close();
         } catch (ConnectionException $connectionException) { }
 
         return null;
+    }
+
+    protected function writeRecord($type, $content, $contentLength)
+    {
+        $headerData = pack('CCnnxx', DaemonInterface::FCGI_VERSION_1, $type,
+            $this->requestId, $contentLength);
+
+        $this->connection->write($headerData, 8);
+        $this->connection->write($content, $contentLength);
+    }
+
+    protected function writeEndRequestRecord($appStatus, $protocolStatus =
+        DaemonInterface::FCGI_REQUEST_COMPLETE)
+    {
+        $content = pack('NCx3', $appStatus, $protocolStatus);
+        $this->writeRecord(DaemonInterface::FCGI_END_REQUEST, $content, 8);
     }
 
     /**
@@ -166,16 +194,12 @@ class SingleplexedResponderConnectionHandler implements
 
         try {
             foreach ($chunks as $chunk) {
-                $stdoutRecord = new StdoutRecord($this->requestId, $chunk);
-                $stdoutRecord->writeToConnection($this->connection);
+                $this->writeRecord(DaemonInterface::FCGI_STDOUT, $chunk,
+                    strlen($chunk));
             }
 
-            $stdoutRecord = new StdoutRecord($this->requestId, null);
-            $stdoutRecord->writeToConnection($this->connection);
-
-            $endRequestRecord = new EndRequestRecord($this->requestId, 0,
-                EndRequestRecord::FCGI_REQUEST_COMPLETE);
-            $endRequestRecord->writeToConnection($this->connection);
+            $this->writeRecord(DaemonInterface::FCGI_STDOUT, null, 0);
+            $this->writeEndRequestRecord(0);
 
             $this->connection->close();
             $this->connection = null;
