@@ -1,0 +1,27 @@
+{
+    "name": "phpfastcgi/fast-cgi-daemon",
+    "description": "A Fast CGI daemon written in PHP",
+    "keywords": ["fast cgi", "daemon"],
+    "license": "GPL v2",
+    "authors": [
+        {
+            "name": "Andrew Carter",
+            "email": "andrewcarter1992@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.4.0"
+    },
+    "require-dev": {
+    },
+    "autoload": {
+        "psr-4": {
+            "PHPFastCGI\\FastCGIDaemon\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "PHPFastCGI\\Test\\FastCGIDaemon\\": "test/"
+        }
+    }
+}
