@@ -3,6 +3,7 @@
 namespace PHPFastCGI\FastCGIDaemon\ConnectionHandler;
 
 use PHPFastCGI\FastCGIDaemon\DaemonInterface;
+use PHPFastCGI\FastCGIDaemon\Connection\ConnectionInterface;
 use PHPFastCGI\FastCGIDaemon\Exception\AbstractRequestException;
 use PHPFastCGI\FastCGIDaemon\Exception\ConnectionException;
 use PHPFastCGI\FastCGIDaemon\Exception\MultiplexingUnsupportedException;
@@ -13,18 +14,22 @@ use PHPFastCGI\FastCGIDaemon\Http\Request;
 class SingleplexedResponderConnectionHandler implements
     SingleplexedConnectionHandlerInterface
 {
-    use ConnectionHandlerTrait;
-
     const STATE_READY_FOR_REQUEST  = 0;
     const STATE_READY_FOR_RESPONSE = 1;
     const STATE_DEAD               = 2;
 
+    protected $connection;
     protected $state              = self::STATE_READY_FOR_REQUEST;
     protected $requestId          = null;
     protected $stdin              = '';
     protected $params             = array();
     protected $gotLastStdinRecord = false;
     protected $gotLastParamRecord = false;
+
+    public function __construct(ConnectionInterface $connection)
+    {
+        $this->connection = $connection;
+    }
 
     protected function ready()
     {
@@ -202,7 +207,6 @@ class SingleplexedResponderConnectionHandler implements
             $this->writeEndRequestRecord(0);
 
             $this->connection->close();
-            $this->connection = null;
 
             $this->state = self::STATE_DEAD;
         } catch (ConnectionException $exception) { }
