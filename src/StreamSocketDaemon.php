@@ -5,7 +5,7 @@ namespace PHPFastCGI\FastCGIDaemon;
 use PHPFastCGI\FastCGIDaemon\Connection\StreamSocketConnectionPool;
 use PHPFastCGI\FastCGIDaemon\ConnectionHandler\SingleplexedResponderConnectionHandlerFactory;
 
-class StreamSocketDaemon extends AbstractSingleplexedDaemon implements DaemonInterface
+class StreamSocketDaemon extends SingleplexedDaemon implements DaemonInterface
 {
     /**
      * Start the daemon listening on a socket stream
