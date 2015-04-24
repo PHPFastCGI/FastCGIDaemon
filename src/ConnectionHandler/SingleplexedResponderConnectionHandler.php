@@ -98,7 +98,7 @@ class SingleplexedResponderConnectionHandler implements
 
                     $extendedLengthName  = $initialBytes[1] & 0x80;
                     $extendedLengthValue = $extendedLengthName ?
-                        $initialBytes[2] & 0x80 : $initialBytes[5] & 0x80;
+                        $initialBytes[5] & 0x80 : $initialBytes[2] & 0x80;
 
                     $structureFormat = (
                         ($extendedLengthName  ? 'N' : 'C') . 'nameLength/' .
@@ -106,6 +106,14 @@ class SingleplexedResponderConnectionHandler implements
                     );
 
                     $structure = unpack($structureFormat, $record['contentData']);
+
+                    if ($extendedLengthName) {
+                        $structure['nameLength'] &= 0x7FFFFFFF;
+                    }
+
+                    if ($extendedLengthValue) {
+                        $structure['valueLength'] &= 0x7FFFFFFF;
+                    }
 
                     $skipLength = ($extendedLengthName ? 4 : 1) +
                         ($extendedLengthValue ? 4 : 1);
