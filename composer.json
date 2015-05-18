@@ -1,6 +1,6 @@
 {
-    "name": "phpfastcgi/fast-cgi-daemon",
-    "description": "A Fast CGI daemon written in PHP",
+    "name": "phpfastcgi/fastcgi-daemon",
+    "description": "A FastCGI daemon written in PHP",
     "keywords": ["fast cgi", "daemon"],
     "license": "GPL v2",
     "authors": [
