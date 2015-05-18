@@ -30,10 +30,20 @@ class RequestEnvironment implements RequestEnvironmentInterface
     protected $cookies;
 
     /**
-     * @var resource
+     * @var resource|null
      */
     protected $body;
 
+    /**
+     * Constructor.
+     * 
+     * @param string[]      $server
+     * @param array         $query
+     * @param array         $post
+     * @param array         $files
+     * @param string[]      $cookies
+     * @param resource|null $body
+     */
     public function __construct(array $server = [], array $query = [], array $post = [], array $files = [], array $cookies = [], $body = null)
     {
         $this->server  = $server;

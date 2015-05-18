@@ -12,6 +12,11 @@ class Daemon implements DaemonInterface
      */
     protected $connectionPool;
 
+    /**
+     * Constructor.
+     * 
+     * @param resource $stream
+     */
     public function __construct($stream)
     {
         $this->connectionPool = new StreamSocketConnectionPool($stream);

@@ -9,6 +9,11 @@ class ConnectionHandlerFactory implements ConnectionHandlerFactoryInterface
 {
     protected $kernel;
 
+    /**
+     * Constructor.
+     * 
+     * @param KernelInterface $kernel
+     */
     public function __construct(KernelInterface $kernel)
     {
         $this->kernel = $kernel;

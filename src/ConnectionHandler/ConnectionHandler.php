@@ -39,6 +39,12 @@ class ConnectionHandler
      */
     protected $bufferLength;
 
+    /**
+     * Constructor.
+     * 
+     * @param KernelInterface     $kernel
+     * @param ConnectionInterface $connection
+     */
     public function __construct(KernelInterface $kernel, ConnectionInterface $connection)
     {
         $this->kernel       = $kernel;
