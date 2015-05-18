@@ -19,7 +19,7 @@ class RequestEnvironment implements RequestEnvironmentInterface
      */
     protected $post;
 
-    /**
+     /**
      * @var array
      */
     protected $files;
@@ -42,13 +42,6 @@ class RequestEnvironment implements RequestEnvironmentInterface
         $this->files   = $files;
         $this->cookies = $cookies;
         $this->body    = $body;
-    }
-
-    public function __destruct()
-    {
-        if (null !== $this->body) {
-            fclose($this->body);
-        }
     }
 
     /**
