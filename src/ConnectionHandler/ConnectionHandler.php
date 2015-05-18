@@ -64,14 +64,14 @@ class ConnectionHandler
             }
 
             $this->buffer       .= $data;
-            $this->bufferLength .= $dataLength;
+            $this->bufferLength += $dataLength;
 
             while (null !== ($record = $this->readRecord())) {
                 $this->processRecord($record);
             }
         } catch (DaemonException $exception) {
-            // TODO: Logging
             $this->close();
+            // TODO: Logging
         }
     }
 
@@ -80,7 +80,8 @@ class ConnectionHandler
      */
     public function close()
     {
-        $this->buffer = null;
+        $this->buffer       = null;
+        $this->bufferLength = 0;
 
         foreach ($this->requests as $request) {
             $request['builder']->clean();
@@ -181,6 +182,9 @@ class ConnectionHandler
             case DaemonInterface::FCGI_ABORT_REQUEST:
                 $this->processAbortRequestRecord($requestId);
                 break;
+
+            default:
+                throw new ProtocolException('Unexpected packet of unkown type: ' . $record['type']);
         }
     }
 
