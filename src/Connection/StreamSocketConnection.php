@@ -29,7 +29,7 @@ class StreamSocketConnection implements ConnectionInterface
 
     public function __destruct()
     {
-        if (false !== $this->socket) {
+        if (null !== $this->socket) {
             $this->close();
         }
     }
@@ -39,6 +39,10 @@ class StreamSocketConnection implements ConnectionInterface
      */
     public function read($length)
     {
+        if ($this->isClosed()) {
+            throw new \Exception('Connection has been closed');
+        }
+
         if (0 === $length) {
             return true;
         }
@@ -57,6 +61,10 @@ class StreamSocketConnection implements ConnectionInterface
      */
     public function write($buffer)
     {
+        if ($this->isClosed()) {
+            throw new \Exception('Connection has been closed');
+        }
+
         if (false === fwrite($this->socket, $buffer)) {
             throw $this->createExceptionFromLastError('fwrite');
         }
@@ -75,9 +83,11 @@ class StreamSocketConnection implements ConnectionInterface
      */
     public function close()
     {
-        fclose($this->socket);
+        if (!$this->isClosed()) {
+            fclose($this->socket);
 
-        $this->socket = false;
-        $this->closed = true;
+            $this->socket = null;
+            $this->closed = true;
+        }
     }
 }
