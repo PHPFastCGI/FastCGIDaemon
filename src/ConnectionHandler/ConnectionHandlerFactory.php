@@ -11,7 +11,7 @@ class ConnectionHandlerFactory implements ConnectionHandlerFactoryInterface
 
     /**
      * Constructor.
-     * 
+     *
      * @param KernelInterface $kernel
      */
     public function __construct(KernelInterface $kernel)

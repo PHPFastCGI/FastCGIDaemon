@@ -20,7 +20,7 @@ interface DaemonInterface
     const FCGI_STDERR            = 7;
     const FCGI_DATA              = 8;
     const FCGI_GET_VALUES        = 9;
-    
+
     // Roles
     const FCGI_RESPONDER         = 1;
     const FCGI_AUTHORIZER        = 2;
@@ -36,8 +36,8 @@ interface DaemonInterface
     const FCGI_UNKNOWN_ROLE      = 3;
 
     /**
-     * Run the daemon
-     * 
+     * Run the daemon.
+     *
      * @param KernelInterface $kernel The kernel to handle the requests
      */
     public function run(KernelInterface $kernel);

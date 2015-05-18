@@ -5,7 +5,7 @@ namespace PHPFastCGI\FastCGIDaemon\Http;
 class RequestEnvironmentBuilder implements RequestEnvironmentBuilderInterface
 {
     /**
-     * @var string[] 
+     * @var string[]
      */
     protected $params;
 

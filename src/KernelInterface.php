@@ -9,7 +9,7 @@ interface KernelInterface
 {
     /**
      * Handles a request and returns a response.
-     * 
+     *
      * @return ResponseInterface
      */
     public function handleRequest(RequestEnvironmentInterface $requestEnvironment);

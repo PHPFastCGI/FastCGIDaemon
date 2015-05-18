@@ -10,14 +10,14 @@ trait StreamSocketExceptionTrait
     {
         fclose($this->socket);
 
-        $message = $function . ' failed';
+        $message = $function.' failed';
 
         if (false !== $errorNumber) {
-            $message .= ' (' . $errorNumber . ')';
+            $message .= ' ('.$errorNumber.')';
         }
 
         if (false !== $errorString) {
-            $message .= ': ' . $errorString;
+            $message .= ': '.$errorString;
         }
 
         return new ConnectionException($message);

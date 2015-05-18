@@ -19,7 +19,7 @@ class RequestEnvironment implements RequestEnvironmentInterface
      */
     protected $post;
 
-     /**
+    /**
      * @var array
      */
     protected $files;
@@ -36,7 +36,7 @@ class RequestEnvironment implements RequestEnvironmentInterface
 
     /**
      * Constructor.
-     * 
+     *
      * @param string[]      $server
      * @param array         $query
      * @param array         $post

@@ -20,7 +20,7 @@ class ConnectionHandler
     protected $kernel;
 
     /**
-     * @var ConnectionInterface 
+     * @var ConnectionInterface
      */
     protected $connection;
 
@@ -41,7 +41,7 @@ class ConnectionHandler
 
     /**
      * Constructor.
-     * 
+     *
      * @param KernelInterface     $kernel
      * @param ConnectionInterface $connection
      */
@@ -66,6 +66,7 @@ class ConnectionHandler
             // Connection has been closed
             if (0 === $dataLength) {
                 $this->connection->close();
+
                 return;
             }
 
@@ -102,7 +103,7 @@ class ConnectionHandler
     {
         // Not enough data to read header
         if ($this->bufferLength < 8) {
-            return null;
+            return;
         }
 
         $headerData = substr($this->buffer, 0, 8);
@@ -113,7 +114,7 @@ class ConnectionHandler
 
         // Not enough data to read rest of record
         if ($this->bufferLength - 8 < $record['contentLength'] + $record['paddingLength']) {
-            return null;
+            return;
         }
 
         $record['contentData'] = substr($this->buffer, 8, $record['contentLength']);
@@ -190,7 +191,7 @@ class ConnectionHandler
                 break;
 
             default:
-                throw new ProtocolException('Unexpected packet of unkown type: ' . $record['type']);
+                throw new ProtocolException('Unexpected packet of unkown type: '.$record['type']);
         }
     }
 
@@ -215,7 +216,7 @@ class ConnectionHandler
         } else {
             $this->requests[$requestId] = [
                 'keepAlive' => $keepAlive,
-                'builder'   => new RequestEnvironmentBuilder()
+                'builder'   => new RequestEnvironmentBuilder(),
             ];
         }
     }
@@ -236,8 +237,8 @@ class ConnectionHandler
         $extendedLengthValue = $extendedLengthName ? $initialBytes[5] & 0x80 : $initialBytes[2] & 0x80;
 
         $structureFormat = (
-            ($extendedLengthName  ? 'N' : 'C') . 'nameLength/' .
-            ($extendedLengthValue ? 'N' : 'C') . 'valueLength'
+            ($extendedLengthName  ? 'N' : 'C').'nameLength/'.
+            ($extendedLengthValue ? 'N' : 'C').'valueLength'
         );
 
         $structure = unpack($structureFormat, $contentData);
@@ -253,9 +254,9 @@ class ConnectionHandler
         $skipLength = ($extendedLengthName ? 4 : 1) + ($extendedLengthValue ? 4 : 1);
 
         $contentFormat = (
-            'x' . $skipLength               . '/'     .
-            'a' . $structure['nameLength']  . 'name/' .
-            'a' . $structure['valueLength'] . 'value/'
+            'x'.$skipLength.'/'.
+            'a'.$structure['nameLength'].'name/'.
+            'a'.$structure['valueLength'].'value/'
         );
 
         $content = unpack($contentFormat, $contentData);
@@ -271,6 +272,7 @@ class ConnectionHandler
 
         if (null === $contentData) {
             $this->dispatchRequest($requestId);
+
             return;
         }
 
@@ -318,7 +320,7 @@ class ConnectionHandler
         $outputData = "Status: {$response->getStatusCode()} {$response->getReasonPhrase()}\r\n";
 
         foreach ($response->getHeaderLines() as $headerLine) {
-            $outputData .= $headerLine . "\r\n";
+            $outputData .= $headerLine."\r\n";
         }
 
         $outputData .= "\r\n";

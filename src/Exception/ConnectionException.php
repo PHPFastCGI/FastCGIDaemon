@@ -2,4 +2,6 @@
 
 namespace PHPFastCGI\FastCGIDaemon\Exception;
 
-class ConnectionException extends DaemonException { }
+class ConnectionException extends DaemonException
+{
+}

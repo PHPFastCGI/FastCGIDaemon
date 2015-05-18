@@ -7,10 +7,10 @@ use PHPFastCGI\FastCGIDaemon\Connection\ConnectionInterface;
 interface ConnectionHandlerFactoryInterface
 {
     /**
-     * Create a connection handler
-     * 
+     * Create a connection handler.
+     *
      * @param ConnectionInterface $connection The connection to handle
-     * 
+     *
      * @return SingleplexedConnectionHandlerInterface The connection handler
      */
     public function createConnectionHandler(ConnectionInterface $connection);

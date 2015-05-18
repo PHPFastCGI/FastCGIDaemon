@@ -14,7 +14,7 @@ class Daemon implements DaemonInterface
 
     /**
      * Constructor.
-     * 
+     *
      * @param resource $stream
      */
     public function __construct($stream)

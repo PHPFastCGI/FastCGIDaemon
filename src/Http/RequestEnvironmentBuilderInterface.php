@@ -6,7 +6,7 @@ interface RequestEnvironmentBuilderInterface
 {
     /**
      * Add a CGI environment variable parameter.
-     * 
+     *
      * @param string $name
      * @param string $value
      */
@@ -14,7 +14,7 @@ interface RequestEnvironmentBuilderInterface
 
     /**
      * Add CGI stdin data.
-     * 
+     *
      * @param string $data
      */
     public function addStdin($data);
@@ -23,7 +23,7 @@ interface RequestEnvironmentBuilderInterface
      * Get the request environment given the data that has been added. This
      * method should only be called once per instance. New builders should be
      * instantiated for new requests.
-     * 
+     *
      * @return RequestEnvironmentInterface
      */
     public function getRequestEnvironment();

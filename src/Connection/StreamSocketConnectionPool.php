@@ -2,7 +2,6 @@
 
 namespace PHPFastCGI\FastCGIDaemon\Connection;
 
-use PHPFastCGI\FastCGIDaemon\Connection\StreamSocketConnection;
 use PHPFastCGI\FastCGIDaemon\ConnectionHandler\ConnectionHandlerFactoryInterface;
 use PHPFastCGI\FastCGIDaemon\ConnectionHandler\ConnectionHandlerInterface;
 
@@ -11,12 +10,12 @@ class StreamSocketConnectionPool implements ConnectionPoolInterface
     use StreamSocketExceptionTrait;
 
     /**
-     * @var resource 
+     * @var resource
      */
     protected $serverSocket;
 
     /**
-     * @var resource[] 
+     * @var resource[]
      */
     protected $clientSockets;
 
@@ -26,13 +25,13 @@ class StreamSocketConnectionPool implements ConnectionPoolInterface
     protected $connections;
 
     /**
-     * @var ConnectionHandlerInterface[] 
+     * @var ConnectionHandlerInterface[]
      */
     protected $connectionHandlers;
 
     /**
      * Constructor.
-     * 
+     *
      * @param resource $socket
      */
     public function __construct($socket)
@@ -74,11 +73,11 @@ class StreamSocketConnectionPool implements ConnectionPoolInterface
     }
 
     protected function acceptConnection(ConnectionHandlerFactoryInterface $connectionHandlerFactory)
-    {        
+    {
         $clientSocket = stream_socket_accept($this->serverSocket);
 
         stream_set_blocking($clientSocket, 0);
- 
+
         $connection = new StreamSocketConnection($clientSocket);
         $handler    = $connectionHandlerFactory->createConnectionHandler($connection);
 

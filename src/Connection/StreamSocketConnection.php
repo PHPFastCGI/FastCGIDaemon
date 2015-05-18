@@ -18,7 +18,7 @@ class StreamSocketConnection implements ConnectionInterface
 
     /**
      * Constructor.
-     * 
+     *
      * @param resource $socket
      */
     public function __construct($socket)
