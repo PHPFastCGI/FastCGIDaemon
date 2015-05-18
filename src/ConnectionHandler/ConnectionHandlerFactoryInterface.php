@@ -4,7 +4,7 @@ namespace PHPFastCGI\FastCGIDaemon\ConnectionHandler;
 
 use PHPFastCGI\FastCGIDaemon\Connection\ConnectionInterface;
 
-interface SingleplexedConnectionHandlerFactoryInterface
+interface ConnectionHandlerFactoryInterface
 {
     /**
      * Create a connection handler

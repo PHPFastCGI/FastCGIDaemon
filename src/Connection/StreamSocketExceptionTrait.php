@@ -6,8 +6,7 @@ use PHPFastCGI\FastCGIDaemon\Exception\ConnectionException;
 
 trait StreamSocketExceptionTrait
 {
-    protected function createExceptionFromLastError($function,
-        $errorNumber = false, $errorString = false)
+    protected function createExceptionFromLastError($function, $errorNumber = false, $errorString = false)
     {
         fclose($this->socket);
 

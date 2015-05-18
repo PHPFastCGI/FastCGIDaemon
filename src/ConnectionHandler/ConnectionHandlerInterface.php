@@ -2,15 +2,16 @@
 
 namespace PHPFastCGI\FastCGIDaemon\ConnectionHandler;
 
-use PHPFastCGI\FastCGIDaemon\Http\Request;
-
 interface ConnectionHandlerInterface
 {
     /**
-     * Send a response to a request
-     * 
-     * @param Request $request  The request object that is being responded to
-     * @param string  $response The HTTP response message
+     * Triggered when the connection the handler was assigned to is ready to
+     * be read.
      */
-    public function sendResponse(Request $request, $response);
+    public function ready();
+
+    /**
+     * Closes the connection handler and free's associated resources.
+     */
+    public function close();
 }

@@ -6,11 +6,25 @@ class StreamSocketConnection implements ConnectionInterface
 {
     use StreamSocketExceptionTrait;
 
-    protected $socket = false;
+    /**
+     * @var resource
+     */
+    protected $socket;
 
+    /**
+     * @var bool
+     */
+    protected $closed;
+
+    /**
+     * Constructor.
+     * 
+     * @param resource $socket
+     */
     public function __construct($socket)
     {
         $this->socket = $socket;
+        $this->closed = false;
     }
 
     public function __destruct()
@@ -29,7 +43,7 @@ class StreamSocketConnection implements ConnectionInterface
             return true;
         }
 
-        $buffer = @fread($this->socket, $length);
+        $buffer = fread($this->socket, $length);
 
         if (false === $buffer) {
             throw $this->createExceptionFromLastError('fread');
@@ -43,9 +57,17 @@ class StreamSocketConnection implements ConnectionInterface
      */
     public function write($buffer)
     {
-        if (false === @fwrite($this->socket, $buffer)) {
+        if (false === fwrite($this->socket, $buffer)) {
             throw $this->createExceptionFromLastError('fwrite');
         }
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function isClosed()
+    {
+        return $this->closed;
     }
 
     /**
@@ -54,6 +76,8 @@ class StreamSocketConnection implements ConnectionInterface
     public function close()
     {
         fclose($this->socket);
+
         $this->socket = false;
+        $this->closed = true;
     }
 }

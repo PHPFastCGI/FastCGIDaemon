@@ -2,65 +2,101 @@
 
 namespace PHPFastCGI\FastCGIDaemon\Connection;
 
-use PHPFastCGI\FastCGIDaemon\DaemonInterface;
+use PHPFastCGI\FastCGIDaemon\Connection\StreamSocketConnection;
+use PHPFastCGI\FastCGIDaemon\ConnectionHandler\ConnectionHandlerFactoryInterface;
+use PHPFastCGI\FastCGIDaemon\ConnectionHandler\ConnectionHandlerInterface;
 
 class StreamSocketConnectionPool implements ConnectionPoolInterface
 {
     use StreamSocketExceptionTrait;
 
-    protected $socket = false;
-    protected $url;
+    /**
+     * @var resource 
+     */
+    protected $serverSocket;
 
-    public function __construct()
-    {
-        $this->connect();
-    }
+    /**
+     * @var resource[] 
+     */
+    protected $clientSockets;
 
-    public function __destruct()
+    /**
+     * @var Connection[]
+     */
+    protected $connections;
+
+    /**
+     * @var ConnectionHandlerInterface[] 
+     */
+    protected $connectionHandlers;
+
+    /**
+     * Constructor.
+     * 
+     * @param resource $socket
+     */
+    public function __construct($socket)
     {
-        if (false !== $this->socket) {
-            $this->close();
-        }
+        stream_set_blocking($socket, 0);
+
+        $this->serverSocket       = $socket;
+        $this->clientSockets      = [];
+        $this->connections        = [];
+        $this->connectionHandlers = [];
     }
 
     /**
      * {@inheritdoc}
      */
-    public function accept()
+    public function operate(ConnectionHandlerFactoryInterface $connectionHandlerFactory, $timeoutLoop)
     {
+        $timeoutLoopSeconds      = (int) floor($timeoutLoop);
+        $timeoutLoopMicroseconds = (int) (($timeoutLoop - $timeoutLoopSeconds) * 1000000);
+
+        $write  = [];
+        $except = [];
+
         while (1) {
-            $acceptedSocket = @stream_socket_accept($this->socket);
+            $read = array_merge(['pool' => $this->serverSocket], $this->clientSockets);
 
-            if (false === $acceptedSocket) {
-                $this->close();
-                $this->connect();
-            } else {
-                break;
+            stream_select($read, $write, $except, $timeoutLoopSeconds, $timeoutLoopMicroseconds);
+
+            foreach (array_keys($read) as $id) {
+                if ('pool' === $id) {
+                    $this->acceptConnection($connectionHandlerFactory);
+                } else {
+                    $this->connectionHandlers[$id]->ready();
+                }
             }
-        }
 
-        return new StreamSocketConnection($acceptedSocket);
+            $this->removeClosedConnections();
+        }
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function close()
-    {
-        fclose($this->socket);
-        $this->socket = false;
+    protected function acceptConnection(ConnectionHandlerFactoryInterface $connectionHandlerFactory)
+    {        
+        $clientSocket = stream_socket_accept($this->serverSocket);
+
+        stream_set_blocking($clientSocket, 0);
+ 
+        $connection = new StreamSocketConnection($clientSocket);
+        $handler    = $connectionHandlerFactory->createConnectionHandler($connection);
+
+        $id = spl_object_hash($connection);
+
+        $this->clientSockets[$id]      = $clientSocket;
+        $this->connections[$id]        = $connection;
+        $this->connectionHandlers[$id] = $handler;
     }
 
-    protected function connect()
+    protected function removeClosedConnections()
     {
-        if (false !== $this->socket) {
-            $this->close();
-        }
-
-        $this->socket = fopen('php://fd/' . DaemonInterface::FCGI_LISTENSOCK_FILENO, 'r');
-
-        if (false === $this->socket) {
-            throw $this->createExceptionFromLastError('fopen');
+        foreach ($this->connections as $id => $connection) {
+            if ($connection->isClosed()) {
+                unset($this->clientSockets[$id]);
+                unset($this->connections[$id]);
+                unset($this->connectionHandlers[$id]);
+            }
         }
     }
 }

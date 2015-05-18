@@ -2,4 +2,4 @@
 
 namespace PHPFastCGI\FastCGIDaemon\Exception;
 
-class ProtocolException extends \RuntimeException { }
+class ProtocolException extends DaemonException { }
