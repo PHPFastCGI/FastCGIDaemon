@@ -5,7 +5,6 @@ namespace PHPFastCGI\Test\FastCGIDaemon\Connection;
 use PHPFastCGI\FastCGIDaemon\Connection\StreamSocketConnection;
 use PHPFastCGI\FastCGIDaemon\ConnectionHandler\ConnectionHandler;
 use PHPFastCGI\FastCGIDaemon\DaemonInterface;
-use PHPFastCGI\FastCGIDaemon\Exception\ProtocolException;
 use PHPFastCGI\FastCGIDaemon\Http\RequestEnvironment;
 use PHPFastCGI\Test\FastCGIDaemon\Http\Response;
 use PHPFastCGI\Test\FastCGIDaemon\KernelMock;
@@ -270,11 +269,8 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
         $this->writeParamsRecord($stream, 0);
         fclose($stream);
 
-        try {
-            $handler->ready();
-            $this->fail('Should have thrown ProtocolException');
-        } catch (ProtocolException $exception) {
-            $this->assertTrue($connection->isClosed());
-        }
+        $handler->ready();
+        $this->assertTrue($connection->isClosed());
+
     }
 }
