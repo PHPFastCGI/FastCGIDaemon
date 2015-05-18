@@ -27,13 +27,6 @@ class StreamSocketConnection implements ConnectionInterface
         $this->closed = false;
     }
 
-    public function __destruct()
-    {
-        if (null !== $this->socket) {
-            $this->close();
-        }
-    }
-
     /**
      * {@inheritdoc}
      */
