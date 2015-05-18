@@ -7,7 +7,7 @@ use PHPFastCGI\FastCGIDaemon\Http\ResponseInterface;
 class Response implements ResponseInterface
 {
     /**
-     * @var int 
+     * @var int
      */
     protected $statusCode;
 
@@ -26,6 +26,14 @@ class Response implements ResponseInterface
      */
     protected $body;
 
+    /**
+     * Constructor.
+     *
+     * @param int                  $statusCode
+     * @param string               $reasonPhrase
+     * @param string[]             $headerLines
+     * @param resource|string|null $body
+     */
     public function __construct($statusCode, $reasonPhrase, array $headerLines, $body = null)
     {
         $this->statusCode   = $statusCode;

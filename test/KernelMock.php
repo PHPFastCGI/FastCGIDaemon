@@ -14,7 +14,7 @@ class KernelMock implements KernelInterface
     protected $testCase;
 
     /**
-     * @var RequestEnvironmentInterface 
+     * @var RequestEnvironmentInterface
      */
     protected $expectedRequestEnvironment;
 
@@ -23,6 +23,13 @@ class KernelMock implements KernelInterface
      */
     protected $response;
 
+    /**
+     * Constructor.
+     *
+     * @param \PHPUnit_Framework_TestCase $testCase
+     * @param RequestEnvironmentInterface $expectedRequestEnvironment
+     * @param ResponseInterface           $response
+     */
     public function __construct(\PHPUnit_Framework_TestCase $testCase, RequestEnvironmentInterface $expectedRequestEnvironment, ResponseInterface $response)
     {
         $this->testCase                   = $testCase;
@@ -30,6 +37,9 @@ class KernelMock implements KernelInterface
         $this->response                   = $response;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public function handleRequest(RequestEnvironmentInterface $requestEnvironment)
     {
         // Only checking params & body here (request parsing is tested in the environment builder)

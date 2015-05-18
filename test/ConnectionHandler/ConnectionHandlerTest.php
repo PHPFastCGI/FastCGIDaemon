@@ -44,7 +44,7 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
     protected function writeRecord($stream, $type, $requestId, $content = '', $paddingLength = 0)
     {
         $header  = pack('CCnnCx', DaemonInterface::FCGI_VERSION_1, $type, $requestId, strlen($content), $paddingLength);
-        $padding = pack('x' . $paddingLength);
+        $padding = pack('x'.$paddingLength);
 
         fwrite($stream, $header);
         fwrite($stream, $content);
@@ -61,6 +61,7 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
     {
         if (null === $name && null === $value) {
             $this->writeRecord($stream, DaemonInterface::FCGI_PARAMS, $requestId);
+
             return;
         }
 
@@ -165,8 +166,8 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
         } while (DaemonInterface::FCGI_END_REQUEST !== $record['type']);
 
         $expectedResponseBody = (
-            'Status: ' . $response->getStatusCode() . ' ' . $response->getReasonPhrase() . "\r\n" .
-            implode("\r\n", $response->getHeaderLines()) . "\r\n\r\n" .
+            'Status: '.$response->getStatusCode().' '.$response->getReasonPhrase()."\r\n".
+            implode("\r\n", $response->getHeaderLines())."\r\n\r\n".
             $response->getBody()
         );
 
@@ -223,7 +224,7 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
         } while (DaemonInterface::FCGI_END_REQUEST !== $record['type']);
 
         $expectedResponseBody = (
-            'Status: ' . $response->getStatusCode() . ' ' . $response->getReasonPhrase() . "\r\n\r\n" .
+            'Status: '.$response->getStatusCode().' '.$response->getReasonPhrase()."\r\n\r\n".
             $body
         );
 
@@ -271,6 +272,5 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
 
         $handler->ready();
         $this->assertTrue($connection->isClosed());
-
     }
 }

@@ -15,7 +15,7 @@ class RequestEnvironmentBuilderTest extends \PHPUnit_Framework_TestCase
             'content_type'   => 'application/x-www-form-urlencoded',
             'REQUEST_URI'    => '/my-page',
             'QUERY_STRING'   => 'bar=foo&world=hello',
-            'HTTP_cookie'    => 'one=two; three=four; five=six'
+            'HTTP_cookie'    => 'one=two; three=four; five=six',
         ];
 
         $content = 'foo=bar&hello=world';
@@ -35,12 +35,12 @@ class RequestEnvironmentBuilderTest extends \PHPUnit_Framework_TestCase
         }
 
         $this->assertEquals($requestEnvironment->getQuery(), ['bar' => 'foo',
-                'world' => 'hello']);
+                'world' => 'hello', ]);
 
         $this->assertEquals($requestEnvironment->getPost(), ['foo' => 'bar',
-                'hello' => 'world']);
+                'hello' => 'world', ]);
 
         $this->assertEquals($requestEnvironment->getCookies(), ['one' => 'two',
-                'three' => 'four', 'five' => 'six']);
+                'three' => 'four', 'five' => 'six', ]);
     }
 }
