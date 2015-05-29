@@ -4,8 +4,108 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "21b20dbc90ddb703e703feb6e4ea9367",
-    "packages": [],
+    "hash": "549dd6e24dfae12f9c5c188c3a2cb010",
+    "packages": [
+        {
+            "name": "psr/http-message",
+            "version": "1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/php-fig/http-message.git",
+                "reference": "85d63699f0dbedb190bbd4b0d2b9dc707ea4c298"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/php-fig/http-message/zipball/85d63699f0dbedb190bbd4b0d2b9dc707ea4c298",
+                "reference": "85d63699f0dbedb190bbd4b0d2b9dc707ea4c298",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.0.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Psr\\Http\\Message\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "PHP-FIG",
+                    "homepage": "http://www.php-fig.org/"
+                }
+            ],
+            "description": "Common interface for HTTP messages",
+            "keywords": [
+                "http",
+                "http-message",
+                "psr",
+                "psr-7",
+                "request",
+                "response"
+            ],
+            "time": "2015-05-04 20:22:00"
+        },
+        {
+            "name": "zendframework/zend-diactoros",
+            "version": "1.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/zendframework/zend-diactoros.git",
+                "reference": "be067c409377671b8268236443d993374e1987fa"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/zendframework/zend-diactoros/zipball/be067c409377671b8268236443d993374e1987fa",
+                "reference": "be067c409377671b8268236443d993374e1987fa",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.5",
+                "psr/http-message": "~1.0"
+            },
+            "provide": {
+                "psr/http-message-implementation": "~1.0.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "~4.6",
+                "squizlabs/php_codesniffer": "~2.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.0-dev",
+                    "dev-develop": "1.1-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Zend\\Diactoros\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-2-Clause"
+            ],
+            "description": "PSR HTTP Message implementations",
+            "homepage": "https://github.com/zendframework/zend-diactoros",
+            "keywords": [
+                "http",
+                "psr",
+                "psr-7"
+            ],
+            "time": "2015-05-26 17:14:45"
+        }
+    ],
     "packages-dev": [
         {
             "name": "guzzle/guzzle",
@@ -217,17 +317,17 @@
         },
         {
             "name": "symfony/config",
-            "version": "v2.6.7",
+            "version": "v2.6.8",
             "target-dir": "Symfony/Component/Config",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/Config.git",
-                "reference": "b6fddb4aa2daaa2b06f0040071ac131b4a1ecf25"
+                "reference": "2696c5bc7c31485a482c10865d713de9fcc7aa31"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/Config/zipball/b6fddb4aa2daaa2b06f0040071ac131b4a1ecf25",
-                "reference": "b6fddb4aa2daaa2b06f0040071ac131b4a1ecf25",
+                "url": "https://api.github.com/repos/symfony/Config/zipball/2696c5bc7c31485a482c10865d713de9fcc7aa31",
+                "reference": "2696c5bc7c31485a482c10865d713de9fcc7aa31",
                 "shasum": ""
             },
             "require": {
@@ -264,21 +364,21 @@
             ],
             "description": "Symfony Config Component",
             "homepage": "https://symfony.com",
-            "time": "2015-05-02 15:18:45"
+            "time": "2015-05-15 13:32:45"
         },
         {
             "name": "symfony/console",
-            "version": "v2.6.7",
+            "version": "v2.6.8",
             "target-dir": "Symfony/Component/Console",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/Console.git",
-                "reference": "ebc5679854aa24ed7d65062e9e3ab0b18a917272"
+                "reference": "2343f6d8026306bd330e0c987e4c102483c213e7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/Console/zipball/ebc5679854aa24ed7d65062e9e3ab0b18a917272",
-                "reference": "ebc5679854aa24ed7d65062e9e3ab0b18a917272",
+                "url": "https://api.github.com/repos/symfony/Console/zipball/2343f6d8026306bd330e0c987e4c102483c213e7",
+                "reference": "2343f6d8026306bd330e0c987e4c102483c213e7",
                 "shasum": ""
             },
             "require": {
@@ -322,11 +422,11 @@
             ],
             "description": "Symfony Console Component",
             "homepage": "https://symfony.com",
-            "time": "2015-05-02 15:18:45"
+            "time": "2015-05-22 14:53:08"
         },
         {
             "name": "symfony/event-dispatcher",
-            "version": "v2.6.7",
+            "version": "v2.6.8",
             "target-dir": "Symfony/Component/EventDispatcher",
             "source": {
                 "type": "git",
@@ -385,17 +485,17 @@
         },
         {
             "name": "symfony/filesystem",
-            "version": "v2.6.7",
+            "version": "v2.6.8",
             "target-dir": "Symfony/Component/Filesystem",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/Filesystem.git",
-                "reference": "f73904bd2dae525c42ea1f0340c7c98480ecacde"
+                "reference": "1f8429f72a5bfa58b33fd96824bea146fc4b3f49"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/Filesystem/zipball/f73904bd2dae525c42ea1f0340c7c98480ecacde",
-                "reference": "f73904bd2dae525c42ea1f0340c7c98480ecacde",
+                "url": "https://api.github.com/repos/symfony/Filesystem/zipball/1f8429f72a5bfa58b33fd96824bea146fc4b3f49",
+                "reference": "1f8429f72a5bfa58b33fd96824bea146fc4b3f49",
                 "shasum": ""
             },
             "require": {
@@ -431,11 +531,11 @@
             ],
             "description": "Symfony Filesystem Component",
             "homepage": "https://symfony.com",
-            "time": "2015-05-08 00:09:07"
+            "time": "2015-05-15 13:32:45"
         },
         {
             "name": "symfony/stopwatch",
-            "version": "v2.6.7",
+            "version": "v2.6.8",
             "target-dir": "Symfony/Component/Stopwatch",
             "source": {
                 "type": "git",
@@ -485,7 +585,7 @@
         },
         {
             "name": "symfony/yaml",
-            "version": "v2.6.7",
+            "version": "v2.6.8",
             "target-dir": "Symfony/Component/Yaml",
             "source": {
                 "type": "git",
