@@ -2,7 +2,9 @@
 
 namespace PHPFastCGI\FastCGIDaemon\Http;
 
-interface RequestEnvironmentBuilderInterface
+use Psr\Http\Message\ServerRequestInterface;
+
+interface RequestBuilderInterface
 {
     /**
      * Add a CGI environment variable parameter.
@@ -20,13 +22,13 @@ interface RequestEnvironmentBuilderInterface
     public function addStdin($data);
 
     /**
-     * Get the request environment given the data that has been added. This
-     * method should only be called once per instance. New builders should be
-     * instantiated for new requests.
+     * Get the request given the data that has been added. This method should
+     * only be called once per instance. New builders should be instantiated for
+     * new requests.
      *
-     * @return RequestEnvironmentInterface
+     * @return ServerRequestInterface
      */
-    public function getRequestEnvironment();
+    public function getRequest();
 
     /**
      * Clear all the current data that has been added to the builder. This

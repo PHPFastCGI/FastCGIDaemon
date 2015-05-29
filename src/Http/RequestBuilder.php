@@ -2,7 +2,10 @@
 
 namespace PHPFastCGI\FastCGIDaemon\Http;
 
-class RequestEnvironmentBuilder implements RequestEnvironmentBuilderInterface
+use Zend\Diactoros\ServerRequest;
+use Zend\Diactoros\ServerRequestFactory;
+
+class RequestBuilder implements RequestBuilderInterface
 {
     /**
      * @var string[]
@@ -43,7 +46,7 @@ class RequestEnvironmentBuilder implements RequestEnvironmentBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function getRequestEnvironment()
+    public function getRequest()
     {
         if (null !== $this->stdin) {
             rewind($this->stdin);
@@ -78,9 +81,17 @@ class RequestEnvironmentBuilder implements RequestEnvironmentBuilderInterface
             }
         }
 
-        $requestEnvironment = new RequestEnvironment($this->params, $query, $post, [], $cookies, $this->stdin);
+        $server  = ServerRequestFactory::normalizeServer($this->params);
+        $headers = ServerRequestFactory::marshalHeaders($server);
+        $uri     = ServerRequestFactory::marshalUriFromServer($server, $headers);
+        $method  = ServerRequestFactory::get('REQUEST_METHOD', $server, 'GET');
 
-        return $requestEnvironment;
+        $request = new ServerRequest($server, [], $uri, $method, $this->stdin, $headers);
+
+        return $request
+            ->withCookieParams($cookies)
+            ->withQueryParams($query)
+            ->withParsedBody($post);
     }
 
     /**

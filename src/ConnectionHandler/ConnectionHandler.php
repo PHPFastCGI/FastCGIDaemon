@@ -6,9 +6,10 @@ use PHPFastCGI\FastCGIDaemon\Connection\ConnectionInterface;
 use PHPFastCGI\FastCGIDaemon\DaemonInterface;
 use PHPFastCGI\FastCGIDaemon\Exception\DaemonException;
 use PHPFastCGI\FastCGIDaemon\Exception\ProtocolException;
-use PHPFastCGI\FastCGIDaemon\Http\RequestEnvironmentBuilder;
-use PHPFastCGI\FastCGIDaemon\Http\ResponseInterface;
+use PHPFastCGI\FastCGIDaemon\Http\RequestBuilder;
 use PHPFastCGI\FastCGIDaemon\KernelInterface;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\StreamInterface;
 
 class ConnectionHandler
 {
@@ -141,10 +142,10 @@ class ConnectionHandler
         }
     }
 
-    protected function writeStream($requestId, $stream)
+    protected function writeStream($requestId, StreamInterface $stream)
     {
-        while (!feof($stream)) {
-            $data = fread($stream, 65535);
+        while (!$stream->eof()) {
+            $data = $stream->read(65535);
 
             if (false !== $data) {
                 $this->writeRecord($requestId, DaemonInterface::FCGI_STDOUT, $data);
@@ -216,7 +217,7 @@ class ConnectionHandler
         } else {
             $this->requests[$requestId] = [
                 'keepAlive' => $keepAlive,
-                'builder'   => new RequestEnvironmentBuilder(),
+                'builder'   => new RequestBuilder(),
             ];
         }
     }
@@ -292,9 +293,9 @@ class ConnectionHandler
     {
         $builder = $this->requests[$requestId]['builder'];
 
-        $requestEnvironment = $builder->getRequestEnvironment();
+        $request = $builder->getRequest();
 
-        $response = $this->kernel->handleRequest($requestEnvironment);
+        $response = $this->kernel->handleRequest($request);
 
         $builder->clean();
 
@@ -319,17 +320,11 @@ class ConnectionHandler
     {
         $outputData = "Status: {$response->getStatusCode()} {$response->getReasonPhrase()}\r\n";
 
-        foreach ($response->getHeaderLines() as $headerLine) {
-            $outputData .= $headerLine."\r\n";
+        foreach ($response->getHeaders() as $name => $values) {
+            $outputData .= $name . ': ' . implode(', ', $values) ."\r\n";
         }
 
         $outputData .= "\r\n";
-
-        $body = $response->getBody();
-
-        if (is_string($body)) {
-            $outputData .= $body;
-        }
 
         $outputChunks = str_split($outputData, 65535);
 
@@ -337,9 +332,7 @@ class ConnectionHandler
             $this->writeRecord($requestId, DaemonInterface::FCGI_STDOUT, $chunk);
         }
 
-        if (is_resource($body)) {
-            $this->writeStream($requestId, $body);
-        }
+        $this->writeStream($requestId, $response->getBody());
 
         $this->writeRecord($requestId, DaemonInterface::FCGI_STDOUT);
         $this->endRequest($requestId);

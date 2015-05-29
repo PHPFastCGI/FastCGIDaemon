@@ -5,9 +5,9 @@ namespace PHPFastCGI\Test\FastCGIDaemon\Connection;
 use PHPFastCGI\FastCGIDaemon\Connection\StreamSocketConnection;
 use PHPFastCGI\FastCGIDaemon\ConnectionHandler\ConnectionHandler;
 use PHPFastCGI\FastCGIDaemon\DaemonInterface;
-use PHPFastCGI\FastCGIDaemon\Http\RequestEnvironment;
-use PHPFastCGI\Test\FastCGIDaemon\Http\Response;
 use PHPFastCGI\Test\FastCGIDaemon\KernelMock;
+use Zend\Diactoros\ServerRequest;
+use Zend\Diactoros\Response;
 
 class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
 {
@@ -94,26 +94,33 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
         $this->writeRecord($stream, DaemonInterface::FCGI_STDIN, $requestId, $content);
     }
 
+    protected function toStream($string)
+    {
+        $stream = fopen('php://temp', 'r+');
+        fwrite($stream, $string);
+        rewind($stream);
+        return $stream;
+    }
+
     public function testRequest()
     {
+        $string = str_repeat('X', 100000);
+        $requestBodyStream  = $this->toStream($string);
+        $responseBodyStream = $this->toStream($string);
+
         // Set up kernel
-        $expectedRequestEnvironment = new RequestEnvironment(
+        $expectedRequest = new ServerRequest(
             [ // Server
                 str_repeat('A', 10)  => str_repeat('b', 127),
                 str_repeat('C', 128) => str_repeat('d', 256),
                 str_repeat('E', 520) => str_repeat('f', 50),
             ],
-            [], [], [], [],
-            str_repeat('X', 100000) // Body
+            [], null, null, $requestBodyStream
         );
 
-        $response = new Response(
-            '200', 'Continue',
-            ['Header-1: foo', 'Header-2: bar'],
-            str_repeat('X', 100000)
-        );
+        $response = new Response($responseBodyStream, 200, ['Header-1: foo', 'Header-2: bar']);
 
-        $kernelMock = new KernelMock($this, $expectedRequestEnvironment, $response);
+        $kernelMock = new KernelMock($this, $expectedRequest, $response);
 
         // Create connections
         $sockets = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, STREAM_IPPROTO_IP);
@@ -131,13 +138,13 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
 
         $this->writeBeginRequestRecord($stream, $requestId, DaemonInterface::FCGI_RESPONDER, 0);
 
-        foreach ($expectedRequestEnvironment->getServer() as $name => $value) {
+        foreach ($expectedRequest->getServerParams() as $name => $value) {
             $this->writeParamsRecord($stream, $requestId, $name, $value);
         }
 
         $this->writeParamsRecord($stream, $requestId);
 
-        $requestBody = $expectedRequestEnvironment->getBody();
+        $requestBody = $expectedRequest->getBody();
 
         $chunks = str_split($requestBody, 65535);
 
@@ -165,72 +172,20 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
             }
         } while (DaemonInterface::FCGI_END_REQUEST !== $record['type']);
 
-        $expectedResponseBody = (
-            'Status: '.$response->getStatusCode().' '.$response->getReasonPhrase()."\r\n".
-            implode("\r\n", $response->getHeaderLines())."\r\n\r\n".
-            $response->getBody()
-        );
+        $expectedResponseBody = 'Status: ' . $response->getStatusCode() . ' ' . $response->getReasonPhrase() . "\r\n";
 
+        foreach ($response->getHeaders() as $name => $values) {
+            $expectedResponseBody .= $name . ': ' . implode(', ', $values) . "\r\n";
+        }
+
+        $expectedResponseBody .= "\r\n" . (string) $response->getBody();
+
+        $this->assertEquals(strlen($expectedResponseBody), strlen($responseBody));
         $this->assertEquals($expectedResponseBody, $responseBody);
 
         fclose($stream);
-    }
-
-    public function testRequestWithStreamResponse()
-    {
-        $body = str_repeat('X', 100);
-
-        // Set up stream
-        $bodyStream = fopen('php://temp', 'r+');
-        fwrite($bodyStream, $body);
-        rewind($bodyStream);
-
-        // Set up kernel
-        $response = new Response('200', 'Continue', [], $bodyStream);
-        $kernelMock = new KernelMock($this, new RequestEnvironment(), $response);
-
-        // Create connections
-        $sockets = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, STREAM_IPPROTO_IP);
-        stream_set_blocking($sockets[0], 0);
-        stream_set_blocking($sockets[1], 0);
-
-        $stream     = $sockets[0];
-        $connection = new StreamSocketConnection($sockets[1]);
-
-        // Set up handler
-        $handler = new ConnectionHandler($kernelMock, $connection);
-
-        // Send request
-        $requestId = 1;
-
-        $this->writeBeginRequestRecord($stream, $requestId, DaemonInterface::FCGI_RESPONDER, 0);
-        $this->writeParamsRecord($stream, $requestId);
-        $this->writeStdinRecord($stream, $requestId);
-
-        // Trigger Handler
-        do {
-            $handler->ready();
-        } while (!$connection->isClosed());
-
-        // Receive response
-        $responseBody = '';
-
-        do {
-            $record = $this->readRecord($stream);
-
-            if (DaemonInterface::FCGI_STDOUT === $record['type']) {
-                $responseBody .= $record['contentData'];
-            }
-        } while (DaemonInterface::FCGI_END_REQUEST !== $record['type']);
-
-        $expectedResponseBody = (
-            'Status: '.$response->getStatusCode().' '.$response->getReasonPhrase()."\r\n\r\n".
-            $body
-        );
-
-        $this->assertEquals($expectedResponseBody, $responseBody);
-
-        fclose($stream);
+        fclose($requestBodyStream);
+        fclose($responseBodyStream);
     }
 
     public function testClosedConnection()
