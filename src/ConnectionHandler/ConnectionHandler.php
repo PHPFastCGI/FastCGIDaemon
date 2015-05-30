@@ -369,25 +369,16 @@ class ConnectionHandler
 
         $request = $builder->getRequest();
 
-        $response = $this->kernel->handleRequest($request);
+        try {
+            $response = $this->kernel->handleRequest($request);
+        } catch (\Exception $exception) {
+            $this->endRequest($requestId);
+            // TODO: Logging
+        }
 
         $builder->clean();
 
-        $body = $response->getBody();
-
-        try {
-            $this->sendResponse($requestId, $response);
-        } catch (DaemonException $exception) {
-            if (is_resource($body)) {
-                fclose($body);
-            }
-
-            throw $exception;
-        }
-
-        if (is_resource($body)) {
-            fclose($body);
-        }
+        $this->sendResponse($requestId, $response);
     }
 
     /**
