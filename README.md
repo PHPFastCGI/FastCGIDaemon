@@ -18,7 +18,6 @@ The [Speedfony Bundle](https://github.com/PHPFastCGI/SpeedfonyBundle) integrates
 
 ## Current Status
 
-This daemon is currently in early development stages and not considered stable. A
-stable release is expected by September 2015.
+This daemon is currently in early development stages and not considered stable. A stable release is expected by September 2015.
 
 Contributions and suggestions are welcome.
