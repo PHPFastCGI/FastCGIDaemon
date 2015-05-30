@@ -12,7 +12,7 @@ A FastCGI daemon written in PHP.
 
 Using this daemon, applications can stay alive between HTTP requests whilst operating behind the protection of a FastCGI enabled web server.
 
-The daemon requires a kernel to be defined that accepts requests and returns responses. Requests objects mimic the PHP superglobals and response objects must provide the status line, header lines and a message body.
+The daemon requires a handler to be defined that accepts PSR-7 requests and returns PSR-7 responses.
 
 The [Speedfony Bundle](https://github.com/PHPFastCGI/SpeedfonyBundle) integrates this daemon with the symfony2 framework.
 
