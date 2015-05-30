@@ -31,8 +31,14 @@ class Daemon implements DaemonInterface
     /**
      * {@inheritdoc}
      */
-    public function run(KernelInterface $kernel)
+    public function run($handler)
     {
+        if ($handler instanceof KernelInterface) {
+            $kernel = $handler;
+        } else {
+            $kernel = new CallbackWrapper($handler);
+        }
+
         $this->connectionPool->operate(new ConnectionHandlerFactory($kernel), 5);
     }
 }

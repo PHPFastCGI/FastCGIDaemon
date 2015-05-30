@@ -42,7 +42,7 @@ interface DaemonInterface
     /**
      * Run the daemon.
      *
-     * @param KernelInterface $kernel The kernel to handle the requests
+     * @param callable|KernelInterface $handler The request handler
      */
-    public function run(KernelInterface $kernel);
+    public function run($handler);
 }
