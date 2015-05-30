@@ -5,6 +5,10 @@ namespace PHPFastCGI\FastCGIDaemon\Http;
 use Zend\Diactoros\ServerRequest;
 use Zend\Diactoros\ServerRequestFactory;
 
+/**
+ * The default implementation of the RequestBuilderInterface using the Zend
+ * Diactoros PSR-7 implementation.
+ */
 class RequestBuilder implements RequestBuilderInterface
 {
     /**
@@ -17,6 +21,9 @@ class RequestBuilder implements RequestBuilderInterface
      */
     protected $stdin;
 
+    /**
+     * Constructor.
+     */
     public function __construct()
     {
         $this->params = [];

@@ -4,20 +4,24 @@ namespace PHPFastCGI\FastCGIDaemon\Http;
 
 use Psr\Http\Message\ServerRequestInterface;
 
+/**
+ * The RequestBuilderInterface defines a set of methods used by a FastCGIDaemon
+ * ConnectionHandler to build PSR-7 server request objects.
+ */
 interface RequestBuilderInterface
 {
     /**
      * Add a CGI environment variable parameter.
      *
-     * @param string $name
-     * @param string $value
+     * @param string $name  The name of the parameter
+     * @param string $value The value of the parameter
      */
     public function addParam($name, $value);
 
     /**
      * Add CGI stdin data.
      *
-     * @param string $data
+     * @param string $data The data
      */
     public function addStdin($data);
 
@@ -26,7 +30,7 @@ interface RequestBuilderInterface
      * only be called once per instance. New builders should be instantiated for
      * new requests.
      *
-     * @return ServerRequestInterface
+     * @return ServerRequestInterface The request object for the builder
      */
     public function getRequest();
 

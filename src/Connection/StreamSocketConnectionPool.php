@@ -5,6 +5,10 @@ namespace PHPFastCGI\FastCGIDaemon\Connection;
 use PHPFastCGI\FastCGIDaemon\ConnectionHandler\ConnectionHandlerFactoryInterface;
 use PHPFastCGI\FastCGIDaemon\ConnectionHandler\ConnectionHandlerInterface;
 
+/**
+ * The default implementation of the ConnectionPoolInterface using stream
+ * sockets.
+ */
 class StreamSocketConnectionPool implements ConnectionPoolInterface
 {
     use StreamSocketExceptionTrait;
@@ -32,7 +36,7 @@ class StreamSocketConnectionPool implements ConnectionPoolInterface
     /**
      * Constructor.
      *
-     * @param resource $socket
+     * @param resource $socket The stream socket to accept connections from
      */
     public function __construct($socket)
     {
@@ -72,6 +76,11 @@ class StreamSocketConnectionPool implements ConnectionPoolInterface
         }
     }
 
+    /**
+     * Accept incoming connections from the stream socket.
+     * 
+     * @param ConnectionHandlerFactoryInterface $connectionHandlerFactory The factory used to create connection handlers
+     */
     protected function acceptConnection(ConnectionHandlerFactoryInterface $connectionHandlerFactory)
     {
         $clientSocket = stream_socket_accept($this->serverSocket);
@@ -88,6 +97,9 @@ class StreamSocketConnectionPool implements ConnectionPoolInterface
         $this->connectionHandlers[$id] = $handler;
     }
 
+    /**
+     * Remove closed connections.
+     */
     protected function removeClosedConnections()
     {
         foreach ($this->connections as $id => $connection) {

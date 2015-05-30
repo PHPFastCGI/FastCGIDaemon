@@ -4,6 +4,11 @@ namespace PHPFastCGI\FastCGIDaemon\Connection;
 
 use PHPFastCGI\FastCGIDaemon\ConnectionHandler\ConnectionHandlerFactoryInterface;
 
+/**
+ * Objects implementing the ConnectionPoolInterface pass incoming connections
+ * off to ConnectionHandler instances that have been created from a connection
+ * handler factory.
+ */
 interface ConnectionPoolInterface
 {
     /**
@@ -14,8 +19,8 @@ interface ConnectionPoolInterface
      * This method only returns if the pool is unable to accept future
      * connections.
      *
-     * @param ConnectionHandlerFactoryInterface $connectionHandlerFactory
-     * @param float                             $timeoutLoop
+     * @param ConnectionHandlerFactoryInterface $connectionHandlerFactory The factory used to create connection handlers
+     * @param float                             $timeoutLoop              The timeout value to use when waiting for activity on incoming connections
      *
      * @return ConnectionInterface The connection that was accepted
      */

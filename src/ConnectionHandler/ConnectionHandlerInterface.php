@@ -2,6 +2,12 @@
 
 namespace PHPFastCGI\FastCGIDaemon\ConnectionHandler;
 
+/**
+ * Objects implementing the connection handler interface are usually
+ * instantiated via some method with an incoming connection and a kernel. The
+ * handler is notified when these connections are ready to be read or closed and
+ * should handle communication between the incoming connection and the kernel.
+ */
 interface ConnectionHandlerInterface
 {
     /**

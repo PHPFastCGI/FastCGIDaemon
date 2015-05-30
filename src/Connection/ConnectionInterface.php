@@ -4,6 +4,10 @@ namespace PHPFastCGI\FastCGIDaemon\Connection;
 
 use PHPFastCGI\FastCGIDaemon\Exception\ConnectionException;
 
+/**
+ * The connection interface defines a set of methods that abstract operations
+ * on incoming connections from the method by which they were accepted.
+ */
 interface ConnectionInterface
 {
     /**
@@ -29,7 +33,7 @@ interface ConnectionInterface
     /**
      * Tests to see if the connection has been closed.
      *
-     * @return bool
+     * @return bool True if the connection has been closed, false otherwise
      */
     public function isClosed();
 

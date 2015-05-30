@@ -2,6 +2,10 @@
 
 namespace PHPFastCGI\FastCGIDaemon\Connection;
 
+/**
+ * The default implementation of the ConnectionInterface using stream socket
+ * resources.
+ */
 class StreamSocketConnection implements ConnectionInterface
 {
     use StreamSocketExceptionTrait;
@@ -19,7 +23,7 @@ class StreamSocketConnection implements ConnectionInterface
     /**
      * Constructor.
      *
-     * @param resource $socket
+     * @param resource $socket The stream socket to wrap
      */
     public function __construct($socket)
     {

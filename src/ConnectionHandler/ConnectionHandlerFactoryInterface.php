@@ -4,6 +4,10 @@ namespace PHPFastCGI\FastCGIDaemon\ConnectionHandler;
 
 use PHPFastCGI\FastCGIDaemon\Connection\ConnectionInterface;
 
+/**
+ * Objects implementing the ConnectionHandlerFactoryInterface can be used by
+ * the ConnectionPool to create handlers for new incoming connections.
+ */
 interface ConnectionHandlerFactoryInterface
 {
     /**

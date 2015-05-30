@@ -2,6 +2,10 @@
 
 namespace PHPFastCGI\FastCGIDaemon;
 
+/**
+ * The DaemonInterface contains the FCGI constants and defines a single blocking
+ * method that can be used to operate a kernel.
+ */
 interface DaemonInterface
 {
     // Socket descriptor
