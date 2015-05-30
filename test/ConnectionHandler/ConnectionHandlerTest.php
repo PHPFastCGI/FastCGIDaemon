@@ -10,8 +10,18 @@ use PHPFastCGI\Test\FastCGIDaemon\KernelMock;
 use Zend\Diactoros\ServerRequest;
 use Zend\Diactoros\Response;
 
+/**
+ * Tests that the connection handler is correctly handling FastCGI connections.
+ */
 class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
 {
+    /**
+     * Converts a string to a stream resource and places pointer at the start.
+     * 
+     * @param  string $string
+     * 
+     * @return resource
+     */
     protected function toStream($string)
     {
         $stream = fopen('php://temp', 'r+');
@@ -20,6 +30,11 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
         return $stream;
     }
 
+    /**
+     * Creates a pair of non-blocking stream socket resources.
+     * 
+     * @return resource[]
+     */
     protected function createStreamSocketPair()
     {
         $sockets = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, STREAM_IPPROTO_IP);

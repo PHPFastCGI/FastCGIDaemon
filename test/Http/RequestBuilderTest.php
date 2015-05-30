@@ -4,12 +4,22 @@ namespace PHPFastCGI\Test\FastCGIDaemon\Http;
 
 use PHPFastCGI\FastCGIDaemon\Http\RequestBuilder;
 
+/**
+ * Test that the request builder is correctly building the PSR-7 request
+ * message.
+ */
 class RequestBuilderTest extends \PHPUnit_Framework_TestCase
 {
+    /**
+     * Test that the request builder is correctly building the PSR-7 request
+     * message.
+     */
     public function testBuilder()
     {
+        // Create a builder
         $builder = new RequestBuilder();
 
+        // Set up FastCGI params and content
         $params = [
             'SERVER_PROTOCOL' => 'HTTP/1.1',
             'REQUEST_METHOD' => 'POST',
@@ -21,18 +31,20 @@ class RequestBuilderTest extends \PHPUnit_Framework_TestCase
 
         $content = 'foo=bar&hello=world';
 
+        // Add to them to the builder
         foreach ($params as $name => $value) {
             $builder->addParam($name, $value);
         }
 
         $builder->addStdin($content);
 
+        // Get the request
         $request = $builder->getRequest();
 
-        $server = $request->getServerParams();
-
+        // Check request object
+        $builtServerParams = $request->getServerParams();
         foreach ($params as $name => $value) {
-            $this->assertEquals($server[strtoupper($name)], $value);
+            $this->assertEquals($builtServerParams[strtoupper($name)], $value);
         }
 
         $this->assertEquals($request->getQueryParams(), ['bar' => 'foo', 'world' => 'hello', ]);

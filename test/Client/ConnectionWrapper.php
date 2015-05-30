@@ -4,6 +4,10 @@ namespace PHPFastCGI\Test\FastCGIDaemon\Client;
 
 use PHPFastCGI\FastCGIDaemon\DaemonInterface;
 
+/**
+ * Helper class that wraps a stream resource and provides helper methods for
+ * writing and reading FastCGI records.
+ */
 class ConnectionWrapper
 {
     /**
