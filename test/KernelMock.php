@@ -6,6 +6,10 @@ use PHPFastCGI\FastCGIDaemon\KernelInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
+/**
+ * Helper mock of a Kernel that can be used to check that the expected request
+ * is received and then provide a predetermined response.
+ */
 class KernelMock implements KernelInterface
 {
     /**
