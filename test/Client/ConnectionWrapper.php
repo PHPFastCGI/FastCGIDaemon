@@ -83,9 +83,9 @@ class ConnectionWrapper
     /**
      * Write a begin request record.
      * 
-     * @param string $requestId
-     * @param int    $role
-     * @param int    $flags
+     * @param int $requestId
+     * @param int $role
+     * @param int $flags
      */
     public function writeBeginRequestRecord($requestId, $role, $flags)
     {
@@ -96,7 +96,7 @@ class ConnectionWrapper
     /**
      * Write a params record.
      * 
-     * @param string $requestId
+     * @param int    $requestId
      * @param string $name
      * @param string $value
      */
@@ -135,7 +135,7 @@ class ConnectionWrapper
     /**
      * Write a stdin record.
      * 
-     * @param string $requestId
+     * @param int    $requestId
      * @param string $content
      */
     public function writeStdinRecord($requestId, $content = '')
