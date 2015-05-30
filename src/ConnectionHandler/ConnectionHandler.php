@@ -371,6 +371,10 @@ class ConnectionHandler
 
         try {
             $response = $this->kernel->handleRequest($request);
+
+            if (!$response instanceof ResponseInterface) {
+                throw new \LogicException('Kernel must return a PSR-7 HTTP response message');
+            }
         } catch (\Exception $exception) {
             $this->endRequest($requestId);
             // TODO: Logging
