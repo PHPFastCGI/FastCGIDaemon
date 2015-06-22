@@ -3,6 +3,7 @@
 namespace PHPFastCGI\FastCGIDaemon\ConnectionHandler;
 
 use PHPFastCGI\FastCGIDaemon\Connection\ConnectionInterface;
+use PHPFastCGI\FastCGIDaemon\CallbackWrapper;
 use PHPFastCGI\FastCGIDaemon\KernelInterface;
 
 /**
@@ -18,11 +19,15 @@ class ConnectionHandlerFactory implements ConnectionHandlerFactoryInterface
     /**
      * Constructor.
      *
-     * @param KernelInterface $kernel The kernel to create handlers for
+     * @param KernelInterface|callable $kernel The kernel to create handlers for
      */
-    public function __construct(KernelInterface $kernel)
+    public function __construct($kernel)
     {
-        $this->kernel = $kernel;
+        if ($kernel instanceof KernelInterface) {
+            $this->kernel = $kernel;
+        } else {
+            $this->kernel = new CallbackWrapper($kernel);
+        }
     }
 
     /**
