@@ -2,43 +2,42 @@
 
 namespace PHPFastCGI\FastCGIDaemon;
 
-use PHPFastCGI\FastCGIDaemon\Connection\StreamSocketConnectionPool;
-use PHPFastCGI\FastCGIDaemon\ConnectionHandler\ConnectionHandlerFactory;
+use PHPFastCGI\FastCGIDaemon\Connection\ConnectionPoolInterface;
+use PHPFastCGI\FastCGIDaemon\ConnectionHandler\ConnectionHandlerFactoryInterface;
 
 /**
  * The standard implementation of the DaemonInterface is constructed from a
- * socket stream which is ready to accept connections.
+ * connection pool and a factory class to generate connection handlers.
  */
 class Daemon implements DaemonInterface
 {
     /**
-     * @var StreamSocketConnectionPool
+     * @var ConnectionPoolInterface
      */
     protected $connectionPool;
 
     /**
+     * @var ConnectionHandlerFactoryInterface
+     */
+    protected $connectionHandlerFactory;
+
+    /**
      * Constructor.
      * 
-     * The stream socket resource must be ready to accept connections.
-     *
-     * @param resource $stream The stream socket resource
+     * @param ConnectionPoolInterface           $connectionPool           The connection pool to accept connections from
+     * @param ConnectionHandlerFactoryInterface $connectionHandlerFactory A factory class for producing connection handlers
      */
-    public function __construct($stream)
+    public function __construct(ConnectionPoolInterface $connectionPool, ConnectionHandlerFactoryInterface $connectionHandlerFactory)
     {
-        $this->connectionPool = new StreamSocketConnectionPool($stream);
+        $this->connectionPool           = $connectionPool;
+        $this->connectionHandlerFactory = $connectionHandlerFactory;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function run($handler)
+    public function run()
     {
-        if ($handler instanceof KernelInterface) {
-            $kernel = $handler;
-        } else {
-            $kernel = new CallbackWrapper($handler);
-        }
-
-        $this->connectionPool->operate(new ConnectionHandlerFactory($kernel), 5);
+        $this->connectionPool->operate($this->connectionHandlerFactory, 5);
     }
 }

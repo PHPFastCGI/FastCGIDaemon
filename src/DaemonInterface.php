@@ -4,7 +4,7 @@ namespace PHPFastCGI\FastCGIDaemon;
 
 /**
  * The DaemonInterface contains the FCGI constants and defines a single blocking
- * method that can be used to operate a kernel.
+ * method to run the daemon.
  */
 interface DaemonInterface
 {
@@ -41,8 +41,10 @@ interface DaemonInterface
 
     /**
      * Run the daemon.
-     *
-     * @param callable|KernelInterface $handler The request handler
+     * 
+     * This is a blocking method that does not return.
+     * 
+     * @throws \Exception On fatal error
      */
-    public function run($handler);
+    public function run();
 }
