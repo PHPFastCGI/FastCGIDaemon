@@ -10,12 +10,18 @@ use PHPFastCGI\FastCGIDaemon\Http\RequestBuilder;
 use PHPFastCGI\FastCGIDaemon\KernelInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 /**
  * The default implementation of the ConnectionHandlerInterface.
  */
-class ConnectionHandler
+class ConnectionHandler implements LoggerAwareInterface
 {
+    use LoggerAwareTrait;
+
     const READ_LENGTH = 4096;
 
     /**
@@ -48,9 +54,12 @@ class ConnectionHandler
      *
      * @param KernelInterface     $kernel     The kernel to use to handle requests
      * @param ConnectionInterface $connection The connection to handle
+     * @param LoggerInterface     $logger     A logger to use
      */
-    public function __construct(KernelInterface $kernel, ConnectionInterface $connection)
+    public function __construct(KernelInterface $kernel, ConnectionInterface $connection, LoggerInterface $logger = null)
     {
+        $this->setLogger((null === $logger) ? new NullLogger() : $logger);
+
         $this->kernel       = $kernel;
         $this->connection   = $connection;
         $this->requests     = [];
@@ -81,8 +90,9 @@ class ConnectionHandler
                 $this->processRecord($record);
             }
         } catch (DaemonException $exception) {
+            $this->logger->error($exception->getMessage());
+
             $this->close();
-            // TODO: Logging
         }
     }
 
@@ -376,8 +386,9 @@ class ConnectionHandler
                 throw new \LogicException('Kernel must return a PSR-7 HTTP response message');
             }
         } catch (\Exception $exception) {
+            $this->logger->error($exception->getMessage());
+
             $this->endRequest($requestId);
-            // TODO: Logging
         }
 
         $builder->clean();
