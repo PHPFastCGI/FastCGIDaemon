@@ -21,8 +21,6 @@ interface ConnectionPoolInterface
      *
      * @param ConnectionHandlerFactoryInterface $connectionHandlerFactory The factory used to create connection handlers
      * @param float                             $timeoutLoop              The timeout value to use when waiting for activity on incoming connections
-     *
-     * @return ConnectionInterface The connection that was accepted
      */
     public function operate(ConnectionHandlerFactoryInterface $connectionHandlerFactory, $timeoutLoop);
 }
