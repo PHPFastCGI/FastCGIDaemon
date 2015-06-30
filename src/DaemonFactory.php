@@ -6,16 +6,12 @@ use PHPFastCGI\FastCGIDaemon\Connection\StreamSocketConnectionPool;
 use PHPFastCGI\FastCGIDaemon\ConnectionHandler\ConnectionHandlerFactory;
 
 /**
- * A class which can be used to create fully instantiated FastCGI daemons.
+ * The default implementation of the DaemonFactoryInterface.
  */
-class DaemonFactory
+class DaemonFactory implements DaemonFactoryInterface
 {
     /**
-     * Create a FastCGI daemon listening on FCGI_LISTENSOCK_FILENO.
-     * 
-     * @param KernelInterface|callable $kernel The daemon's kernel
-     * 
-     * @return DaemonInterface The FastCGI daemon
+     * {@inheritdoc}
      */
     public function createDaemon($kernel)
     {
@@ -25,14 +21,7 @@ class DaemonFactory
     }
 
     /**
-     * Create a FastCGI daemon listening on a given address. The default host is
-     * localhost.
-     *
-     * @param KernelInterface|callable $kernel The daemon's kernel
-     * @param int                      $port   The port to bind to
-     * @param string                   $host   The host to bind to
-     * 
-     * @return DaemonInterface The FastCGI daemon
+     * {@inheritdoc}
      */
     public function createTcpDaemon($kernel, $port, $host = 'localhost')
     {
@@ -42,13 +31,7 @@ class DaemonFactory
     }
 
     /**
-     * Create a FastCGI daemon from a stream socket which is configured for
-     * accepting connections.
-     * 
-     * @param KernelInterface|callable $kernel The daemon's kernel
-     * @param resource                 $socket The socket to accept connections from
-     * 
-     * @return DaemonInterface The FastCGI daemon
+     * {@inheritdoc}
      */
     public function createDaemonFromStreamSocket($kernel, $socket)
     {
