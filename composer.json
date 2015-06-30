@@ -12,7 +12,8 @@
     "require": {
         "php": ">=5.5",
         "psr/http-message": "~1.0",
-        "zendframework/zend-diactoros": "~1.0"
+        "zendframework/zend-diactoros": "~1.0",
+        "symfony/console": "~2.5"
     },
     "require-dev": {
         "satooshi/php-coveralls": "dev-master"
