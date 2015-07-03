@@ -168,20 +168,34 @@ class ConnectionHandler implements LoggerAwareInterface
     }
 
     /**
-     * Write a stream to the connection as FCGI_STDOUT records.
+     * Write a response to the connection as FCGI_STDOUT records.
      * 
-     * @param int             $requestId The request id to write to
-     * @param StreamInterface $stream    The stream to write
+     * @param int             $requestId  The request id to write to
+     * @param string          $headerData The header data to write (including terminating CRLFCRLF)
+     * @param StreamInterface $stream     The stream to write
      */
-    protected function writeStream($requestId, StreamInterface $stream)
+    protected function writeResponse($requestId, $headerData, StreamInterface $stream)
     {
-        while (!$stream->eof()) {
-            $data = $stream->read(65535);
+        $data = $headerData;
+        $eof  = false;
 
-            if (false !== $data) {
-                $this->writeRecord($requestId, DaemonInterface::FCGI_STDOUT, $data);
+        $stream->rewind();
+
+        do {
+            $dataLength = strlen($data);
+
+            if ($dataLength < 65535 && !$eof && !($eof = $stream->eof())) {
+                $readLength  = 65535 - $dataLength;
+                $data       .= $stream->read($readLength);
+                $dataLength  = strlen($data);
             }
-        }
+
+            $writeSize = min($dataLength, 65535);
+            $writeData = substr($data, 0, $writeSize);
+            $data      = substr($data, $writeSize);
+
+            $this->writeRecord($requestId, DaemonInterface::FCGI_STDOUT, $writeData);
+        } while ($writeSize === 65535);
     }
 
     /**
@@ -404,21 +418,15 @@ class ConnectionHandler implements LoggerAwareInterface
      */
     protected function sendResponse($requestId, ResponseInterface $response)
     {
-        $outputData = "Status: {$response->getStatusCode()} {$response->getReasonPhrase()}\r\n";
+        $headerData = "Status: {$response->getStatusCode()} {$response->getReasonPhrase()}\r\n";
 
         foreach ($response->getHeaders() as $name => $values) {
-            $outputData .= $name . ': ' . implode(', ', $values) ."\r\n";
+            $headerData .= $name . ': ' . implode(', ', $values) ."\r\n";
         }
 
-        $outputData .= "\r\n";
+        $headerData .= "\r\n";
 
-        $outputChunks = str_split($outputData, 65535);
-
-        foreach ($outputChunks as $chunk) {
-            $this->writeRecord($requestId, DaemonInterface::FCGI_STDOUT, $chunk);
-        }
-
-        $this->writeStream($requestId, $response->getBody());
+        $this->writeResponse($requestId, $headerData, $response->getBody());
 
         $this->writeRecord($requestId, DaemonInterface::FCGI_STDOUT);
         $this->endRequest($requestId);
