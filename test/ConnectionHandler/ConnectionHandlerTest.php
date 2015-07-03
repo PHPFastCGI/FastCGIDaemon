@@ -6,7 +6,7 @@ use PHPFastCGI\FastCGIDaemon\Connection\StreamSocketConnection;
 use PHPFastCGI\FastCGIDaemon\ConnectionHandler\ConnectionHandler;
 use PHPFastCGI\FastCGIDaemon\DaemonInterface;
 use PHPFastCGI\Test\FastCGIDaemon\Client\ConnectionWrapper;
-use PHPFastCGI\Test\FastCGIDaemon\KernelMock;
+use PHPFastCGI\Test\FastCGIDaemon\Mock\KernelMock;
 use Zend\Diactoros\ServerRequest;
 use Zend\Diactoros\Response;
 
