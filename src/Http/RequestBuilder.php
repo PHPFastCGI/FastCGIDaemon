@@ -92,8 +92,9 @@ class RequestBuilder implements RequestBuilderInterface
         $headers = ServerRequestFactory::marshalHeaders($server);
         $uri     = ServerRequestFactory::marshalUriFromServer($server, $headers);
         $method  = ServerRequestFactory::get('REQUEST_METHOD', $server, 'GET');
+        $body    = $this->stdin !== null ? $this->stdin : 'php://memory';
 
-        $request = new ServerRequest($server, [], $uri, $method, $this->stdin, $headers);
+        $request = new ServerRequest($server, [], $uri, $method, $body, $headers);
 
         return $request
             ->withCookieParams($cookies)
