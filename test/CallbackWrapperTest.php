@@ -6,7 +6,6 @@ use PHPFastCGI\FastCGIDaemon\CallbackWrapper;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\ServerRequest;
 
-
 /**
  * Tests the callback wrapper.
  */
