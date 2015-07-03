@@ -8,6 +8,7 @@
     <filter>
         <blacklist>
            <directory>vendor</directory>
+           <directory>test</directory>
         </blacklist>
     </filter>
 </phpunit>
