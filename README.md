@@ -15,13 +15,14 @@ Using this daemon, applications can stay alive between HTTP requests whilst oper
 The daemon requires a handler to be defined that accepts PSR-7 requests and returns PSR-7 responses.
 
 The [Speedfony Bundle](https://github.com/PHPFastCGI/SpeedfonyBundle) integrates this daemon with the symfony2 framework.
+The [Slimmer package](https://github.com/PHPFastCGI/Slimmer) integrates this daemon with the Slim v3 framework.
 
 ## Usage
 
 Below is an example of a simple 'Hello, World!' FastCGI application in PHP.
 
 ```php
-<?php // application.php
+<?php // command.php
 
 // Include the composer autoloader
 require_once dirname(__FILE__) . '/../vendor/autoload.php';
@@ -55,15 +56,15 @@ $consoleApplication->run();
 
 If you wish to configure your FastCGI application to work with the apache web server, you can use the apache FastCGI module to process manage your application.
 
-This can be done by creating an FCGI script that launches your application and inserting a FastCgiServer directive into your virtual host configuration.
+This can be done by creating a FCGI script that launches your application and inserting a FastCgiServer directive into your virtual host configuration.
 
 ```sh
 #!/bin/bash
-php /path/to/application.php run
+php /path/to/command.php run
 ```
 
 ```
-FastCgiServer /path/to/web/root/index.fcgi
+FastCgiServer /path/to/web/root/script.fcgi
 ```
 
 If you are using a web server such as nginx, you will need to use a process manager to monitor and run your application.
