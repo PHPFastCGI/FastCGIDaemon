@@ -389,9 +389,7 @@ class ConnectionHandler implements LoggerAwareInterface
      */
     protected function dispatchRequest($requestId)
     {
-        $builder = $this->requests[$requestId]['builder'];
-
-        $request = $builder->getRequest();
+        $request = $this->requests[$requestId]['builder']->getRequest();
 
         try {
             $response = $this->kernel->handleRequest($request);
@@ -399,15 +397,13 @@ class ConnectionHandler implements LoggerAwareInterface
             if (!$response instanceof ResponseInterface) {
                 throw new \LogicException('Kernel must return a PSR-7 HTTP response message');
             }
+
+            $this->sendResponse($requestId, $response);
         } catch (\Exception $exception) {
             $this->logger->error($exception->getMessage());
 
             $this->endRequest($requestId);
         }
-
-        $builder->clean();
-
-        $this->sendResponse($requestId, $response);
     }
 
     /**

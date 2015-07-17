@@ -17,7 +17,7 @@ class RequestBuilder implements RequestBuilderInterface
     protected $params;
 
     /**
-     * @var resource|null
+     * @var resource
      */
     protected $stdin;
 
@@ -27,7 +27,7 @@ class RequestBuilder implements RequestBuilderInterface
     public function __construct()
     {
         $this->params = [];
-        $this->stdin  = null;
+        $this->stdin  = fopen('php://temp', 'r+');
     }
 
     /**
@@ -43,10 +43,6 @@ class RequestBuilder implements RequestBuilderInterface
      */
     public function addStdin($data)
     {
-        if (null === $this->stdin) {
-            $this->stdin = fopen('php://temp', 'r+');
-        }
-
         fwrite($this->stdin, $data);
     }
 
@@ -55,19 +51,15 @@ class RequestBuilder implements RequestBuilderInterface
      */
     public function getRequest()
     {
-        if (null !== $this->stdin) {
-            rewind($this->stdin);
-        }
+        rewind($this->stdin);
 
-        $query   = [];
-        $post    = [];
-        $cookies = [];
+        $query = $post = $cookies = [];
 
         if (isset($this->params['QUERY_STRING'])) {
             parse_str($this->params['QUERY_STRING'], $query);
         }
 
-        if (null !== $this->stdin && isset($this->params['REQUEST_METHOD']) && isset($this->params['CONTENT_TYPE'])) {
+        if (isset($this->params['REQUEST_METHOD']) && isset($this->params['CONTENT_TYPE'])) {
             $requestMethod = $this->params['REQUEST_METHOD'];
             $contentType   = $this->params['CONTENT_TYPE'];
 
@@ -92,9 +84,8 @@ class RequestBuilder implements RequestBuilderInterface
         $headers = ServerRequestFactory::marshalHeaders($server);
         $uri     = ServerRequestFactory::marshalUriFromServer($server, $headers);
         $method  = ServerRequestFactory::get('REQUEST_METHOD', $server, 'GET');
-        $body    = $this->stdin !== null ? $this->stdin : 'php://memory';
 
-        $request = new ServerRequest($server, [], $uri, $method, $body, $headers);
+        $request = new ServerRequest($server, [], $uri, $method, $this->stdin, $headers);
 
         return $request
             ->withCookieParams($cookies)
@@ -107,11 +98,9 @@ class RequestBuilder implements RequestBuilderInterface
      */
     public function clean()
     {
-        $this->params = [];
+        fclose($this->stdin);
 
-        if (null !== $this->stdin) {
-            fclose($this->stdin);
-            $this->stdin = null;
-        }
+        $this->params = [];
+        $this->stdin  = null;
     }
 }
