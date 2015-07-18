@@ -17,9 +17,9 @@ class CallbackWrapper implements KernelInterface
 
     /**
      * Constructor.
-     * 
+     *
      * @param callable $handler The handler callback to wrap
-     * 
+     *
      * @throws \InvalidArgumentException When not given callable callback
      */
     public function __construct($handler)

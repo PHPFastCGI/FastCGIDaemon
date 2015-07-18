@@ -33,16 +33,16 @@ class StreamSocketConnection implements ConnectionInterface
 
     /**
      * Creates a formatted exception from the last error that occurecd.
-     * 
+     *
      * @param string $function The function that failed
-     * 
+     *
      * @return ConnectionException
      */
     protected function createExceptionFromLastError($function)
     {
         $this->close();
 
-        return new ConnectionException($function . ' failed');
+        return new ConnectionException($function.' failed');
     }
 
     /**

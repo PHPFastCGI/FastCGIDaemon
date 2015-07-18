@@ -41,9 +41,9 @@ interface DaemonInterface
 
     /**
      * Run the daemon.
-     * 
+     *
      * This is a blocking method that does not return.
-     * 
+     *
      * @throws \Exception On fatal error
      */
     public function run();

@@ -14,7 +14,7 @@ class CallbackWrapperTest extends \PHPUnit_Framework_TestCase
     /**
      * Tests an \InvalidArgumentException is thrown when it isn't constructed
      * with a callable.
-     * 
+     *
      * @expectedException \InvalidArgumentException
      */
     public function testInvalidArgumentException()
@@ -32,6 +32,7 @@ class CallbackWrapperTest extends \PHPUnit_Framework_TestCase
 
         $kernel = new CallbackWrapper(function (ServerRequest $request) use ($expectedRequest, $expectedResponse) {
             $this->assertSame($expectedRequest, $request);
+
             return $expectedResponse;
         });
 

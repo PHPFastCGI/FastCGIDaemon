@@ -70,7 +70,7 @@ class StreamSocketConnectionPool implements ConnectionPoolInterface, LoggerAware
 
             if (false === stream_select($read, $write, $except, $timeoutLoopSeconds, $timeoutLoopMicroseconds)) {
                 $lastError = error_get_last();
-     
+
                 if (null === $lastError) {
                     $this->logger->emergency('stream_select failed');
                 } else {
@@ -94,7 +94,7 @@ class StreamSocketConnectionPool implements ConnectionPoolInterface, LoggerAware
 
     /**
      * Accept incoming connections from the stream socket.
-     * 
+     *
      * @param ConnectionHandlerFactoryInterface $connectionHandlerFactory The factory used to create connection handlers
      */
     protected function acceptConnection(ConnectionHandlerFactoryInterface $connectionHandlerFactory)

@@ -8,14 +8,14 @@ use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\NullOutput;
 
 /**
- * Tests the daemon run command
+ * Tests the daemon run command.
  */
 class DaemonRunCommandTest extends \PHPUnit_Framework_TestCase
 {
     /**
      * Tests an \InvalidArgumentException is thrown when it isn't constructed
      * with a callable.
-     * 
+     *
      * @expectedException \InvalidArgumentException
      */
     public function testInvalidArgumentException()
@@ -43,7 +43,7 @@ class DaemonRunCommandTest extends \PHPUnit_Framework_TestCase
     /**
      * Test invalid option configuration. An Invalid argument exception should
      * be thrown if the host option is supplied without the port optional also.
-     * 
+     *
      * @expectedException \InvalidArgumentException
      */
     public function testInvalidOptions()
@@ -74,7 +74,7 @@ class DaemonRunCommandTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * Create a mock daemon to use for testing
+     * Create a mock daemon to use for testing.
      */
     private function createMockDaemonFactory($createMethod)
     {

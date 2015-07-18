@@ -29,7 +29,7 @@ class Daemon implements DaemonInterface, LoggerAwareInterface
 
     /**
      * Constructor.
-     * 
+     *
      * @param ConnectionPoolInterface           $connectionPool           The connection pool to accept connections from
      * @param ConnectionHandlerFactoryInterface $connectionHandlerFactory A factory class for producing connection handlers
      * @param LoggerInterface                   $logger                   A logger to use

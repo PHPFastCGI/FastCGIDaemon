@@ -17,7 +17,7 @@ class ConnectionWrapper
 
     /**
      * Constructor.
-     * 
+     *
      * @param resource $stream
      */
     public function __construct($stream)
@@ -27,9 +27,9 @@ class ConnectionWrapper
 
     /**
      * Read a record from the connection.
-     * 
-     * @param  \PHPUnit_Framework_TestCase $testCase
-     * 
+     *
+     * @param \PHPUnit_Framework_TestCase $testCase
+     *
      * @return array
      */
     public function readRecord(\PHPUnit_Framework_TestCase $testCase)
@@ -64,7 +64,7 @@ class ConnectionWrapper
 
     /**
      * Write a record to the stream.
-     * 
+     *
      * @param string $type
      * @param string $requestId
      * @param string $content
@@ -73,7 +73,7 @@ class ConnectionWrapper
     public function writeRecord($type, $requestId, $content = '', $paddingLength = 0)
     {
         $header  = pack('CCnnCx', DaemonInterface::FCGI_VERSION_1, $type, $requestId, strlen($content), $paddingLength);
-        $padding = pack('x' . $paddingLength);
+        $padding = pack('x'.$paddingLength);
 
         fwrite($this->stream, $header);
         fwrite($this->stream, $content);
@@ -82,7 +82,7 @@ class ConnectionWrapper
 
     /**
      * Write a begin request record.
-     * 
+     *
      * @param int $requestId
      * @param int $role
      * @param int $flags
@@ -95,7 +95,7 @@ class ConnectionWrapper
 
     /**
      * Write a params record.
-     * 
+     *
      * @param int    $requestId
      * @param string $name
      * @param string $value
@@ -134,7 +134,7 @@ class ConnectionWrapper
 
     /**
      * Write an abort request record.
-     * 
+     *
      * @param int $requestId
      */
     public function writeAbortRequestRecord($requestId)
@@ -144,7 +144,7 @@ class ConnectionWrapper
 
     /**
      * Write a stdin record.
-     * 
+     *
      * @param int    $requestId
      * @param string $content
      */

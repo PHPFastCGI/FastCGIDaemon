@@ -10,7 +10,7 @@ use PHPFastCGI\FastCGIDaemon\ConnectionHandler\ConnectionHandlerFactory;
 class ConnectionHandlerFactoryTest extends \PHPUnit_Framework_TestCase
 {
     /**
-     * Tests that the factory creates a connection handler from a kernel
+     * Tests that the factory creates a connection handler from a kernel.
      */
     public function testCreatesConnectionHandlerFromKernel()
     {
@@ -31,11 +31,11 @@ class ConnectionHandlerFactoryTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * Tests that the factory creates a connection handler from a closure
+     * Tests that the factory creates a connection handler from a closure.
      */
     public function testCreatesConnectionHandlerFromClosure()
     {
-        $connectionHandlerFactory = new ConnectionHandlerFactory(function() { });
+        $connectionHandlerFactory = new ConnectionHandlerFactory(function () { });
 
         $connection = $this
             ->getMockBuilder('PHPFastCGI\\FastCGIDaemon\\Connection\\StreamSocketConnection')

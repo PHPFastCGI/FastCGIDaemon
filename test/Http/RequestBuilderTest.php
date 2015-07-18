@@ -47,10 +47,10 @@ class RequestBuilderTest extends \PHPUnit_Framework_TestCase
             $this->assertEquals($builtServerParams[strtoupper($name)], $value);
         }
 
-        $this->assertEquals($request->getQueryParams(), ['bar' => 'foo', 'world' => 'hello', ]);
+        $this->assertEquals($request->getQueryParams(), ['bar' => 'foo', 'world' => 'hello']);
 
-        $this->assertEquals($request->getParsedBody(), ['foo' => 'bar', 'hello' => 'world', ]);
+        $this->assertEquals($request->getParsedBody(), ['foo' => 'bar', 'hello' => 'world']);
 
-        $this->assertEquals($request->getCookieParams(), ['one' => 'two', 'three' => 'four', 'five' => 'six', ]);
+        $this->assertEquals($request->getCookieParams(), ['one' => 'two', 'three' => 'four', 'five' => 'six']);
     }
 }

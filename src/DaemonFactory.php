@@ -12,24 +12,24 @@ class DaemonFactory implements DaemonFactoryInterface
 {
     /**
      * {@inheritdoc}
-     * 
+     *
      * @codeCoverageIgnore
      */
     public function createDaemon($kernel)
     {
-        $socket = fopen('php://fd/' . DaemonInterface::FCGI_LISTENSOCK_FILENO, 'r');
+        $socket = fopen('php://fd/'.DaemonInterface::FCGI_LISTENSOCK_FILENO, 'r');
 
         return $this->createDaemonFromStreamSocket($kernel, $socket);
     }
 
     /**
      * {@inheritdoc}
-     * 
+     *
      * @codeCoverageIgnore
      */
     public function createTcpDaemon($kernel, $port, $host = 'localhost')
     {
-        $socket = stream_socket_server('tcp://' . $host . ':' . $port);
+        $socket = stream_socket_server('tcp://'.$host.':'.$port);
 
         return $this->createDaemonFromStreamSocket($kernel, $socket);
     }

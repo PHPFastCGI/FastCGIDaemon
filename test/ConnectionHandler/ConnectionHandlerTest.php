@@ -8,10 +8,8 @@ use PHPFastCGI\FastCGIDaemon\ConnectionHandler\ConnectionHandler;
 use PHPFastCGI\FastCGIDaemon\DaemonInterface;
 use PHPFastCGI\Test\FastCGIDaemon\Client\ConnectionWrapper;
 use PHPFastCGI\Test\FastCGIDaemon\Logger\InMemoryLogger;
-use PHPFastCGI\Test\FastCGIDaemon\Mock\KernelMock;
 use Psr\Http\Message\ServerRequestInterface;
 use Zend\Diactoros\Response;
-use Zend\Diactoros\ServerRequest;
 
 /**
  * Tests that the connection handler is correctly handling FastCGI connections.
@@ -20,9 +18,9 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
 {
     /**
      * Converts a string to a stream resource and places pointer at the start.
-     * 
-     * @param  string $string
-     * 
+     *
+     * @param string $string
+     *
      * @return resource
      */
     protected function toStream($string)
@@ -30,12 +28,13 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
         $stream = fopen('php://temp', 'r+');
         fwrite($stream, $string);
         rewind($stream);
+
         return $stream;
     }
 
     /**
      * Creates a pair of non-blocking stream socket resources.
-     * 
+     *
      * @return resource[]
      */
     protected function createStreamSocketPair()
@@ -43,13 +42,15 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
         $sockets = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, STREAM_IPPROTO_IP);
         stream_set_blocking($sockets[0], 0);
         stream_set_blocking($sockets[1], 0);
+
         return $sockets;
     }
 
     /**
      * Create a testing context.
-     * 
+     *
      * @param callable $callback
+     *
      * @return array
      */
     protected function createTestingContext($callback = null)
@@ -139,13 +140,13 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
             }
         } while (DaemonInterface::FCGI_END_REQUEST !== $record['type']);
 
-        $expectedRawResponse = 'Status: ' . $response->getStatusCode() . ' ' . $response->getReasonPhrase() . "\r\n";
+        $expectedRawResponse = 'Status: '.$response->getStatusCode().' '.$response->getReasonPhrase()."\r\n";
 
         foreach ($response->getHeaders() as $name => $values) {
-            $expectedRawResponse .= $name . ': ' . implode(', ', $values) . "\r\n";
+            $expectedRawResponse .= $name.': '.implode(', ', $values)."\r\n";
         }
 
-        $expectedRawResponse .= "\r\n" . $body;
+        $expectedRawResponse .= "\r\n".$body;
 
         // Check response
         $this->assertEquals(strlen($expectedRawResponse), strlen($rawResponse));
@@ -175,7 +176,7 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * Test that the daemon correctly handles a kernel exception
+     * Test that the daemon correctly handles a kernel exception.
      */
     public function testKernelExceptionHandling()
     {
@@ -198,8 +199,8 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
             [
                 'level'   => 'error',
                 'message' => 'Kernel must return a PSR-7 HTTP response message',
-                'context' => []
-            ]
+                'context' => [],
+            ],
         ];
         $this->assertEquals($expectedLogMessages, $context['logger']->getMessages());
 
@@ -208,7 +209,7 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * Test that the daemon correctly handles an abort request record
+     * Test that the daemon correctly handles an abort request record.
      */
     public function testAbortRequestRecord()
     {
@@ -233,7 +234,7 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * Test that the daemon correctly handles an unexpected abort request record
+     * Test that the daemon correctly handles an unexpected abort request record.
      */
     public function testUnexpectedAbortRequestRecord()
     {
@@ -253,8 +254,8 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
             [
                 'level'   => 'error',
                 'message' => 'Unexpected FCG_ABORT_REQUEST record',
-                'context' => []
-            ]
+                'context' => [],
+            ],
         ];
         $this->assertEquals($expectedLogMessages, $context['logger']->getMessages());
 
@@ -263,7 +264,7 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * Test that the daemon correctly handles an unexpected record
+     * Test that the daemon correctly handles an unexpected record.
      */
     public function testUnexpectedRecord()
     {
@@ -282,9 +283,9 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
         $expectedLogMessages = [
             [
                 'level'   => 'error',
-                'message' => 'Unexpected packet of unkown type: ' . DaemonInterface::FCGI_STDOUT,
-                'context' => []
-            ]
+                'message' => 'Unexpected packet of unkown type: '.DaemonInterface::FCGI_STDOUT,
+                'context' => [],
+            ],
         ];
         $this->assertEquals($expectedLogMessages, $context['logger']->getMessages());
 
@@ -294,7 +295,7 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
 
     /**
      * Test that the daemon throws an error if a begin request record is
-     * received with the same id as an ongoing request
+     * received with the same id as an ongoing request.
      */
     public function testUnexpectedBeginRequestRecord()
     {
@@ -315,8 +316,8 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
             [
                 'level'   => 'error',
                 'message' => 'Unexpected FCGI_BEGIN_REQUEST record',
-                'context' => []
-            ]
+                'context' => [],
+            ],
         ];
 
         $this->assertEquals($expectedLogMessages, $context['logger']->getMessages());
@@ -327,7 +328,7 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
 
     /**
      * Test that the daemon throws an error if a stdin record is received for
-     * an unknown request id
+     * an unknown request id.
      */
     public function testUnexpectedStdinRecord()
     {
@@ -347,8 +348,8 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
             [
                 'level'   => 'error',
                 'message' => 'Unexpected FCGI_STDIN record',
-                'context' => []
-            ]
+                'context' => [],
+            ],
         ];
         $this->assertEquals($expectedLogMessages, $context['logger']->getMessages());
 
@@ -358,7 +359,7 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
 
     /**
      * Test that the daemon throws an error if a params record is received for
-     * an unknown request id
+     * an unknown request id.
      */
     public function testUnexpectedParamsRecord()
     {
@@ -378,8 +379,8 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
             [
                 'level'   => 'error',
                 'message' => 'Unexpected FCGI_PARAMS record',
-                'context' => []
-            ]
+                'context' => [],
+            ],
         ];
         $this->assertEquals($expectedLogMessages, $context['logger']->getMessages());
 
@@ -388,7 +389,7 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * Test that the daemon responds correctly to a non-responder role
+     * Test that the daemon responds correctly to a non-responder role.
      */
     public function testUnknownRole()
     {

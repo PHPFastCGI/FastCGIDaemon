@@ -12,16 +12,17 @@ class DaemonFactoryTest extends \PHPUnit_Framework_TestCase
 {
     /**
      * Extract a property from a class using reflection API.
-     * 
+     *
      * @param object $object
      * @param string $property
-     * 
+     *
      * @return mixed
      */
     protected function getObjectProperty($object, $property)
     {
         $reflectionProperty = new \ReflectionProperty(get_class($object), $property);
         $reflectionProperty->setAccessible(true);
+
         return $reflectionProperty->getValue($object);
     }
 

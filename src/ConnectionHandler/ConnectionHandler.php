@@ -108,7 +108,7 @@ class ConnectionHandler implements LoggerAwareInterface
 
     /**
      * Read a record from the connection.
-     * 
+     *
      * @return array|null The record that has been read
      */
     protected function readRecord()
@@ -142,7 +142,7 @@ class ConnectionHandler implements LoggerAwareInterface
 
     /**
      * Write a record to the connection.
-     * 
+     *
      * @param int    $requestId The request id to write to
      * @param int    $type      The type of record
      * @param string $content   The content of the record
@@ -162,7 +162,7 @@ class ConnectionHandler implements LoggerAwareInterface
 
     /**
      * Write a response to the connection as FCGI_STDOUT records.
-     * 
+     *
      * @param int             $requestId  The request id to write to
      * @param string          $headerData The header data to write (including terminating CRLFCRLF)
      * @param StreamInterface $stream     The stream to write
@@ -194,7 +194,7 @@ class ConnectionHandler implements LoggerAwareInterface
     /**
      * End the request by writing an FCGI_END_REQUEST record and then removing
      * the request from memory and closing the connection if necessary.
-     * 
+     *
      * @param int $requestId      The request id to end
      * @param int $appStatus      The application status to declare
      * @param int $protocolStatus The protocol status to declare
@@ -220,9 +220,9 @@ class ConnectionHandler implements LoggerAwareInterface
 
     /**
      * Process a record.
-     * 
+     *
      * @param array $record The record that has been read
-     * 
+     *
      * @throws ProtocolException If the client sends an unexpected record.
      */
     protected function processRecord(array $record)
@@ -249,16 +249,16 @@ class ConnectionHandler implements LoggerAwareInterface
                 break;
 
             default:
-                throw new ProtocolException('Unexpected packet of unkown type: ' . $record['type']);
+                throw new ProtocolException('Unexpected packet of unkown type: '.$record['type']);
         }
     }
 
     /**
      * Process a FCGI_BEGIN_REQUEST record.
-     * 
+     *
      * @param int    $requestId   The request id sending the record
      * @param string $contentData The content of the record
-     * 
+     *
      * @throws ProtocolException If the FCGI_BEGIN_REQUEST record is unexpected
      */
     protected function processBeginRequestRecord($requestId, $contentData)
@@ -285,10 +285,10 @@ class ConnectionHandler implements LoggerAwareInterface
 
     /**
      * Process a FCGI_PARAMS record.
-     * 
+     *
      * @param int    $requestId   The request id sending the record
      * @param string $contentData The content of the record
-     * 
+     *
      * @throws ProtocolException If the FCGI_PARAMS record is unexpected
      */
     protected function processParamsRecord($requestId, $contentData)
@@ -336,10 +336,10 @@ class ConnectionHandler implements LoggerAwareInterface
 
     /**
      * Process a FCGI_STDIN record.
-     * 
+     *
      * @param int    $requestId   The request id sending the record
      * @param string $contentData The content of the record
-     * 
+     *
      * @throws ProtocolException If the FCGI_STDIN record is unexpected
      */
     protected function processStdinRecord($requestId, $contentData)
@@ -359,9 +359,9 @@ class ConnectionHandler implements LoggerAwareInterface
 
     /**
      * Process a FCGI_ABORT_REQUEST record.
-     * 
+     *
      * @param int $requestId The request id sending the record
-     * 
+     *
      * @throws ProtocolException If the FCGI_ABORT_REQUEST record is unexpected
      */
     protected function processAbortRequestRecord($requestId)
@@ -375,9 +375,9 @@ class ConnectionHandler implements LoggerAwareInterface
 
     /**
      * Dispatches a request to the kernel.
-     * 
+     *
      * @param int $requestId The request id that is ready to dispatch
-     * 
+     *
      * @throws DaemonException If there is an error dispatching the request
      */
     protected function dispatchRequest($requestId)
@@ -401,7 +401,7 @@ class ConnectionHandler implements LoggerAwareInterface
 
     /**
      * Sends the response to the client.
-     * 
+     *
      * @param int               $requestId The request id to respond to
      * @param ResponseInterface $response  The PSR-7 HTTP response message
      */
@@ -410,7 +410,7 @@ class ConnectionHandler implements LoggerAwareInterface
         $headerData = "Status: {$response->getStatusCode()} {$response->getReasonPhrase()}\r\n";
 
         foreach ($response->getHeaders() as $name => $values) {
-            $headerData .= $name . ': ' . implode(', ', $values) ."\r\n";
+            $headerData .= $name.': '.implode(', ', $values)."\r\n";
         }
 
         $headerData .= "\r\n";

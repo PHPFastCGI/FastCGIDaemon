@@ -24,7 +24,7 @@ class DaemonRunCommand extends Command
 
     /**
      * Constructor.
-     * 
+     *
      * @param string                   $name          The name of the daemon run command
      * @param string                   $description   The description of the daemon run command
      * @param DaemonFactoryInterface   $daemonFactory The factory to use to create the daemon

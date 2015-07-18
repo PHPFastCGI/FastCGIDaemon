@@ -20,8 +20,8 @@ class InMemoryLogger extends AbstractLogger
     }
 
     /**
-     * Get the logged messages
-     * 
+     * Get the logged messages.
+     *
      * @return array
      */
     public function getMessages()
