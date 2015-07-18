@@ -133,6 +133,16 @@ class ConnectionWrapper
     }
 
     /**
+     * Write an abort request record.
+     * 
+     * @param int $requestId
+     */
+    public function writeAbortRequestRecord($requestId)
+    {
+        $this->writeRecord(DaemonInterface::FCGI_ABORT_REQUEST, $requestId);
+    }
+
+    /**
      * Write a stdin record.
      * 
      * @param int    $requestId
