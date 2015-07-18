@@ -12,6 +12,8 @@ class DaemonFactory implements DaemonFactoryInterface
 {
     /**
      * {@inheritdoc}
+     * 
+     * @codeCoverageIgnore
      */
     public function createDaemon($kernel)
     {
@@ -22,6 +24,8 @@ class DaemonFactory implements DaemonFactoryInterface
 
     /**
      * {@inheritdoc}
+     * 
+     * @codeCoverageIgnore
      */
     public function createTcpDaemon($kernel, $port, $host = 'localhost')
     {
