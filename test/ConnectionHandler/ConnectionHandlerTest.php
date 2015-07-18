@@ -2,13 +2,16 @@
 
 namespace PHPFastCGI\Test\FastCGIDaemon\Connection;
 
+use PHPFastCGI\FastCGIDaemon\CallbackWrapper;
 use PHPFastCGI\FastCGIDaemon\Connection\StreamSocketConnection;
 use PHPFastCGI\FastCGIDaemon\ConnectionHandler\ConnectionHandler;
 use PHPFastCGI\FastCGIDaemon\DaemonInterface;
 use PHPFastCGI\Test\FastCGIDaemon\Client\ConnectionWrapper;
+use PHPFastCGI\Test\FastCGIDaemon\Logger\InMemoryLogger;
 use PHPFastCGI\Test\FastCGIDaemon\Mock\KernelMock;
-use Zend\Diactoros\ServerRequest;
+use Psr\Http\Message\ServerRequestInterface;
 use Zend\Diactoros\Response;
+use Zend\Diactoros\ServerRequest;
 
 /**
  * Tests that the connection handler is correctly handling FastCGI connections.
@@ -44,89 +47,113 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * Create a testing context.
+     * 
+     * @param callable $callback
+     * @return array
+     */
+    protected function createTestingContext($callback = null)
+    {
+        if (null === $callback) {
+            $callback = function () {};
+        }
+
+        $sockets       = $this->createStreamSocketPair();
+        $clientWrapper = new ConnectionWrapper($sockets[0]);
+        $connection    = new StreamSocketConnection($sockets[1]);
+        $handler       = new ConnectionHandler(new CallbackWrapper($callback), $connection);
+        $logger        = new InMemoryLogger();
+
+        $handler->setLogger($logger);
+
+        return [
+            'sockets'       => $sockets,
+            'clientWrapper' => $clientWrapper,
+            'connection'    => $connection,
+            'handler'       => $handler,
+            'logger'        => $logger,
+        ];
+    }
+
+    /**
      * Test that the daemon is correctly handling requests with large param
      * records and message bodies.
      */
-    public function testRequestLimits()
+    public function testLargeParamsAndBody()
     {
         // Set up body streams
-        $string = str_repeat('X', 100000);
-        $requestBodyStream  = $this->toStream($string);
-        $responseBodyStream = $this->toStream($string);
+        $body       = str_repeat('X', 100000);
+        $bodyStream = $this->toStream($body);
 
-        // Set up kernel
+        // Set up test request values
         $serverParams = [
             str_repeat('A', 10)  => str_repeat('b', 127),
             str_repeat('C', 128) => str_repeat('d', 256),
             str_repeat('E', 520) => str_repeat('f', 50),
         ];
 
-        $expectedRequest = new ServerRequest($serverParams, [], null, null, $requestBodyStream);
-        $response        = new Response($responseBodyStream, 200, ['Header-1: foo', 'Header-2: bar']);
-        $kernelMock      = new KernelMock($this, $expectedRequest, $response);
+        $response = new Response($bodyStream, 200, ['Header-1' => 'foo', 'Header-2' => 'bar']);
 
-        // Create connections, set up client wrapper and daemon handler
-        $sockets       = $this->createStreamSocketPair();
-        $clientWrapper = new ConnectionWrapper($sockets[0]);
-        $connection    = new StreamSocketConnection($sockets[1]);
-        $handler       = new ConnectionHandler($kernelMock, $connection);
+        // Create test environment
+        $context = $this->createTestingContext(function (ServerRequestInterface $request) use ($serverParams, $body, $response) {
+            $this->assertEquals($serverParams, $request->getServerParams());
+            $this->assertEquals($body, (string) $request->getBody());
+
+            return $response;
+        });
 
         // Send request
         $requestId = 5;
 
-        $clientWrapper->writeBeginRequestRecord($requestId, DaemonInterface::FCGI_RESPONDER, 0);
+        $context['clientWrapper']->writeBeginRequestRecord($requestId, DaemonInterface::FCGI_RESPONDER, 0);
 
-        foreach ($expectedRequest->getServerParams() as $name => $value) {
-            $clientWrapper->writeParamsRecord($requestId, $name, $value);
+        foreach ($serverParams as $name => $value) {
+            $context['clientWrapper']->writeParamsRecord($requestId, $name, $value);
         }
 
-        $clientWrapper->writeParamsRecord($requestId);
+        $context['clientWrapper']->writeParamsRecord($requestId);
 
-        $requestBody = $expectedRequest->getBody();
-
-        $chunks = str_split($requestBody, 65535);
+        $chunks = str_split($body, 65535);
 
         foreach ($chunks as $chunk) {
-            $clientWrapper->writeStdinRecord($requestId, $chunk);
+            $context['clientWrapper']->writeStdinRecord($requestId, $chunk);
         }
 
-        $clientWrapper->writeStdinRecord($requestId);
+        $context['clientWrapper']->writeStdinRecord($requestId);
 
         // Trigger Handler
         do {
-            $handler->ready();
-        } while (!$connection->isClosed());
+            $context['handler']->ready();
+        } while (!$context['connection']->isClosed());
 
         // Receive response
-        $responseBody = '';
+        $rawResponse = '';
 
         do {
-            $record = $clientWrapper->readRecord($this);
+            $record = $context['clientWrapper']->readRecord($this);
 
             $this->assertEquals($requestId, $record['requestId']);
 
             if (DaemonInterface::FCGI_STDOUT === $record['type']) {
-                $responseBody .= $record['contentData'];
+                $rawResponse .= $record['contentData'];
             }
         } while (DaemonInterface::FCGI_END_REQUEST !== $record['type']);
 
-        $expectedResponseBody = 'Status: ' . $response->getStatusCode() . ' ' . $response->getReasonPhrase() . "\r\n";
+        $expectedRawResponse = 'Status: ' . $response->getStatusCode() . ' ' . $response->getReasonPhrase() . "\r\n";
 
         foreach ($response->getHeaders() as $name => $values) {
-            $expectedResponseBody .= $name . ': ' . implode(', ', $values) . "\r\n";
+            $expectedRawResponse .= $name . ': ' . implode(', ', $values) . "\r\n";
         }
 
-        $expectedResponseBody .= "\r\n" . (string) $response->getBody();
+        $expectedRawResponse .= "\r\n" . $body;
 
         // Check response
-        $this->assertEquals(strlen($expectedResponseBody), strlen($responseBody));
-        $this->assertEquals($expectedResponseBody, $responseBody);
+        $this->assertEquals(strlen($expectedRawResponse), strlen($rawResponse));
+        $this->assertEquals($expectedRawResponse, $rawResponse);
 
         // Clean up
-        fclose($requestBodyStream);
-        fclose($responseBodyStream);
-
-        fclose($sockets[0]);
+        fclose($bodyStream);
+        fclose($context['sockets'][0]);
     }
 
     /**
@@ -135,46 +162,256 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
      */
     public function testClosedConnection()
     {
-        $sockets    = $this->createStreamSocketPair();
-        $connection = new StreamSocketConnection($sockets[1]);
-
-        // Set up handler
-        $kernelMock = $this->getMockBuilder('PHPFastCGI\FastCGIDaemon\KernelInterface')->getMock();
-        $handler    = new ConnectionHandler($kernelMock, $connection);
+        $context = $this->createTestingContext();
 
         // Close the client connection
-        fclose($sockets[0]);
+        fclose($context['sockets'][0]);
 
         // Run the handler
-        $handler->ready();
+        $context['handler']->ready();
 
         // Check daemon has closed server side connection
-        $this->assertTrue($connection->isClosed());
+        $this->assertTrue($context['connection']->isClosed());
     }
 
     /**
-     * Test that the daemon detects when the client does not abide by the
-     * protocol and closes the connection accordingly.
+     * Test that the daemon correctly handles a kernel exception
      */
-    public function testInvalidProtocol()
+    public function testKernelExceptionHandling()
     {
-        // Mock the kernel (just needs to pass as a parameter)
-        $kernelMock = $this->getMockBuilder('PHPFastCGI\FastCGIDaemon\KernelInterface')->getMock();
+        // Create a broken kernel that does not return a valid response (triggering an exception)
+        $context = $this->createTestingContext(function () { return false; });
 
-        // Create connections, client side wrapper and daemon side handler
-        $sockets       = $this->createStreamSocketPair();
-        $clientWrapper = new ConnectionWrapper($sockets[0]);
-        $connection    = new StreamSocketConnection($sockets[1]);
-        $handler       = new ConnectionHandler($kernelMock, $connection);
-
-        // Write an unexpected record and close the connection
-        $clientWrapper->writeParamsRecord(0);
-        fclose($sockets[0]);
+        // Write a simple request
+        $context['clientWrapper']->writeBeginRequestRecord(0, DaemonInterface::FCGI_RESPONDER, 0);
+        $context['clientWrapper']->writeParamsRecord(0);
+        $context['clientWrapper']->writeStdinRecord(0);
 
         // Run the handler
-        $handler->ready();
+        $context['handler']->ready();
 
         // Check daemon has closed server side connection
-        $this->assertTrue($connection->isClosed());
+        $this->assertTrue($context['connection']->isClosed());
+
+        // Check the logging has worked
+        $expectedLogMessages = [
+            [
+                'level'   => 'error',
+                'message' => 'Kernel must return a PSR-7 HTTP response message',
+                'context' => []
+            ]
+        ];
+        $this->assertEquals($expectedLogMessages, $context['logger']->getMessages());
+
+        // Close the client side socket
+        fclose($context['sockets'][0]);
+    }
+
+    /**
+     * Test that the daemon correctly handles an abort request record
+     */
+    public function testAbortRequestRecord()
+    {
+        $context = $this->createTestingContext();
+
+        // Write an abort request record and close the connection
+        $context['clientWrapper']->writeBeginRequestRecord(0, DaemonInterface::FCGI_RESPONDER, 0);
+        $context['clientWrapper']->writeAbortRequestRecord(0);
+
+        // Run the handler
+        $context['handler']->ready();
+
+        // The application should respond with an end request record
+        $record = $context['clientWrapper']->readRecord($this);
+        $this->assertEquals(DaemonInterface::FCGI_END_REQUEST, $record['type']);
+
+        // Check daemon has closed server side connection
+        $this->assertTrue($context['connection']->isClosed());
+
+        // Close the client side socket
+        fclose($context['sockets'][0]);
+    }
+
+    /**
+     * Test that the daemon correctly handles an unexpected abort request record
+     */
+    public function testUnexpectedAbortRequestRecord()
+    {
+        $context = $this->createTestingContext();
+
+        // Write an abort request record without beginning a request
+        $context['clientWrapper']->writeAbortRequestRecord(0);
+
+        // Run the handler
+        $context['handler']->ready();
+
+        // Check daemon has closed server side connection
+        $this->assertTrue($context['connection']->isClosed());
+
+        // Check the logging has worked
+        $expectedLogMessages = [
+            [
+                'level'   => 'error',
+                'message' => 'Unexpected FCG_ABORT_REQUEST record',
+                'context' => []
+            ]
+        ];
+        $this->assertEquals($expectedLogMessages, $context['logger']->getMessages());
+
+        // Close the client side socket
+        fclose($context['sockets'][0]);
+    }
+
+    /**
+     * Test that the daemon correctly handles an unexpected record
+     */
+    public function testUnexpectedRecord()
+    {
+        $context = $this->createTestingContext();
+
+        // Write a record with a type that makes no sense (application doesn't receive stdout)
+        $context['clientWrapper']->writeRecord(DaemonInterface::FCGI_STDOUT, 0);
+
+        // Run the handler
+        $context['handler']->ready();
+
+        // Check daemon has closed server side connection
+        $this->assertTrue($context['connection']->isClosed());
+
+        // Check the logging has worked
+        $expectedLogMessages = [
+            [
+                'level'   => 'error',
+                'message' => 'Unexpected packet of unkown type: ' . DaemonInterface::FCGI_STDOUT,
+                'context' => []
+            ]
+        ];
+        $this->assertEquals($expectedLogMessages, $context['logger']->getMessages());
+
+        // Close the client side socket
+        fclose($context['sockets'][0]);
+    }
+
+    /**
+     * Test that the daemon throws an error if a begin request record is
+     * received with the same id as an ongoing request
+     */
+    public function testUnexpectedBeginRequestRecord()
+    {
+        $context = $this->createTestingContext();
+
+        // Write two begin request records with the same id
+        $context['clientWrapper']->writeBeginRequestRecord(0, DaemonInterface::FCGI_RESPONDER, 0);
+        $context['clientWrapper']->writeBeginRequestRecord(0, DaemonInterface::FCGI_RESPONDER, 0);
+
+        // Run the handler
+        $context['handler']->ready();
+
+        // Check daemon has closed server side connection
+        $this->assertTrue($context['connection']->isClosed());
+
+        // Check the logging has worked
+        $expectedLogMessages = [
+            [
+                'level'   => 'error',
+                'message' => 'Unexpected FCGI_BEGIN_REQUEST record',
+                'context' => []
+            ]
+        ];
+
+        $this->assertEquals($expectedLogMessages, $context['logger']->getMessages());
+
+        // Close the client side socket
+        fclose($context['sockets'][0]);
+    }
+
+    /**
+     * Test that the daemon throws an error if a stdin record is received for
+     * an unknown request id
+     */
+    public function testUnexpectedStdinRecord()
+    {
+        $context = $this->createTestingContext();
+
+        // Write an unexpected record and close the connection
+        $context['clientWrapper']->writeStdinRecord(0);
+
+        // Run the handler
+        $context['handler']->ready();
+
+        // Check daemon has closed server side connection
+        $this->assertTrue($context['connection']->isClosed());
+
+        // Check the logging has worked
+        $expectedLogMessages = [
+            [
+                'level'   => 'error',
+                'message' => 'Unexpected FCGI_STDIN record',
+                'context' => []
+            ]
+        ];
+        $this->assertEquals($expectedLogMessages, $context['logger']->getMessages());
+
+        // Close the client side socket
+        fclose($context['sockets'][0]);
+    }
+
+    /**
+     * Test that the daemon throws an error if a params record is received for
+     * an unknown request id
+     */
+    public function testUnexpectedParamsRecord()
+    {
+        $context = $this->createTestingContext();
+
+        // Write an unexpected record and close the connection
+        $context['clientWrapper']->writeParamsRecord(0);
+
+        // Run the handler
+        $context['handler']->ready();
+
+        // Check daemon has closed server side connection
+        $this->assertTrue($context['connection']->isClosed());
+
+        // Check the logging has worked
+        $expectedLogMessages = [
+            [
+                'level'   => 'error',
+                'message' => 'Unexpected FCGI_PARAMS record',
+                'context' => []
+            ]
+        ];
+        $this->assertEquals($expectedLogMessages, $context['logger']->getMessages());
+
+        // Close the client side socket
+        fclose($context['sockets'][0]);
+    }
+
+    /**
+     * Test that the daemon responds correctly to a non-responder role
+     */
+    public function testUnknownRole()
+    {
+        $context = $this->createTestingContext();
+
+        // Write an unexpected record and close the connection
+        $context['clientWrapper']->writeBeginRequestRecord(0, DaemonInterface::FCGI_FILTER, 0);
+
+        // Run the handler
+        $context['handler']->ready();
+
+        // The application should respond with an end request record
+        $record = $context['clientWrapper']->readRecord($this);
+        $this->assertEquals(DaemonInterface::FCGI_END_REQUEST,  $record['type']);
+
+        // The application should declare an unknown role protocol status
+        $content = unpack('NappStatus/CprotocolStatus/x3', $record['contentData']);
+        $this->assertEquals(DaemonInterface::FCGI_UNKNOWN_ROLE, $content['protocolStatus']);
+
+        // Check daemon has closed server side connection
+        $this->assertTrue($context['connection']->isClosed());
+
+        // Close the client side socket
+        fclose($context['sockets'][0]);
     }
 }

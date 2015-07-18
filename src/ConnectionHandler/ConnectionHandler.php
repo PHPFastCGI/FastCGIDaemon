@@ -76,13 +76,6 @@ class ConnectionHandler implements LoggerAwareInterface
             $data = $this->connection->read(self::READ_LENGTH);
             $dataLength = strlen($data);
 
-            // Connection has been closed
-            if (0 === $dataLength) {
-                $this->connection->close();
-
-                return;
-            }
-
             $this->buffer       .= $data;
             $this->bufferLength += $dataLength;
 
@@ -211,12 +204,16 @@ class ConnectionHandler implements LoggerAwareInterface
         $content = pack('NCx3', $appStatus, $protocolStatus);
         $this->writeRecord($requestId, DaemonInterface::FCGI_END_REQUEST, $content);
 
-        $keepAlive = $this->requests[$requestId]['keepAlive'];
+        if (isset($this->requests[$requestId])) {
+            $keepAlive = $this->requests[$requestId]['keepAlive'];
 
-        $this->requests[$requestId]['builder']->clean();
-        unset($this->requests[$requestId]);
+            $this->requests[$requestId]['builder']->clean();
+            unset($this->requests[$requestId]);
 
-        if (!$keepAlive) {
+            if (!$keepAlive) {
+                $this->close();
+            }
+        } else {
             $this->close();
         }
     }
@@ -252,7 +249,7 @@ class ConnectionHandler implements LoggerAwareInterface
                 break;
 
             default:
-                throw new ProtocolException('Unexpected packet of unkown type: '.$record['type']);
+                throw new ProtocolException('Unexpected packet of unkown type: ' . $record['type']);
         }
     }
 
@@ -277,11 +274,7 @@ class ConnectionHandler implements LoggerAwareInterface
         $keepAlive = DaemonInterface::FCGI_KEEP_CONNECTION & $content['flags'];
 
         if (DaemonInterface::FCGI_RESPONDER !== $content['role']) {
-            $this->writeEndRequestRecord($requestId, 0, DaemonInterface::FCGI_UNKNOWN_ROLE);
-
-            if (!$keepAlive) {
-                $this->connection->close();
-            }
+            $this->endRequest($requestId, 0, DaemonInterface::FCGI_UNKNOWN_ROLE);
         } else {
             $this->requests[$requestId] = [
                 'keepAlive' => $keepAlive,
