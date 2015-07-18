@@ -2,14 +2,14 @@
 
 namespace PHPFastCGI\FastCGIDaemon\Connection;
 
+use PHPFastCGI\FastCGIDaemon\Exception\ConnectionException;
+
 /**
  * The default implementation of the ConnectionInterface using stream socket
  * resources.
  */
 class StreamSocketConnection implements ConnectionInterface
 {
-    use StreamSocketExceptionTrait;
-
     /**
      * @var resource
      */
@@ -32,21 +32,35 @@ class StreamSocketConnection implements ConnectionInterface
     }
 
     /**
+     * Creates a formatted exception from the last error that occurecd.
+     * 
+     * @param string $function The function that failed
+     * 
+     * @return ConnectionException
+     */
+    protected function createExceptionFromLastError($function)
+    {
+        $this->close();
+
+        return new ConnectionException($function . ' failed');
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function read($length)
     {
         if ($this->isClosed()) {
-            throw new \Exception('Connection has been closed');
+            throw new ConnectionException('Connection has been closed');
         }
 
         if (0 === $length) {
             return true;
         }
 
-        $buffer = fread($this->socket, $length);
+        $buffer = @fread($this->socket, $length);
 
-        if (false === $buffer) {
+        if (empty($buffer)) {
             throw $this->createExceptionFromLastError('fread');
         }
 
@@ -59,10 +73,10 @@ class StreamSocketConnection implements ConnectionInterface
     public function write($buffer)
     {
         if ($this->isClosed()) {
-            throw new \Exception('Connection has been closed');
+            throw new ConnectionException('Connection has been closed');
         }
 
-        if (false === fwrite($this->socket, $buffer)) {
+        if (false == @fwrite($this->socket, $buffer)) {
             throw $this->createExceptionFromLastError('fwrite');
         }
     }

@@ -15,7 +15,6 @@ use Psr\Log\NullLogger;
  */
 class StreamSocketConnectionPool implements ConnectionPoolInterface, LoggerAwareInterface
 {
-    use StreamSocketExceptionTrait;
     use LoggerAwareTrait;
 
     /**
@@ -64,8 +63,7 @@ class StreamSocketConnectionPool implements ConnectionPoolInterface, LoggerAware
         $timeoutLoopSeconds      = (int) floor($timeoutLoop);
         $timeoutLoopMicroseconds = (int) (($timeoutLoop - $timeoutLoopSeconds) * 1000000);
 
-        $write  = [];
-        $except = [];
+        $write = $except = [];
 
         while (1) {
             $read = array_merge(['pool' => $this->serverSocket], $this->clientSockets);
@@ -74,7 +72,7 @@ class StreamSocketConnectionPool implements ConnectionPoolInterface, LoggerAware
                 $lastError = error_get_last();
      
                 if (null === $lastError) {
-                    $this->logger->emergency('stream_select() returned false');
+                    $this->logger->emergency('stream_select failed');
                 } else {
                     $this->logger->emergency($lastError['message']);
                 }

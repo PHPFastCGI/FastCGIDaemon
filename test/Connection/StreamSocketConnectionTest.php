@@ -3,6 +3,7 @@
 namespace PHPFastCGI\Test\FastCGIDaemon\Connection;
 
 use PHPFastCGI\FastCGIDaemon\Connection\StreamSocketConnection;
+use PHPFastCGI\FastCGIDaemon\Exception\ConnectionException;
 
 /**
  * Test to ensure that the StreamSocketConnection class can read, write and
@@ -35,5 +36,92 @@ class StreamSocketConnectionTest extends \PHPUnit_Framework_TestCase
         $streamSocket2->close();
         $this->assertTrue($streamSocket1->isClosed());
         $this->assertTrue($streamSocket2->isClosed());
+    }
+
+    /**
+     * Tests that the StreamSocketConnection class can handle errors.
+     */
+    public function testClosedConnections()
+    {
+        // Create sockets and connection classes
+        $sockets = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, STREAM_IPPROTO_IP);
+
+        stream_set_blocking($sockets[0], 0);
+        stream_set_blocking($sockets[1], 0);
+
+        $streamSocket1 = new StreamSocketConnection($sockets[0]);
+        $streamSocket2 = new StreamSocketConnection($sockets[1]);
+
+        // Check reading nothing
+        $this->assertEquals(true, $streamSocket2->read(0));
+
+        $streamSocket1->close();
+        $streamSocket2->close();
+
+        try {
+            $streamSocket1->read(0);
+            $this->fail('Should have thrown exception');
+        } catch (ConnectionException $exception) {
+            $this->assertEquals('Connection has been closed', $exception->getMessage());
+        }
+
+        try {
+            $streamSocket2->write('hello');
+            $this->fail('Should have thrown exception');
+        } catch (ConnectionException $exception) {
+            $this->assertEquals('Connection has been closed', $exception->getMessage());
+        }
+    }
+
+    /**
+     * Tests that the StreamSocketConnection class can handle errors.
+     */
+    public function testFailedWrite()
+    {
+        // Create sockets and connection classes
+        $sockets = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, STREAM_IPPROTO_IP);
+
+        stream_set_blocking($sockets[0], 0);
+        stream_set_blocking($sockets[1], 0);
+
+        $streamSocket1 = new StreamSocketConnection($sockets[0]);
+        $streamSocket2 = new StreamSocketConnection($sockets[1]);
+
+        $streamSocket2->close();
+
+        try {
+            $streamSocket1->write('hello');
+            $this->fail('Should have thrown exception');
+        } catch (ConnectionException $exception) {
+            $this->assertEquals('fwrite failed', $exception->getMessage());
+        }
+
+        $streamSocket1->close();
+    }
+
+    /**
+     * Tests that the StreamSocketConnection class can handle errors.
+     */
+    public function testFailedRead()
+    {
+        // Create sockets and connection classes
+        $sockets = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, STREAM_IPPROTO_IP);
+
+        stream_set_blocking($sockets[0], 0);
+        stream_set_blocking($sockets[1], 0);
+
+        $streamSocket1 = new StreamSocketConnection($sockets[0]);
+        $streamSocket2 = new StreamSocketConnection($sockets[1]);
+
+        $streamSocket2->close();
+
+        try {
+            $streamSocket1->read(5);
+            $this->fail('Should have thrown exception');
+        } catch (ConnectionException $exception) {
+            $this->assertEquals('fread failed', $exception->getMessage());
+        }
+
+        $streamSocket1->close();
     }
 }
