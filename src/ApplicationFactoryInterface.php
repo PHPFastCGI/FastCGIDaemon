@@ -14,18 +14,22 @@ interface ApplicationFactoryInterface
     /**
      * Create a Symfony console application
      *
-     * @param KernelInterface|callable $kernel The daemon's kernel
+     * @param KernelInterface|callable $kernel             The kernel to use
+     * @param string                   $commandName        The name of the daemon run command
+     * @param string                   $commandDescription The description of the daemon run command
      *
      * @return Application The Symfony console application
      */
-    public function createApplication($kernel);
+    public function createApplication($kernel, $commandName = null, $commandDescription = null);
 
     /**
      * Create a Symfony console command
      *
-     * @param KernelInterface|callable $kernel The daemon's kernel
+     * @param KernelInterface|callable $kernel             The kernel to use
+     * @param string                   $commandName        The name of the daemon run command
+     * @param string                   $commandDescription The description of the daemon run command
      *
      * @return Command The Symfony console command
      */
-    public function createCommand($kernel);
+    public function createCommand($kernel, $commandName = null, $commandDescription = null);
 }
