@@ -19,6 +19,10 @@ class DaemonFactory implements DaemonFactoryInterface
     {
         $socket = fopen('php://fd/'.DaemonInterface::FCGI_LISTENSOCK_FILENO, 'r');
 
+        if (false === $socket) {
+            throw new \RuntimeException('Could not open FCGI_LISTENSOCK_FILENO');
+        }
+
         return $this->createDaemonFromStreamSocket($kernel, $socket);
     }
 
@@ -29,7 +33,12 @@ class DaemonFactory implements DaemonFactoryInterface
      */
     public function createTcpDaemon($kernel, $port, $host = 'localhost')
     {
-        $socket = stream_socket_server('tcp://'.$host.':'.$port);
+        $address = 'tcp://'.$host.':'.$port;
+        $socket  = stream_socket_server($address);
+
+        if (false === $socket) {
+            throw new \RuntimeException('Could not create stream socket server on: '.$address);
+        }
 
         return $this->createDaemonFromStreamSocket($kernel, $socket);
     }
