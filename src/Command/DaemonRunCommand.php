@@ -2,6 +2,7 @@
 
 namespace PHPFastCGI\FastCGIDaemon\Command;
 
+use PHPFastCGI\FastCGIDaemon\DaemonFactory;
 use PHPFastCGI\FastCGIDaemon\DaemonFactoryInterface;
 use PHPFastCGI\FastCGIDaemon\KernelInterface;
 use Symfony\Component\Console\Command\Command;
@@ -12,6 +13,9 @@ use Symfony\Component\Console\Logger\ConsoleLogger;
 
 class DaemonRunCommand extends Command
 {
+    const DEFAULT_NAME        = 'run';
+    const DEFAULT_DESCRIPTION = 'Run the FastCGI daemon';
+
     /**
      * @var DaemonFactoryInterface
      */
@@ -25,13 +29,17 @@ class DaemonRunCommand extends Command
     /**
      * Constructor.
      *
+     * @param KernelInterface|callable $kernel        The kernel to be given to the daemon
+     * @param DaemonFactoryInterface   $daemonFactory The factory to use to create the daemon
      * @param string                   $name          The name of the daemon run command
      * @param string                   $description   The description of the daemon run command
-     * @param DaemonFactoryInterface   $daemonFactory The factory to use to create the daemon
-     * @param KernelInterface|callable $kernel        The kernel to be given to the daemon
      */
-    public function __construct($name, $description, DaemonFactoryInterface $daemonFactory, $kernel)
+    public function __construct($kernel, DaemonFactoryInterface $daemonFactory = null, $name = null, $description = null)
     {
+        $daemonFactory = ($daemonFactory === null) ? new DaemonFactory         : $daemonFactory;
+        $name          = ($name          === null) ? self::DEFAULT_NAME        : $name;
+        $description   = ($description   === null) ? self::DEFAULT_DESCRIPTION : $description;
+
         parent::__construct($name);
 
         $this
