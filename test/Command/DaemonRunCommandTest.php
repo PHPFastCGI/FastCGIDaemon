@@ -20,7 +20,7 @@ class DaemonRunCommandTest extends \PHPUnit_Framework_TestCase
      */
     public function testInvalidArgumentException()
     {
-        new DaemonRunCommand('name', 'description', new DaemonFactory(), 'not a callable function');
+        new DaemonRunCommand('not a callable function');
     }
 
     /**
@@ -29,7 +29,7 @@ class DaemonRunCommandTest extends \PHPUnit_Framework_TestCase
      */
     public function testOptions()
     {
-        $command = new DaemonRunCommand('name', 'description', new DaemonFactory(), function () { });
+        $command = new DaemonRunCommand(function () { });
 
         $definition = $command->getDefinition();
 
@@ -48,7 +48,7 @@ class DaemonRunCommandTest extends \PHPUnit_Framework_TestCase
      */
     public function testInvalidOptions()
     {
-        $command = new DaemonRunCommand('name', 'description', new DaemonFactory(), function () { });
+        $command = new DaemonRunCommand(function () { });
 
         $input  = new ArrayInput(['--host' => '_']);
         $output = new NullOutput();
@@ -103,7 +103,7 @@ class DaemonRunCommandTest extends \PHPUnit_Framework_TestCase
             ->method('createDaemon')
             ->will($this->returnValue($mockDaemon));
 
-        $command = new DaemonRunCommand('name', 'description', $mockDaemonFactory, function () { });
+        $command = new DaemonRunCommand(function () { }, $mockDaemonFactory);
 
         $command->run($input, $output);
     }
@@ -130,7 +130,7 @@ class DaemonRunCommandTest extends \PHPUnit_Framework_TestCase
             ->with($this->equalTo($kernel), $this->equalTo($port), $this->equalTo($host))
             ->will($this->returnValue($mockDaemon));
 
-        $command = new DaemonRunCommand('name', 'description', $mockDaemonFactory, $kernel);
+        $command = new DaemonRunCommand($kernel, $mockDaemonFactory);
 
         $command->run($input, $output);
     }
@@ -156,7 +156,7 @@ class DaemonRunCommandTest extends \PHPUnit_Framework_TestCase
             ->with($this->equalTo($kernel), $this->equalTo($port), $this->equalTo('localhost'))
             ->will($this->returnValue($mockDaemon));
 
-        $command = new DaemonRunCommand('name', 'description', $mockDaemonFactory, $kernel);
+        $command = new DaemonRunCommand($kernel, $mockDaemonFactory);
 
         $command->run($input, $output);
     }

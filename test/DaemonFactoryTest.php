@@ -6,7 +6,7 @@ use PHPFastCGI\FastCGIDaemon\CallbackWrapper;
 use PHPFastCGI\FastCGIDaemon\DaemonFactory;
 
 /**
- * Tests the daemon.
+ * Tests the daemon factory.
  */
 class DaemonFactoryTest extends \PHPUnit_Framework_TestCase
 {
