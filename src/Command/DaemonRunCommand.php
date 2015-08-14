@@ -36,9 +36,9 @@ class DaemonRunCommand extends Command
      */
     public function __construct($kernel, DaemonFactoryInterface $daemonFactory = null, $name = null, $description = null)
     {
-        $daemonFactory = ($daemonFactory === null) ? new DaemonFactory         : $daemonFactory;
-        $name          = ($name          === null) ? self::DEFAULT_NAME        : $name;
-        $description   = ($description   === null) ? self::DEFAULT_DESCRIPTION : $description;
+        $daemonFactory = $daemonFactory ?: new DaemonFactory;
+        $name          = $name          ?: self::DEFAULT_NAME;
+        $description   = $description   ?: self::DEFAULT_DESCRIPTION;
 
         parent::__construct($name);
 
