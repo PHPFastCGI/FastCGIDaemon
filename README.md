@@ -27,31 +27,20 @@ Below is an example of a simple 'Hello, World!' FastCGI application in PHP.
 // Include the composer autoloader
 require_once dirname(__FILE__) . '/../vendor/autoload.php';
 
-use PHPFastCGI\FastCGIDaemon\Command\DaemonRunCommand;
-use PHPFastCGI\FastCGIDaemon\DaemonFactory;
+use PHPFastCGI\FastCGIDaemon\ApplicationFactory;
 use Psr\Http\Message\ServerRequestInterface;
-use Symfony\Component\Console\Application;
 use Zend\Diactoros\Response\HtmlResponse;
 
-// Create the dependencies for the DaemonRunCommand
-
-// Dependency 1: The daemon factory
-$daemonFactory = new DaemonFactory();
-
-// Dependency 2: A simple kernel. This is the core of your application
+// A simple kernel. This is the core of your application
 $kernel = function (ServerRequestInterface $request) {
     return new HtmlResponse('<h1>Hello, World!</h1>');
 };
 
-// Create an instance of DaemonRunCommand using the daemon factory and the kernel
-$command = new DaemonRunCommand('run', 'Run a FastCGI daemon', $daemonFactory, $kernel);
+// Create your Symfony console application using the factory
+$application = (new ApplicationFactory)->createApplication($kernel);
 
-// Create a symfony console application and add the command
-$consoleApplication = new Application();
-$consoleApplication->add($command);
-
-// Run the symfony console application
-$consoleApplication->run();
+// Run the Symfony console application
+$application->run();
 ```
 
 If you wish to configure your FastCGI application to work with the apache web server, you can use the apache FastCGI module to process manage your application.
