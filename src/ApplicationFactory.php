@@ -21,17 +21,13 @@ class ApplicationFactory implements ApplicationFactoryInterface
      */
     public function __construct(DaemonFactoryInterface $daemonFactory = null)
     {
-        if (null === $daemonFactory) {
-            $this->daemonFactory = new DaemonFactory;
-        } else {
-            $this->daemonFactory = $daemonFactory;
-        }
+        $this->daemonFactory = $daemonFactory;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function createApplication($kernel, $commandName = 'run', $commandDescription = 'Run a FastCGI daemon')
+    public function createApplication($kernel, $commandName = null, $commandDescription = null)
     {
         $command = $this->createCommand($kernel, $commandName, $commandDescription);
 
@@ -44,8 +40,8 @@ class ApplicationFactory implements ApplicationFactoryInterface
     /**
      * {@inheritdoc}
      */
-    public function createCommand($kernel, $commandName = 'run', $commandDescription = 'Run a FastCGI daemon')
+    public function createCommand($kernel, $commandName = null, $commandDescription = null)
     {
-        return new DaemonRunCommand($commandName, $commandDescription, $this->daemonFactory, $kernel);
+        return new DaemonRunCommand($kernel, $this->daemonFactory, $commandName, $commandDescription);
     }
 }
