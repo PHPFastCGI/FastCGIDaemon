@@ -2,3 +2,5 @@
 /build/
 /coverage/
 /example/
+/composer.lock
+
