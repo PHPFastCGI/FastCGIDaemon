@@ -15,7 +15,7 @@ interface ConnectionHandlerFactoryInterface
      *
      * @param ConnectionInterface $connection The connection to handle
      *
-     * @return SingleplexedConnectionHandlerInterface The connection handler
+     * @return ConnectionHandlerInterface The connection handler
      */
     public function createConnectionHandler(ConnectionInterface $connection);
 }
