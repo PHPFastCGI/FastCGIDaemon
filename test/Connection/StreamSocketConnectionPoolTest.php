@@ -15,9 +15,9 @@ use PHPFastCGI\Test\FastCGIDaemon\ConnectionHandler\CallableConnectionHandlerFac
 class StreamSocketConnectionPoolTest extends \PHPUnit_Framework_TestCase
 {
     /**
-     * Test something.
+     * Test basic connection pool.
      */
-    public function test()
+    public function testConnectionPool()
     {
         $address = 'tcp://localhost:7000';
 
