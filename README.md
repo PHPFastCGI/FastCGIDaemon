@@ -1,7 +1,6 @@
 # FastCGI Daemon
 
-![GitHub Issues](https://img.shields.io/github/issues/PHPFastCGI/FastCGIDaemon.svg)
-![GitHub Stars](https://img.shields.io/github/stars/PHPFastCGI/FastCGIDaemon.svg)
+![GitHub Stars](http://githubbadges.com/star.svg?user=PHPFastCGI&repo=FastCGIDaemon)
 ![GitHub License](https://img.shields.io/badge/license-GPLv2-blue.svg)
 [![Build Status](https://travis-ci.org/PHPFastCGI/FastCGIDaemon.svg?branch=master)](https://travis-ci.org/PHPFastCGI/FastCGIDaemon)
 [![Coverage Status](https://coveralls.io/repos/PHPFastCGI/FastCGIDaemon/badge.svg?branch=master)](https://coveralls.io/r/PHPFastCGI/FastCGIDaemon?branch=master)
