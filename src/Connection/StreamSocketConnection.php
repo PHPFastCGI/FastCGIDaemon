@@ -55,7 +55,7 @@ class StreamSocketConnection implements ConnectionInterface
         }
 
         if (0 === $length) {
-            return true;
+            return '';
         }
 
         $buffer = @fread($this->socket, $length);

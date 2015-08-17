@@ -53,7 +53,7 @@ class StreamSocketConnectionTest extends \PHPUnit_Framework_TestCase
         $streamSocket2 = new StreamSocketConnection($sockets[1]);
 
         // Check reading nothing
-        $this->assertEquals(true, $streamSocket2->read(0));
+        $this->assertEquals('', $streamSocket2->read(0));
 
         $streamSocket1->close();
         $streamSocket2->close();
