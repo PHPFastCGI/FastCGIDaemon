@@ -2,7 +2,11 @@
 
 namespace PHPFastCGI\Test\FastCGIDaemon;
 
+use PHPFastCGI\FastCGIDaemon\Connection\ConnectionInterface;
 use PHPFastCGI\FastCGIDaemon\Daemon;
+use PHPFastCGI\Test\FastCGIDaemon\Connection\CallableConnectionPool;
+use PHPFastCGI\Test\FastCGIDaemon\ConnectionHandler\CallableConnectionHandlerFactory;
+use PHPFastCGI\Test\FastCGIDaemon\Logger\InMemoryLogger;
 
 /**
  * Tests the daemon.
@@ -14,28 +18,37 @@ class DaemonTest extends \PHPUnit_Framework_TestCase
      */
     public function testRun()
     {
-        $mockConnectionHandlerFactory = $this
-            ->getMockBuilder('PHPFastCGI\\FastCGIDaemon\\ConnectionHandler\\ConnectionHandlerFactory')
-            ->disableOriginalConstructor()
-            ->setMethods(['setLogger'])
-            ->getMock();
+        $logger = new InMemoryLogger;
 
-        $mockConnectionHandlerFactory
-            ->expects($this->once())
-            ->method('setLogger');
+        // Create mock connection handler factory
+        $mockConnectionHandlerFactory = new CallableConnectionHandlerFactory(function () { });
 
-        $mockConnectionPool = $this
-            ->getMockBuilder('PHPFastCGI\\FastCGIDaemon\\Connection\\StreamSocketConnectionPool')
-            ->disableOriginalConstructor()
-            ->setMethods(['operate'])
-            ->getMock();
+        // Create mock connection pool
+        $connectionPoolCallback = function ($connectionHandlerFactory, $timeout) use ($mockConnectionHandlerFactory) {
+            $this->assertSame($mockConnectionHandlerFactory, $connectionHandlerFactory);
+            $this->assertEquals(5, $timeout);
 
-        $mockConnectionPool
-            ->expects($this->once())
-            ->method('operate')
-            ->with($this->equalTo($mockConnectionHandlerFactory), $this->equalTo(5));
+            throw new \RuntimeException('foo');
+        };
 
-        $daemon = new Daemon($mockConnectionPool, $mockConnectionHandlerFactory);
-        $daemon->run();
+        $mockConnectionPool = new CallableConnectionPool($connectionPoolCallback);
+
+        // Create daemon
+        $daemon = new Daemon($mockConnectionPool, $mockConnectionHandlerFactory, $logger);
+
+        // Test loggers have been set
+        $this->assertSame($logger, $mockConnectionHandlerFactory->getLogger());
+        $this->assertSame($logger, $mockConnectionPool->getLogger());
+
+        try {
+            $daemon->run();
+            $this->fail('Should not be reached');
+        } catch (\RuntimeException $exception) {
+            $this->assertEquals('foo', $exception->getMessage());
+
+            $messages = $logger->getMessages();
+            $this->assertEquals('emergency', $messages[0]['level']);
+            $this->assertEquals('foo',       $messages[0]['message']);
+        }
     }
 }

@@ -55,6 +55,18 @@ class Daemon implements DaemonInterface, LoggerAwareInterface
      */
     public function run()
     {
-        $this->connectionPool->operate($this->connectionHandlerFactory, 5);
+        try {
+            while (1) {
+                $this->connectionPool->operate($this->connectionHandlerFactory, 5);
+                // @codeCoverageIgnoreStart
+            }
+            // @codeCoverageIgnoreEnd
+        } catch (\RuntimeException $exception) {
+            $this->logger->emergency($exception->getMessage());
+            throw $exception;
+        }
+
+        // @codeCoverageIgnoreStart
     }
+    // @codeCoverageIgnoreEnd
 }
