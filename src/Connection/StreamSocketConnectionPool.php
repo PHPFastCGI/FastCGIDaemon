@@ -4,19 +4,13 @@ namespace PHPFastCGI\FastCGIDaemon\Connection;
 
 use PHPFastCGI\FastCGIDaemon\ConnectionHandler\ConnectionHandlerFactoryInterface;
 use PHPFastCGI\FastCGIDaemon\ConnectionHandler\ConnectionHandlerInterface;
-use Psr\Log\LoggerAwareInterface;
-use Psr\Log\LoggerAwareTrait;
-use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 
 /**
  * The default implementation of the ConnectionPoolInterface using stream
  * sockets.
  */
-class StreamSocketConnectionPool implements ConnectionPoolInterface, LoggerAwareInterface
+class StreamSocketConnectionPool implements ConnectionPoolInterface
 {
-    use LoggerAwareTrait;
-
     /**
      * @var resource
      */
@@ -39,14 +33,11 @@ class StreamSocketConnectionPool implements ConnectionPoolInterface, LoggerAware
 
     /**
      * Constructor.
-     *
-     * @param resource        $socket The stream socket to accept connections from
-     * @param LoggerInterface $logger A logger to use
+     * 
+     * @param resource $socket The stream socket to accept connections from
      */
-    public function __construct($socket, LoggerInterface $logger = null)
+    public function __construct($socket)
     {
-        $this->setLogger((null === $logger) ? new NullLogger() : $logger);
-
         stream_set_blocking($socket, 0);
 
         $this->serverSocket       = $socket;
@@ -65,31 +56,23 @@ class StreamSocketConnectionPool implements ConnectionPoolInterface, LoggerAware
 
         $write = $except = [];
 
-        while (1) {
-            $read = array_merge(['pool' => $this->serverSocket], $this->clientSockets);
+        $read = array_merge(['pool' => $this->serverSocket], $this->clientSockets);
 
-            if (false === stream_select($read, $write, $except, $timeoutLoopSeconds, $timeoutLoopMicroseconds)) {
-                $lastError = error_get_last();
-
-                if (null === $lastError) {
-                    $this->logger->emergency('stream_select failed');
-                } else {
-                    $this->logger->emergency($lastError['message']);
-                }
-
-                break;
-            }
-
-            foreach (array_keys($read) as $id) {
-                if ('pool' === $id) {
-                    $this->acceptConnection($connectionHandlerFactory);
-                } else {
-                    $this->connectionHandlers[$id]->ready();
-                }
-            }
-
-            $this->removeClosedConnections();
+        if (false === stream_select($read, $write, $except, $timeoutLoopSeconds, $timeoutLoopMicroseconds)) {
+            // @codeCoverageIgnoreStart
+            throw new \RuntimeException('stream_select failed');
+            // @codeCoverageIgnoreEnd
         }
+
+        foreach (array_keys($read) as $id) {
+            if ('pool' === $id) {
+                $this->acceptConnection($connectionHandlerFactory);
+            } else {
+                $this->connectionHandlers[$id]->ready();
+            }
+        }
+
+        $this->removeClosedConnections();
     }
 
     /**
