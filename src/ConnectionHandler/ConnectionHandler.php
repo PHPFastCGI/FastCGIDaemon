@@ -25,6 +25,11 @@ class ConnectionHandler implements LoggerAwareInterface
     const READ_LENGTH = 4096;
 
     /**
+     * @var bool
+     */
+    protected $shuttingDown;
+
+    /**
      * @var KernelInterface
      */
     protected $kernel;
@@ -60,6 +65,7 @@ class ConnectionHandler implements LoggerAwareInterface
     {
         $this->setLogger((null === $logger) ? new NullLogger() : $logger);
 
+        $this->shuttingDown = false;
         $this->kernel       = $kernel;
         $this->connection   = $connection;
         $this->requests     = [];
@@ -86,6 +92,16 @@ class ConnectionHandler implements LoggerAwareInterface
             $this->logger->error($exception->getMessage());
 
             $this->close();
+        }
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function shutdown()
+    {
+        foreach ($this->requests as &$request) {
+            $request['keepAlive'] = false;
         }
     }
 
@@ -265,6 +281,11 @@ class ConnectionHandler implements LoggerAwareInterface
     {
         if (isset($this->requests[$requestId])) {
             throw new ProtocolException('Unexpected FCGI_BEGIN_REQUEST record');
+        }
+
+        if ($this->shuttingDown) {
+            $this->endRequest($requestId, 0, DaemonInterface::FCGI_OVERLOADED);
+            return;
         }
 
         $contentFormat = 'nrole/Cflags/x5';

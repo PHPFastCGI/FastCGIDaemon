@@ -43,6 +43,14 @@ class CallableConnectionHandler implements ConnectionHandlerInterface
     /**
      * {@inheritdoc}
      */
+    public function shutdown()
+    {
+        call_user_func_array($this->callback, ['shutdown', $this->connection]);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function close()
     {
         call_user_func_array($this->callback, ['close', $this->connection]);

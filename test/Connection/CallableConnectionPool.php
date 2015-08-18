@@ -21,13 +21,20 @@ class CallableConnectionPool implements ConnectionPoolInterface, LoggerAwareInte
     protected $callback;
 
     /**
+     * @var callable|null
+     */
+    protected $shutdownCallback;
+
+    /**
      * Constructor.
      * 
-     * @param callable $callback The callback to use
+     * @param callable $callback         The callback to use
+     * @param callable $shutdownCallback The shutdown callback to use
      */
-    public function __construct($callback)
+    public function __construct($callback, $shutdownCallback = null)
     {
-        $this->callback = $callback;
+        $this->callback         = $callback;
+        $this->shutdownCallback = $shutdownCallback;
     }
 
     /**
@@ -46,5 +53,15 @@ class CallableConnectionPool implements ConnectionPoolInterface, LoggerAwareInte
     public function operate(ConnectionHandlerFactoryInterface $connectionHandlerFactory, $timeoutLoop)
     {
         call_user_func_array($this->callback, [$connectionHandlerFactory, $timeoutLoop]);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function shutdown()
+    {
+        if (null !== $this->shutdownCallback) {
+            call_user_func($this->shutdownCallback);
+        }
     }
 }

@@ -45,9 +45,9 @@ class StreamSocketConnectionPoolTest extends \PHPUnit_Framework_TestCase
                 throw new \LogicException('Unexpected method');
             }
         };
+        $connectionHandlerFactory = new CallableConnectionHandlerFactory($connectionHandlerCallback);
 
         // Should accept connection
-        $connectionHandlerFactory = new CallableConnectionHandlerFactory($connectionHandlerCallback);
         $connectionPool->operate($connectionHandlerFactory, 1);
 
         // Ping pong test
@@ -59,5 +59,59 @@ class StreamSocketConnectionPoolTest extends \PHPUnit_Framework_TestCase
         $connection->close();
         $connectionPool->operate($connectionHandlerFactory, 1);
         $this->assertTrue($closed);
+    }
+
+    /**
+     * Test basic stream_select fail.
+     * 
+     * @expectedException \RuntimeException
+     */
+    public function testStreamSelectFail()
+    {
+        $address = 'tcp://localhost:7000';
+        $serverSocket = stream_socket_server($address);
+        $connectionPool = new StreamSocketConnectionPool($serverSocket);
+
+        fclose($serverSocket);
+
+        $connectionHandlerFactory = new CallableConnectionHandlerFactory(function () {});
+
+        $connectionPool->operate($connectionHandlerFactory, 1);
+    }
+
+    /**
+     * Test shutdown.
+     */
+    public function testShutdown()
+    {
+        $address = 'tcp://localhost:7000';
+
+        $serverSocket = stream_socket_server($address);
+        $connectionPool = new StreamSocketConnectionPool($serverSocket);
+
+        // Create connection and prompt read
+        $clientSocket = stream_socket_client($address);
+        $connection = new StreamSocketConnection($clientSocket);
+        $connection->write('hello');
+
+        $shutdown = false;
+
+        $connectionHandlerCallback = function ($method, ConnectionInterface $connection) use (&$shutdown) {
+            if ('shutdown' === $method) {
+                $shutdown = true;
+            } elseif ('ready' === $method) {
+                // Do not close immediately, close on read
+                $connection->close();
+            }   
+        };
+        $connectionHandlerFactory = new CallableConnectionHandlerFactory($connectionHandlerCallback);
+
+        // Should accept connection
+        $connectionPool->operate($connectionHandlerFactory, 1);
+
+        // Shutdown connection pool
+        $connectionPool->shutdown();
+
+        $this->assertTrue($shutdown);
     }
 }

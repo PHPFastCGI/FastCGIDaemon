@@ -17,6 +17,12 @@ interface ConnectionHandlerInterface
     public function ready();
 
     /**
+     * Gracefully shutdown the connection being handled. Usually triggered
+     * following a SIGINT.
+     */
+    public function shutdown();
+
+    /**
      * Closes the connection handler and free's associated resources.
      */
     public function close();
