@@ -20,4 +20,10 @@ interface ConnectionPoolInterface
      * @param float                             $timeoutLoop              The timeout value to use when waiting for activity on incoming connections
      */
     public function operate(ConnectionHandlerFactoryInterface $connectionHandlerFactory, $timeoutLoop);
+
+    /**
+     * Shutdown to connection pool cleanly. Usually triggered following a
+     * SIGINT.
+     */
+    public function shutdown();
 }

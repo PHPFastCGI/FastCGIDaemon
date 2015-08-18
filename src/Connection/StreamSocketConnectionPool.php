@@ -58,10 +58,8 @@ class StreamSocketConnectionPool implements ConnectionPoolInterface
 
         $read = array_merge(['pool' => $this->serverSocket], $this->clientSockets);
 
-        if (false === stream_select($read, $write, $except, $timeoutLoopSeconds, $timeoutLoopMicroseconds)) {
-            // @codeCoverageIgnoreStart
+        if (false === @stream_select($read, $write, $except, $timeoutLoopSeconds, $timeoutLoopMicroseconds)) {
             throw new \RuntimeException('stream_select failed');
-            // @codeCoverageIgnoreEnd
         }
 
         foreach (array_keys($read) as $id) {
@@ -72,7 +70,35 @@ class StreamSocketConnectionPool implements ConnectionPoolInterface
             }
         }
 
-        $this->removeClosedConnections();
+        $this->removeConnections();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function shutdown()
+    {
+        $this->acceptingNewConnections = false;
+
+        foreach ($this->connectionHandlers as $connectionHandler) {
+            $connectionHandler->shutdown();
+        }
+
+        $this->removeConnections();
+
+        while (count($this->connections) > 0) {
+            $write = $except = [];
+
+            $read = $this->clientSockets;
+
+            stream_select($read, $write, $except, 1);
+
+            foreach (array_keys($read) as $id) {
+                $this->connectionHandlers[$id]->ready();
+            }
+
+            $this->removeConnections();
+        }
     }
 
     /**
@@ -97,9 +123,9 @@ class StreamSocketConnectionPool implements ConnectionPoolInterface
     }
 
     /**
-     * Remove closed connections.
+     * Remove connections.
      */
-    protected function removeClosedConnections()
+    protected function removeConnections()
     {
         foreach ($this->connections as $id => $connection) {
             if ($connection->isClosed()) {
