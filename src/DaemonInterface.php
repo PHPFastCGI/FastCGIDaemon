@@ -42,7 +42,7 @@ interface DaemonInterface
     /**
      * Run the daemon.
      *
-     * This is a blocking method that does not return.
+     * This process may return if, for example, a SIGINT is received.
      *
      * @throws \Exception On fatal error
      */
