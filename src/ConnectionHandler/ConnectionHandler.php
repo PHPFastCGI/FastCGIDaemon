@@ -18,7 +18,7 @@ use Psr\Log\NullLogger;
 /**
  * The default implementation of the ConnectionHandlerInterface.
  */
-class ConnectionHandler implements LoggerAwareInterface
+class ConnectionHandler implements ConnectionHandlerInterface, LoggerAwareInterface
 {
     use LoggerAwareTrait;
 
