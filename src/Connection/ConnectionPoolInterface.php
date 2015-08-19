@@ -22,7 +22,7 @@ interface ConnectionPoolInterface
     public function operate(ConnectionHandlerFactoryInterface $connectionHandlerFactory, $timeoutLoop);
 
     /**
-     * Shutdown to connection pool cleanly. Usually triggered following a
+     * Shutdown the connection pool cleanly. Usually triggered following a
      * SIGINT.
      */
     public function shutdown();
