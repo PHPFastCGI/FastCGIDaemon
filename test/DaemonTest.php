@@ -30,7 +30,6 @@ class DaemonTest extends \PHPUnit_Framework_TestCase
 
             throw new \RuntimeException('foo');
         };
-
         $mockConnectionPool = new CallableConnectionPool($connectionPoolCallback);
 
         // Create daemon
@@ -50,5 +49,32 @@ class DaemonTest extends \PHPUnit_Framework_TestCase
             $this->assertEquals('emergency', $messages[0]['level']);
             $this->assertEquals('foo',       $messages[0]['message']);
         }
+    }
+
+    /**
+     * Tests that the daemon shuts down cleanly after a SIGINT
+     */
+    public function testInterruptSignal()
+    {
+        $logger = new InMemoryLogger;
+
+        // Create mock connection handler factory
+        $mockConnectionHandlerFactory = new CallableConnectionHandlerFactory(function () { });
+
+        // Create mock connection pool that sends a SIGINT to itself immediately
+        $connectionPoolCallback = function () {
+            posix_kill(posix_getpid(), SIGINT);
+        };
+        $mockConnectionPool = new CallableConnectionPool($connectionPoolCallback);
+
+        // Create daemon
+        $daemon = new Daemon($mockConnectionPool, $mockConnectionHandlerFactory, $logger);
+
+        $daemon->run();
+
+        // Check that the daemon exits and the correct message is logged
+        $messages = $logger->getMessages();
+        $this->assertEquals('notice',                            $messages[0]['level']);
+        $this->assertEquals('Received SIGINT, shutting down...', $messages[0]['message']);
     }
 }

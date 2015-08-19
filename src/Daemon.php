@@ -4,6 +4,7 @@ namespace PHPFastCGI\FastCGIDaemon;
 
 use PHPFastCGI\FastCGIDaemon\Connection\ConnectionPoolInterface;
 use PHPFastCGI\FastCGIDaemon\ConnectionHandler\ConnectionHandlerFactoryInterface;
+use PHPFastCGI\FastCGIDaemon\Exception\ShutdownException;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
@@ -55,18 +56,24 @@ class Daemon implements DaemonInterface, LoggerAwareInterface
      */
     public function run()
     {
+        declare(ticks = 1);
+
+        pcntl_signal(SIGINT, function () {
+            $this->connectionPool->shutdown();
+            throw new ShutdownException('Received SIGINT, shutting down...');
+        });
+
         try {
             while (1) {
                 $this->connectionPool->operate($this->connectionHandlerFactory, 5);
                 // @codeCoverageIgnoreStart
             }
             // @codeCoverageIgnoreEnd
+        } catch (ShutdownException $exception) {
+            $this->logger->notice($exception->getMessage());
         } catch (\RuntimeException $exception) {
             $this->logger->emergency($exception->getMessage());
             throw $exception;
         }
-
-        // @codeCoverageIgnoreStart
     }
-    // @codeCoverageIgnoreEnd
 }
