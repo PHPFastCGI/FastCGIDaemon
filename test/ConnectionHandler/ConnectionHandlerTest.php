@@ -176,6 +176,85 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * Test that the daemon doesn't accept new requests once it has been
+     * shutdown but still handles old ones
+     */
+    public function testShutdown()
+    {
+        $response = new Response($this->toStream('Hello World'), 200);
+
+        $kernelCalled = false;
+
+        // Create test environment
+        $context = $this->createTestingContext(function (ServerRequestInterface $request) use ($response, &$kernelCalled) {
+            $this->assertEquals(['FOO' => 'bar'], $request->getServerParams());
+
+            $kernelCalled = true;
+
+            return $response;
+        });
+
+        // Write half of the first request (id 0)
+        $context['clientWrapper']->writeBeginRequestRecord(0, DaemonInterface::FCGI_RESPONDER, DaemonInterface::FCGI_KEEP_CONNECTION);
+        $context['clientWrapper']->writeParamsRecord(0, 'foo', 'bar');
+        $context['clientWrapper']->writeParamsRecord(0);
+
+        // Process first half of the first request
+        $context['handler']->ready();
+
+        // Trigger the shutdown method
+        $context['handler']->shutdown();
+
+        // Try creating a new request (id 1)
+        $context['clientWrapper']->writeBeginRequestRecord(1, DaemonInterface::FCGI_RESPONDER, DaemonInterface::FCGI_KEEP_CONNECTION);
+
+        // Process the attempt at a second request after the shutdown
+        $context['handler']->ready();
+
+        // The application should end the second request immediately
+        $record = $context['clientWrapper']->readRecord($this);
+        $this->assertEquals(DaemonInterface::FCGI_END_REQUEST, $record['type']);
+        $this->assertEquals(1, $record['requestId']);
+
+        // The application should declare an overloaded protocol status
+        $content = unpack('NappStatus/CprotocolStatus/x3', $record['contentData']);
+        $this->assertEquals(DaemonInterface::FCGI_OVERLOADED, $content['protocolStatus']);
+
+        // Check daemon hasn't closed server side connection
+        $this->assertFalse($context['connection']->isClosed());
+
+        // Write the second half of the first request
+        $context['clientWrapper']->writeStdinRecord(0);
+
+        // Process the second half of the first request
+        $context['handler']->ready();
+
+        // Assert that kernel was called
+        $this->assertTrue($kernelCalled);
+
+        // Receive response
+        $rawResponse = '';
+
+        do {
+            $record = $context['clientWrapper']->readRecord($this);
+
+            $this->assertEquals(0, $record['requestId']);
+
+            if (DaemonInterface::FCGI_STDOUT === $record['type']) {
+                $rawResponse .= $record['contentData'];
+            }
+        } while (DaemonInterface::FCGI_END_REQUEST !== $record['type']);
+
+        $expectedResponse = "Status: 200 OK\r\n\r\nHello World";
+  
+        // Check response
+        $this->assertEquals($expectedResponse, $rawResponse);
+
+        // Close the client side socket
+        fclose($context['sockets'][0]);
+    }
+
+    /**
      * Test that the daemon correctly handles a kernel exception.
      */
     public function testKernelExceptionHandling()
@@ -403,7 +482,7 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
 
         // The application should respond with an end request record
         $record = $context['clientWrapper']->readRecord($this);
-        $this->assertEquals(DaemonInterface::FCGI_END_REQUEST,  $record['type']);
+        $this->assertEquals(DaemonInterface::FCGI_END_REQUEST, $record['type']);
 
         // The application should declare an unknown role protocol status
         $content = unpack('NappStatus/CprotocolStatus/x3', $record['contentData']);

@@ -27,7 +27,7 @@ class ConnectionHandler implements LoggerAwareInterface
     /**
      * @var bool
      */
-    protected $shuttingDown;
+    protected $shutdown;
 
     /**
      * @var KernelInterface
@@ -65,7 +65,7 @@ class ConnectionHandler implements LoggerAwareInterface
     {
         $this->setLogger((null === $logger) ? new NullLogger() : $logger);
 
-        $this->shuttingDown = false;
+        $this->shutdown     = false;
         $this->kernel       = $kernel;
         $this->connection   = $connection;
         $this->requests     = [];
@@ -100,9 +100,7 @@ class ConnectionHandler implements LoggerAwareInterface
      */
     public function shutdown()
     {
-        foreach ($this->requests as &$request) {
-            $request['keepAlive'] = false;
-        }
+        $this->shutdown = true;
     }
 
     /**
@@ -220,16 +218,15 @@ class ConnectionHandler implements LoggerAwareInterface
         $content = pack('NCx3', $appStatus, $protocolStatus);
         $this->writeRecord($requestId, DaemonInterface::FCGI_END_REQUEST, $content);
 
-        if (isset($this->requests[$requestId])) {
-            $keepAlive = $this->requests[$requestId]['keepAlive'];
+        $keepAlive = $this->requests[$requestId]['keepAlive'];
 
+        if (isset($this->requests[$requestId]['builder'])) {
             $this->requests[$requestId]['builder']->clean();
-            unset($this->requests[$requestId]);
+        }
 
-            if (!$keepAlive) {
-                $this->close();
-            }
-        } else {
+        unset($this->requests[$requestId]);
+
+        if (!$keepAlive) {
             $this->close();
         }
     }
@@ -283,25 +280,25 @@ class ConnectionHandler implements LoggerAwareInterface
             throw new ProtocolException('Unexpected FCGI_BEGIN_REQUEST record');
         }
 
-        if ($this->shuttingDown) {
-            $this->endRequest($requestId, 0, DaemonInterface::FCGI_OVERLOADED);
-            return;
-        }
-
         $contentFormat = 'nrole/Cflags/x5';
 
         $content = unpack($contentFormat, $contentData);
 
         $keepAlive = DaemonInterface::FCGI_KEEP_CONNECTION & $content['flags'];
 
+        $this->requests[$requestId] = ['keepAlive' => $keepAlive];
+
+        if ($this->shutdown) {
+            $this->endRequest($requestId, 0, DaemonInterface::FCGI_OVERLOADED);
+            return;
+        }
+
         if (DaemonInterface::FCGI_RESPONDER !== $content['role']) {
             $this->endRequest($requestId, 0, DaemonInterface::FCGI_UNKNOWN_ROLE);
-        } else {
-            $this->requests[$requestId] = [
-                'keepAlive' => $keepAlive,
-                'builder'   => new RequestBuilder(),
-            ];
+            return;
         }
+
+        $this->requests[$requestId]['builder'] = new RequestBuilder();
     }
 
     /**
