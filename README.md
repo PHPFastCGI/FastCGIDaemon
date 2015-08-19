@@ -14,6 +14,7 @@ The daemon requires a handler to be defined that accepts PSR-7 requests and retu
 
 The [Speedfony Bundle](https://github.com/PHPFastCGI/SpeedfonyBundle) integrates this daemon with the symfony2 framework.
 The [Slimmer package](https://github.com/PHPFastCGI/Slimmer) integrates this daemon with the Slim v3 framework.
+The [Speedex package](https://github.com/PHPFastCGI/Speedex) integrates this daemon with the Silex framework.
 
 ## Usage
 
