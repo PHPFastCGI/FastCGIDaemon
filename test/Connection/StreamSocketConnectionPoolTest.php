@@ -80,6 +80,30 @@ class StreamSocketConnectionPoolTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * Test stream_select signal interrupt doesn't trigger \RunTime exception
+     */
+    public function testStreamSelectSignalInterrupt()
+    {
+        $address = 'tcp://localhost:7000';
+        $serverSocket = stream_socket_server($address);
+        $connectionPool = new StreamSocketConnectionPool($serverSocket);
+
+        $connectionHandlerFactory = new CallableConnectionHandlerFactory(function () {});
+
+        $alarmCalled = false;
+
+        pcntl_signal(SIGALRM, function () use (&$alarmCalled) {
+            $alarmCalled = true;
+        });
+
+        pcntl_alarm(1);
+
+        $connectionPool->operate($connectionHandlerFactory, 1);
+
+        $this->assertTrue($alarmCalled);
+    }
+
+    /**
      * Test shutdown.
      */
     public function testShutdown()
@@ -94,13 +118,14 @@ class StreamSocketConnectionPoolTest extends \PHPUnit_Framework_TestCase
         $connection = new StreamSocketConnection($clientSocket);
         $connection->write('hello');
 
-        $shutdown = false;
+        $shutdownCalled   = false;
+        $readCalled = false;
 
-        $connectionHandlerCallback = function ($method, ConnectionInterface $connection) use (&$shutdown) {
+        $connectionHandlerCallback = function ($method, ConnectionInterface $connection) use (&$shutdownCalled, &$readCalled) {
             if ('shutdown' === $method) {
-                $shutdown = true;
+                $shutdownCalled = true;
             } elseif ('ready' === $method) {
-                // Do not close immediately, close on read
+                $readCalled = true;
                 $connection->close();
             }   
         };
@@ -112,6 +137,8 @@ class StreamSocketConnectionPoolTest extends \PHPUnit_Framework_TestCase
         // Shutdown connection pool
         $connectionPool->shutdown();
 
-        $this->assertTrue($shutdown);
+        // Make sure the handler cleaned up properly and got a chance to read the data
+        $this->assertTrue($shutdownCalled);
+        $this->assertTrue($readCalled);
     }
 }

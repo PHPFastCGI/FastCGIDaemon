@@ -59,18 +59,22 @@ class StreamSocketConnectionPool implements ConnectionPoolInterface
         $read = array_merge(['pool' => $this->serverSocket], $this->clientSockets);
 
         if (false === @stream_select($read, $write, $except, $timeoutLoopSeconds, $timeoutLoopMicroseconds)) {
-            throw new \RuntimeException('stream_select failed');
-        }
+            $error = error_get_last();
 
-        foreach (array_keys($read) as $id) {
-            if ('pool' === $id) {
-                $this->acceptConnection($connectionHandlerFactory);
-            } else {
-                $this->connectionHandlers[$id]->ready();
+            if (false === stripos($error['message'], 'interrupted system call')) {
+                throw new \RuntimeException('stream_select failed: '.$error['message']);
             }
-        }
+        } else {
+            foreach (array_keys($read) as $id) {
+                if ('pool' === $id) {
+                    $this->acceptConnection($connectionHandlerFactory);
+                } else {
+                    $this->connectionHandlers[$id]->ready();
+                }
+            }
 
-        $this->removeConnections();
+            $this->removeConnections();
+        }
     }
 
     /**
@@ -78,8 +82,6 @@ class StreamSocketConnectionPool implements ConnectionPoolInterface
      */
     public function shutdown()
     {
-        $this->acceptingNewConnections = false;
-
         foreach ($this->connectionHandlers as $connectionHandler) {
             $connectionHandler->shutdown();
         }
@@ -99,6 +101,8 @@ class StreamSocketConnectionPool implements ConnectionPoolInterface
 
             $this->removeConnections();
         }
+
+        fclose($this->serverSocket);
     }
 
     /**
