@@ -167,10 +167,10 @@ class ConnectionHandler implements ConnectionHandlerInterface, LoggerAwareInterf
 
         $headerData = pack('CCnnxx', DaemonInterface::FCGI_VERSION_1, $type, $requestId, $contentLength);
 
-        $this->connection->write($headerData, 8);
+        $this->connection->write($headerData);
 
         if (null !== $content) {
-            $this->connection->write($content, $contentLength);
+            $this->connection->write($content);
         }
     }
 
