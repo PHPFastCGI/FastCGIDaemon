@@ -112,7 +112,7 @@ class StreamSocketConnectionPool implements ConnectionPoolInterface
      */
     protected function acceptConnection(ConnectionHandlerFactoryInterface $connectionHandlerFactory)
     {
-        $clientSocket = stream_socket_accept($this->serverSocket);
+        $clientSocket = @stream_socket_accept($this->serverSocket);
 
         if (false === $clientSocket) {
             return;
