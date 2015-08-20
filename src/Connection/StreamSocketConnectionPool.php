@@ -114,6 +114,10 @@ class StreamSocketConnectionPool implements ConnectionPoolInterface
     {
         $clientSocket = stream_socket_accept($this->serverSocket);
 
+        if (false === $clientSocket) {
+            return;
+        }
+
         stream_set_blocking($clientSocket, 0);
 
         $connection = new StreamSocketConnection($clientSocket);
