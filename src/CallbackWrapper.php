@@ -2,7 +2,7 @@
 
 namespace PHPFastCGI\FastCGIDaemon;
 
-use Psr\Http\Message\ServerRequestInterface;
+use PHPFastCGI\FastCGIDaemon\Http\RequestInterface;
 
 /**
  * Wraps a callback (such as a closure, function or class and method pair) as an
@@ -34,7 +34,7 @@ class CallbackWrapper implements KernelInterface
     /**
      * {@inheritdoc}
      */
-    public function handleRequest(ServerRequestInterface $request)
+    public function handleRequest(RequestInterface $request)
     {
         return call_user_func($this->callback, $request);
     }

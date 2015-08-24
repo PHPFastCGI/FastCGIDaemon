@@ -10,7 +10,7 @@ A FastCGI daemon written in PHP.
 
 Using this daemon, applications can stay alive between HTTP requests whilst operating behind the protection of a FastCGI enabled web server.
 
-The daemon requires a handler to be defined that accepts PSR-7 requests and returns PSR-7 responses.
+The daemon requires a handler to be defined that accepts request objects and returns PSR-7 or HttpFoundation responses.
 
 The [Speedfony Bundle](https://github.com/PHPFastCGI/SpeedfonyBundle) integrates this daemon with the symfony2 framework.
 The [Slimmer package](https://github.com/PHPFastCGI/Slimmer) integrates this daemon with the Slim v3 framework.
@@ -27,11 +27,13 @@ Below is an example of a simple 'Hello, World!' FastCGI application in PHP.
 require_once dirname(__FILE__) . '/../vendor/autoload.php';
 
 use PHPFastCGI\FastCGIDaemon\ApplicationFactory;
-use Psr\Http\Message\ServerRequestInterface;
+use PHPFastCGI\FastCGIDaemon\Http\RequestInterface;
 use Zend\Diactoros\Response\HtmlResponse;
 
 // A simple kernel. This is the core of your application
-$kernel = function (ServerRequestInterface $request) {
+$kernel = function (RequestInterface $request) {
+    // $request->getServerRequest()         returns PSR-7 server request object
+    // $request->getHttpFoundationRequest() returns HTTP foundation request object
     return new HtmlResponse('<h1>Hello, World!</h1>');
 };
 

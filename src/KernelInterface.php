@@ -2,21 +2,22 @@
 
 namespace PHPFastCGI\FastCGIDaemon;
 
+use PHPFastCGI\FastCGIDaemon\Http\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
+use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 
 /**
  * Objects that implement the KernelInterface can be used by the FastCGIDaemon
- * to respond to PSR-7 HTTP server request messages.
+ * to 
  */
 interface KernelInterface
 {
     /**
      * Handles a request and returns a response.
      *
-     * @param ServerRequestInterface $request The PSR-7 HTTP server request message
+     * @param RequestInterface $request FastCGI HTTP request object
      *
-     * @return ResponseInterface The PSR-7 HTTP server response message
+     * @return ResponseInterface|HttpFoundationResponse HTTP response message
      */
-    public function handleRequest(ServerRequestInterface $request);
+    public function handleRequest(RequestInterface $request);
 }

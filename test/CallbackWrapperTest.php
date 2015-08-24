@@ -3,8 +3,8 @@
 namespace PHPFastCGI\Test\FastCGIDaemon;
 
 use PHPFastCGI\FastCGIDaemon\CallbackWrapper;
+use PHPFastCGI\FastCGIDaemon\Http\Request;
 use Zend\Diactoros\Response;
-use Zend\Diactoros\ServerRequest;
 
 /**
  * Tests the callback wrapper.
@@ -27,10 +27,12 @@ class CallbackWrapperTest extends \PHPUnit_Framework_TestCase
      */
     public function testHandleRequest()
     {
-        $expectedRequest  = new ServerRequest();
+        $stream = fopen('php://memory', 'r');
+
+        $expectedRequest  = new Request([], $stream);
         $expectedResponse = new Response();
 
-        $kernel = new CallbackWrapper(function (ServerRequest $request) use ($expectedRequest, $expectedResponse) {
+        $kernel = new CallbackWrapper(function (Request $request) use ($expectedRequest, $expectedResponse) {
             $this->assertSame($expectedRequest, $request);
 
             return $expectedResponse;
@@ -38,5 +40,7 @@ class CallbackWrapperTest extends \PHPUnit_Framework_TestCase
 
         $response = $kernel->handleRequest($expectedRequest);
         $this->assertSame($expectedResponse, $response);
+
+        fclose($stream);
     }
 }
