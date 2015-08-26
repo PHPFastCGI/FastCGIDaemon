@@ -9,7 +9,7 @@ class InMemoryLogger extends AbstractLogger
     /**
      * @var array
      */
-    protected $messages;
+    private $messages;
 
     /**
      * Constructor.

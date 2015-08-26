@@ -20,7 +20,7 @@ class ConnectionHandlerFactory implements ConnectionHandlerFactoryInterface, Log
     /**
      * @var KernelInterface
      */
-    protected $kernel;
+    private $kernel;
 
     /**
      * Constructor.

@@ -13,7 +13,7 @@ class ConnectionWrapper
     /**
      * @var resource
      */
-    protected $stream;
+    private $stream;
 
     /**
      * Constructor.

@@ -12,7 +12,7 @@ class ApplicationFactory implements ApplicationFactoryInterface
     /**
      * @var DaemonFactoryInterface
      */
-    protected $daemonFactory;
+    private $daemonFactory;
 
     /**
      * Constructor.

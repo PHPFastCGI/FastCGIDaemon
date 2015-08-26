@@ -13,12 +13,12 @@ class CallableConnectionHandler implements ConnectionHandlerInterface
     /**
      * @var callable
      */
-    protected $callback;
+    private $callback;
 
     /**
      * @var ConnectionInterface
      */
-    protected $connection;
+    private $connection;
 
     /**
      * Constructor.

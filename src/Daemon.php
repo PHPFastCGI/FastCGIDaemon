@@ -21,12 +21,12 @@ class Daemon implements DaemonInterface, LoggerAwareInterface
     /**
      * @var ConnectionPoolInterface
      */
-    protected $connectionPool;
+    private $connectionPool;
 
     /**
      * @var ConnectionHandlerFactoryInterface
      */
-    protected $connectionHandlerFactory;
+    private $connectionHandlerFactory;
 
     /**
      * Constructor.

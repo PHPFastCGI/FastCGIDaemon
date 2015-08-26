@@ -13,12 +13,12 @@ class StreamSocketConnection implements ConnectionInterface
     /**
      * @var resource
      */
-    protected $socket;
+    private $socket;
 
     /**
      * @var bool
      */
-    protected $closed;
+    private $closed;
 
     /**
      * Constructor.
