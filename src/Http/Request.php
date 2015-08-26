@@ -53,13 +53,13 @@ class Request implements RequestInterface
      */
     public function getQuery()
     {
-        $query = [];
+        $query = null;
 
         if (isset($this->params['QUERY_STRING'])) {
             parse_str($this->params['QUERY_STRING'], $query);
         }
 
-        return $query;
+        return $query ?: [];
     }
 
     /**
@@ -67,7 +67,7 @@ class Request implements RequestInterface
      */
     public function getPost()
     {
-        $post = [];
+        $post = null;
 
         if (isset($this->params['REQUEST_METHOD']) && isset($this->params['CONTENT_TYPE'])) {
             $requestMethod = $this->params['REQUEST_METHOD'];
@@ -81,7 +81,7 @@ class Request implements RequestInterface
             }
         }
 
-        return $post;
+        return $post ?: [];
     }
 
     /**
