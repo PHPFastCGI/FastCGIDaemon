@@ -6,7 +6,7 @@ use PHPFastCGI\FastCGIDaemon\Connection\ConnectionInterface;
 use PHPFastCGI\FastCGIDaemon\DaemonInterface;
 use PHPFastCGI\FastCGIDaemon\Exception\DaemonException;
 use PHPFastCGI\FastCGIDaemon\Exception\ProtocolException;
-use PHPFastCGI\FastCGIDaemon\Http\RequestBuilder;
+use PHPFastCGI\FastCGIDaemon\Http\Request;
 use PHPFastCGI\FastCGIDaemon\KernelInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
@@ -14,6 +14,8 @@ use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
+use Zend\Diactoros\Stream;
 
 /**
  * The default implementation of the ConnectionHandlerInterface.
@@ -112,7 +114,7 @@ class ConnectionHandler implements ConnectionHandlerInterface, LoggerAwareInterf
         $this->bufferLength = 0;
 
         foreach ($this->requests as $request) {
-            $request['builder']->clean();
+            fclose($request['stdin']);
         }
 
         $this->requests = [];
@@ -203,6 +205,8 @@ class ConnectionHandler implements ConnectionHandlerInterface, LoggerAwareInterf
 
             $this->writeRecord($requestId, DaemonInterface::FCGI_STDOUT, $writeData);
         } while ($writeSize === 65535);
+
+        $this->writeRecord($requestId, DaemonInterface::FCGI_STDOUT);
     }
 
     /**
@@ -220,9 +224,7 @@ class ConnectionHandler implements ConnectionHandlerInterface, LoggerAwareInterf
 
         $keepAlive = $this->requests[$requestId]['keepAlive'];
 
-        if (isset($this->requests[$requestId]['builder'])) {
-            $this->requests[$requestId]['builder']->clean();
-        }
+        fclose($this->requests[$requestId]['stdin']);
 
         unset($this->requests[$requestId]);
 
@@ -286,7 +288,11 @@ class ConnectionHandler implements ConnectionHandlerInterface, LoggerAwareInterf
 
         $keepAlive = DaemonInterface::FCGI_KEEP_CONNECTION & $content['flags'];
 
-        $this->requests[$requestId] = ['keepAlive' => $keepAlive];
+        $this->requests[$requestId] = [
+            'keepAlive' => $keepAlive,
+            'stdin'     => fopen('php://temp', 'r+'),
+            'params'    => [],
+        ];
 
         if ($this->shutdown) {
             $this->endRequest($requestId, 0, DaemonInterface::FCGI_OVERLOADED);
@@ -297,8 +303,6 @@ class ConnectionHandler implements ConnectionHandlerInterface, LoggerAwareInterf
             $this->endRequest($requestId, 0, DaemonInterface::FCGI_UNKNOWN_ROLE);
             return;
         }
-
-        $this->requests[$requestId]['builder'] = new RequestBuilder();
     }
 
     /**
@@ -349,7 +353,7 @@ class ConnectionHandler implements ConnectionHandlerInterface, LoggerAwareInterf
 
         $content = unpack($contentFormat, $contentData);
 
-        $this->requests[$requestId]['builder']->addParam($content['name'], $content['value']);
+        $this->requests[$requestId]['params'][$content['name']] = $content['value'];
     }
 
     /**
@@ -372,7 +376,7 @@ class ConnectionHandler implements ConnectionHandlerInterface, LoggerAwareInterf
             return;
         }
 
-        $this->requests[$requestId]['builder']->addStdin($contentData);
+        fwrite($this->requests[$requestId]['stdin'], $contentData);
     }
 
     /**
@@ -400,16 +404,23 @@ class ConnectionHandler implements ConnectionHandlerInterface, LoggerAwareInterf
      */
     protected function dispatchRequest($requestId)
     {
-        $request = $this->requests[$requestId]['builder']->getRequest();
+        $request = new Request(
+            $this->requests[$requestId]['params'],
+            $this->requests[$requestId]['stdin']
+        );
 
         try {
             $response = $this->kernel->handleRequest($request);
 
-            if (!$response instanceof ResponseInterface) {
-                throw new \LogicException('Kernel must return a PSR-7 HTTP response message');
+            if ($response instanceof ResponseInterface) {
+                $this->sendResponse($requestId, $response);
+            } elseif ($response instanceof HttpFoundationResponse) {
+                $this->sendHttpFoundationResponse($requestId, $response);
+            } else {
+                throw new \LogicException('Kernel must return a PSR-7 or HttpFoundation response message');
             }
 
-            $this->sendResponse($requestId, $response);
+            $this->endRequest($requestId);
         } catch (\Exception $exception) {
             $this->logger->error($exception->getMessage());
 
@@ -425,7 +436,10 @@ class ConnectionHandler implements ConnectionHandlerInterface, LoggerAwareInterf
      */
     protected function sendResponse($requestId, ResponseInterface $response)
     {
-        $headerData = "Status: {$response->getStatusCode()} {$response->getReasonPhrase()}\r\n";
+        $statusCode   = $response->getStatusCode();
+        $reasonPhrase = $response->getReasonPhrase();
+
+        $headerData = "Status: {$statusCode} {$reasonPhrase}\r\n";
 
         foreach ($response->getHeaders() as $name => $values) {
             $headerData .= $name.': '.implode(', ', $values)."\r\n";
@@ -434,8 +448,25 @@ class ConnectionHandler implements ConnectionHandlerInterface, LoggerAwareInterf
         $headerData .= "\r\n";
 
         $this->writeResponse($requestId, $headerData, $response->getBody());
+    }
 
-        $this->writeRecord($requestId, DaemonInterface::FCGI_STDOUT);
-        $this->endRequest($requestId);
+    /**
+     * Send a HttpFoundation response to the client.
+     * 
+     * @param int                    $requestId The request id to respond to
+     * @param HttpFoundationResponse $response  The HTTP foundation response message
+     */
+    protected function sendHttpFoundationResponse($requestId, HttpFoundationResponse $response)
+    {
+        $statusCode = $response->getStatusCode();
+
+        $headerData  = "Status: {$statusCode}\r\n";
+        $headerData .= $response->headers . "\r\n";
+
+        $stream = new Stream('php://memory', 'r+');
+        $stream->write($response->getContent());
+        $stream->rewind();
+
+        $this->writeResponse($requestId, $headerData, $stream);
     }
 }

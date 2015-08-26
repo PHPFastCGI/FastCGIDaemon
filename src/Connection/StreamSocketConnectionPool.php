@@ -114,20 +114,18 @@ class StreamSocketConnectionPool implements ConnectionPoolInterface
     {
         $clientSocket = @stream_socket_accept($this->serverSocket);
 
-        if (false === $clientSocket) {
-            return;
+        if (false !== $clientSocket) {
+            stream_set_blocking($clientSocket, 0);
+
+            $connection = new StreamSocketConnection($clientSocket);
+            $handler    = $connectionHandlerFactory->createConnectionHandler($connection);
+
+            $id = spl_object_hash($connection);
+
+            $this->clientSockets[$id]      = $clientSocket;
+            $this->connections[$id]        = $connection;
+            $this->connectionHandlers[$id] = $handler;
         }
-
-        stream_set_blocking($clientSocket, 0);
-
-        $connection = new StreamSocketConnection($clientSocket);
-        $handler    = $connectionHandlerFactory->createConnectionHandler($connection);
-
-        $id = spl_object_hash($connection);
-
-        $this->clientSockets[$id]      = $clientSocket;
-        $this->connections[$id]        = $connection;
-        $this->connectionHandlers[$id] = $handler;
     }
 
     /**

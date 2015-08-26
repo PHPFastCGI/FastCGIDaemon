@@ -2,17 +2,17 @@
 
 namespace PHPFastCGI\FastCGIDaemon\Http;
 
+use Symfony\Component\HttpFoundation\Request as HttpFoundationRequest;
 use Zend\Diactoros\ServerRequest;
 use Zend\Diactoros\ServerRequestFactory;
 
 /**
- * The default implementation of the RequestBuilderInterface using the Zend
- * Diactoros PSR-7 implementation.
+ * The default implementation of the RequestInterface
  */
-class RequestBuilder implements RequestBuilderInterface
+class Request implements RequestInterface
 {
     /**
-     * @var string[]
+     * @var array
      */
     protected $params;
 
@@ -23,41 +23,51 @@ class RequestBuilder implements RequestBuilderInterface
 
     /**
      * Constructor.
+     * 
+     * @param array    $params The FastCGI server params as an associative array
+     * @param resource $stdin  The FastCGI stdin data as a stream resource
      */
-    public function __construct()
+    public function __construct(array $params, $stdin)
     {
         $this->params = [];
-        $this->stdin  = fopen('php://temp', 'r+');
-    }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function addParam($name, $value)
-    {
-        $this->params[strtoupper($name)] = $value;
-    }
+        foreach ($params as $name => $value) {
+            $this->params[strtoupper($name)] = $value;
+        }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function addStdin($data)
-    {
-        fwrite($this->stdin, $data);
-    }
+        $this->stdin  = $stdin;
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getRequest()
-    {
         rewind($this->stdin);
+    }
 
-        $query = $post = $cookies = [];
+    /**
+     * {@inheritdoc}
+     */
+    public function getParams()
+    {
+        return $this->params;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getQuery()
+    {
+        $query = [];
 
         if (isset($this->params['QUERY_STRING'])) {
             parse_str($this->params['QUERY_STRING'], $query);
         }
+
+        return $query;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getPost()
+    {
+        $post = [];
 
         if (isset($this->params['REQUEST_METHOD']) && isset($this->params['CONTENT_TYPE'])) {
             $requestMethod = $this->params['REQUEST_METHOD'];
@@ -71,6 +81,16 @@ class RequestBuilder implements RequestBuilderInterface
             }
         }
 
+        return $post;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getCookies()
+    {
+        $cookies = [];
+
         if (isset($this->params['HTTP_COOKIE'])) {
             $cookiePairs = explode(';', $this->params['HTTP_COOKIE']);
 
@@ -79,6 +99,26 @@ class RequestBuilder implements RequestBuilderInterface
                 $cookies[$name] = $value;
             }
         }
+
+        return $cookies;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getStdin()
+    {
+        return $this->stdin;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getServerRequest()
+    {
+        $query   = $this->getQuery();
+        $post    = $this->getPost();
+        $cookies = $this->getCookies();
 
         $server  = ServerRequestFactory::normalizeServer($this->params);
         $headers = ServerRequestFactory::marshalHeaders($server);
@@ -96,11 +136,12 @@ class RequestBuilder implements RequestBuilderInterface
     /**
      * {@inheritdoc}
      */
-    public function clean()
+    public function getHttpFoundationRequest()
     {
-        fclose($this->stdin);
+        $query   = $this->getQuery();
+        $post    = $this->getPost();
+        $cookies = $this->getCookies();
 
-        $this->params = [];
-        $this->stdin  = null;
+        return new HttpFoundationRequest($query, $post, [], $cookies, [], $this->params, $this->stdin);
     }
 }

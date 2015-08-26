@@ -26,6 +26,31 @@ class ConnectionWrapper
     }
 
     /**
+     * Read a request from the connection
+     * 
+     * @param \PHPUnit_Framework_TestCase $testCase
+     * @param string                      $requestId
+     * 
+     * @return string
+     */
+    public function readResponse(\PHPUnit_Framework_TestCase $testCase, $requestId)
+    {
+        $response = '';
+
+        do {
+            $record = $this->readRecord($testCase);
+
+            $testCase->assertEquals($requestId, $record['requestId']);
+
+            if (DaemonInterface::FCGI_STDOUT === $record['type']) {
+                $response .= $record['contentData'];
+            }
+        } while (DaemonInterface::FCGI_END_REQUEST !== $record['type']);
+
+        return $response;
+    }
+
+    /**
      * Read a record from the connection.
      *
      * @param \PHPUnit_Framework_TestCase $testCase
@@ -60,6 +85,32 @@ class ConnectionWrapper
         }
 
         return $record;
+    }
+
+    /**
+     * Write a request to the stream.
+     * 
+     * @param string $requestId FastCGI request ID
+     * @param array  $params    FastCGI environment variables
+     * @param string $body      FastCGI stdin resource stream
+     */
+    public function writeRequest($requestId, array $params, $body)
+    {
+        $this->writeBeginRequestRecord($requestId, DaemonInterface::FCGI_RESPONDER, 0);
+
+        foreach ($params as $name => $value) {
+            $this->writeParamsRecord($requestId, $name, $value);
+        }
+
+        $this->writeParamsRecord($requestId);
+
+        $chunks = str_split($body, 65535);
+
+        foreach ($chunks as $chunk) {
+            $this->writeStdinRecord($requestId, $chunk);
+        }
+
+        $this->writeStdinRecord($requestId);
     }
 
     /**

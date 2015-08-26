@@ -5,10 +5,11 @@ namespace PHPFastCGI\Test\FastCGIDaemon\Connection;
 use PHPFastCGI\FastCGIDaemon\CallbackWrapper;
 use PHPFastCGI\FastCGIDaemon\Connection\StreamSocketConnection;
 use PHPFastCGI\FastCGIDaemon\ConnectionHandler\ConnectionHandler;
+use PHPFastCGI\FastCGIDaemon\Http\RequestInterface;
 use PHPFastCGI\FastCGIDaemon\DaemonInterface;
 use PHPFastCGI\Test\FastCGIDaemon\Client\ConnectionWrapper;
 use PHPFastCGI\Test\FastCGIDaemon\Logger\InMemoryLogger;
-use Psr\Http\Message\ServerRequestInterface;
+use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 use Zend\Diactoros\Response;
 
 /**
@@ -77,84 +78,87 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * Test that the daemon is correctly handling requests with large param
-     * records and message bodies.
+     * Create test request data
+     * 
+     * @return array
      */
-    public function testLargeParamsAndBody()
+    protected function createTestData()
     {
-        // Set up body streams
-        $body       = str_repeat('X', 100000);
-        $bodyStream = $this->toStream($body);
-
-        // Set up test request values
-        $serverParams = [
-            str_repeat('A', 10)  => str_repeat('b', 127),
-            str_repeat('C', 128) => str_repeat('d', 256),
-            str_repeat('E', 520) => str_repeat('f', 50),
+        $testData = [
+            'requestBody'   => str_repeat('X', 100000),
+            'requestParams' => [
+                str_repeat('A', 10)  => str_repeat('b', 127),
+                str_repeat('C', 128) => str_repeat('d', 256),
+                str_repeat('E', 520) => str_repeat('f', 50),
+            ],
+            'responseStatusCode' => 201,
+            'responseBody'       => str_repeat('Y', 100000),
+            'responseHeaders'    => ['Header-1' => 'foo', 'Header-2' => 'bar']
         ];
 
-        $response = new Response($bodyStream, 200, ['Header-1' => 'foo', 'Header-2' => 'bar']);
+        $testData['responseBodyStream'] = $this->toStream($testData['responseBody']);
+
+        $testData['symfonyResponse'] = new HttpFoundationResponse($testData['responseBody'], $testData['responseStatusCode'], $testData['responseHeaders']);
+        $testData['psr7Response']    = new Response($testData['responseBodyStream'], $testData['responseStatusCode'], $testData['responseHeaders']);
+
+        $testData['rawSymfonyResponse']  = "Status: 201\r\n";
+        $testData['rawSymfonyResponse'] .= $testData['symfonyResponse']->headers . "\r\n";
+        $testData['rawSymfonyResponse'] .= $testData['responseBody'];
+
+        $testData['rawPsr7Response'] = 'Status: 201 ' . $testData['psr7Response']->getReasonPhrase() . "\r\n";
+        foreach ($testData['psr7Response']->getHeaders() as $name => $value) {
+            $testData['rawPsr7Response'] .=  $name . ': ' . implode(', ', $value) . "\r\n";
+        }
+        $testData['rawPsr7Response'] .= "\r\n" . $testData['responseBody'];
+
+        return $testData;
+    }
+
+    /**
+     * Test that the daemon is correctly handling requests and PSR-7 and
+     * HttpFoundation responses with large param records and message bodies.
+     */
+    public function testHandler()
+    {
+        $testData = $this->createTestData();
 
         // Create test environment
-        $context = $this->createTestingContext(function (ServerRequestInterface $request) use ($serverParams, $body, $response) {
-            $this->assertEquals($serverParams, $request->getServerParams());
-            $this->assertEquals($body, (string) $request->getBody());
+        $kernelGenerator = function ($response) use ($testData) {
+            return function (RequestInterface $request) use ($response, $testData) {
+                $this->assertEquals($testData['requestParams'], $request->getParams());
+                $this->assertEquals($testData['requestBody'],   stream_get_contents($request->getStdin()));
 
-            return $response;
-        });
+                return $response;
+            };
+        };
 
-        // Send request
-        $requestId = 5;
+        $scenarios = [
+            ['responseKey' => 'symfonyResponse', 'rawResponseKey' => 'rawSymfonyResponse'],
+            ['responseKey' => 'psr7Response',    'rawResponseKey' => 'rawPsr7Response']
+        ];
 
-        $context['clientWrapper']->writeBeginRequestRecord($requestId, DaemonInterface::FCGI_RESPONDER, 0);
+        foreach ($scenarios as $scenario) {
+            $kernel  = $kernelGenerator($testData[$scenario['responseKey']]);
+            $context = $this->createTestingContext($kernel);
+            
+            $requestId = 1;
 
-        foreach ($serverParams as $name => $value) {
-            $context['clientWrapper']->writeParamsRecord($requestId, $name, $value);
+            $context['clientWrapper']->writeRequest($requestId, $testData['requestParams'], $testData['requestBody']);
+
+            do {
+                $context['handler']->ready();
+            } while (!$context['connection']->isClosed());
+
+            $rawResponse         = $context['clientWrapper']->readResponse($this, $requestId);
+            $expectedRawResponse = $testData[$scenario['rawResponseKey']];
+
+            // Check response
+            $this->assertEquals(strlen($expectedRawResponse), strlen($rawResponse));
+            $this->assertEquals($expectedRawResponse, $rawResponse);
+
+            // Clean up
+            fclose($context['sockets'][0]);
         }
-
-        $context['clientWrapper']->writeParamsRecord($requestId);
-
-        $chunks = str_split($body, 65535);
-
-        foreach ($chunks as $chunk) {
-            $context['clientWrapper']->writeStdinRecord($requestId, $chunk);
-        }
-
-        $context['clientWrapper']->writeStdinRecord($requestId);
-
-        // Trigger Handler
-        do {
-            $context['handler']->ready();
-        } while (!$context['connection']->isClosed());
-
-        // Receive response
-        $rawResponse = '';
-
-        do {
-            $record = $context['clientWrapper']->readRecord($this);
-
-            $this->assertEquals($requestId, $record['requestId']);
-
-            if (DaemonInterface::FCGI_STDOUT === $record['type']) {
-                $rawResponse .= $record['contentData'];
-            }
-        } while (DaemonInterface::FCGI_END_REQUEST !== $record['type']);
-
-        $expectedRawResponse = 'Status: '.$response->getStatusCode().' '.$response->getReasonPhrase()."\r\n";
-
-        foreach ($response->getHeaders() as $name => $values) {
-            $expectedRawResponse .= $name.': '.implode(', ', $values)."\r\n";
-        }
-
-        $expectedRawResponse .= "\r\n".$body;
-
-        // Check response
-        $this->assertEquals(strlen($expectedRawResponse), strlen($rawResponse));
-        $this->assertEquals($expectedRawResponse, $rawResponse);
-
-        // Clean up
-        fclose($bodyStream);
-        fclose($context['sockets'][0]);
     }
 
     /**
@@ -186,8 +190,8 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
         $kernelCalled = false;
 
         // Create test environment
-        $context = $this->createTestingContext(function (ServerRequestInterface $request) use ($response, &$kernelCalled) {
-            $this->assertEquals(['FOO' => 'bar'], $request->getServerParams());
+        $context = $this->createTestingContext(function (RequestInterface $request) use ($response, &$kernelCalled) {
+            $this->assertEquals(['FOO' => 'bar'], $request->getParams());
 
             $kernelCalled = true;
 
@@ -277,7 +281,7 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
         $expectedLogMessages = [
             [
                 'level'   => 'error',
-                'message' => 'Kernel must return a PSR-7 HTTP response message',
+                'message' => 'Kernel must return a PSR-7 or HttpFoundation response message',
                 'context' => [],
             ],
         ];
