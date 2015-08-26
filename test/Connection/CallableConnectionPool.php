@@ -18,12 +18,12 @@ class CallableConnectionPool implements ConnectionPoolInterface, LoggerAwareInte
     /**
      * @var callable
      */
-    protected $callback;
+    private $callback;
 
     /**
      * @var callable|null
      */
-    protected $shutdownCallback;
+    private $shutdownCallback;
 
     /**
      * Constructor.

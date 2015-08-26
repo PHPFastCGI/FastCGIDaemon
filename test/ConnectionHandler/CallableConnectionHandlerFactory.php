@@ -18,7 +18,7 @@ class CallableConnectionHandlerFactory implements ConnectionHandlerFactoryInterf
     /**
      * @var callable
      */
-    protected $callback;
+    private $callback;
 
     /**
      * Constructor.

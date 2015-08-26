@@ -18,103 +18,6 @@ use Zend\Diactoros\Response;
 class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
 {
     /**
-     * Converts a string to a stream resource and places pointer at the start.
-     *
-     * @param string $string
-     *
-     * @return resource
-     */
-    protected function toStream($string)
-    {
-        $stream = fopen('php://temp', 'r+');
-        fwrite($stream, $string);
-        rewind($stream);
-
-        return $stream;
-    }
-
-    /**
-     * Creates a pair of non-blocking stream socket resources.
-     *
-     * @return resource[]
-     */
-    protected function createStreamSocketPair()
-    {
-        $sockets = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, STREAM_IPPROTO_IP);
-        stream_set_blocking($sockets[0], 0);
-        stream_set_blocking($sockets[1], 0);
-
-        return $sockets;
-    }
-
-    /**
-     * Create a testing context.
-     *
-     * @param callable $callback
-     *
-     * @return array
-     */
-    protected function createTestingContext($callback = null)
-    {
-        if (null === $callback) {
-            $callback = function () {};
-        }
-
-        $sockets       = $this->createStreamSocketPair();
-        $clientWrapper = new ConnectionWrapper($sockets[0]);
-        $connection    = new StreamSocketConnection($sockets[1]);
-        $handler       = new ConnectionHandler(new CallbackWrapper($callback), $connection);
-        $logger        = new InMemoryLogger();
-
-        $handler->setLogger($logger);
-
-        return [
-            'sockets'       => $sockets,
-            'clientWrapper' => $clientWrapper,
-            'connection'    => $connection,
-            'handler'       => $handler,
-            'logger'        => $logger,
-        ];
-    }
-
-    /**
-     * Create test request data
-     * 
-     * @return array
-     */
-    protected function createTestData()
-    {
-        $testData = [
-            'requestBody'   => str_repeat('X', 100000),
-            'requestParams' => [
-                str_repeat('A', 10)  => str_repeat('b', 127),
-                str_repeat('C', 128) => str_repeat('d', 256),
-                str_repeat('E', 520) => str_repeat('f', 50),
-            ],
-            'responseStatusCode' => 201,
-            'responseBody'       => str_repeat('Y', 100000),
-            'responseHeaders'    => ['Header-1' => 'foo', 'Header-2' => 'bar']
-        ];
-
-        $testData['responseBodyStream'] = $this->toStream($testData['responseBody']);
-
-        $testData['symfonyResponse'] = new HttpFoundationResponse($testData['responseBody'], $testData['responseStatusCode'], $testData['responseHeaders']);
-        $testData['psr7Response']    = new Response($testData['responseBodyStream'], $testData['responseStatusCode'], $testData['responseHeaders']);
-
-        $testData['rawSymfonyResponse']  = "Status: 201\r\n";
-        $testData['rawSymfonyResponse'] .= $testData['symfonyResponse']->headers . "\r\n";
-        $testData['rawSymfonyResponse'] .= $testData['responseBody'];
-
-        $testData['rawPsr7Response'] = 'Status: 201 ' . $testData['psr7Response']->getReasonPhrase() . "\r\n";
-        foreach ($testData['psr7Response']->getHeaders() as $name => $value) {
-            $testData['rawPsr7Response'] .=  $name . ': ' . implode(', ', $value) . "\r\n";
-        }
-        $testData['rawPsr7Response'] .= "\r\n" . $testData['responseBody'];
-
-        return $testData;
-    }
-
-    /**
      * Test that the daemon is correctly handling requests and PSR-7 and
      * HttpFoundation responses with large param records and message bodies.
      */
@@ -497,5 +400,102 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
 
         // Close the client side socket
         fclose($context['sockets'][0]);
+    }
+
+    /**
+     * Converts a string to a stream resource and places pointer at the start.
+     *
+     * @param string $string
+     *
+     * @return resource
+     */
+    private function toStream($string)
+    {
+        $stream = fopen('php://temp', 'r+');
+        fwrite($stream, $string);
+        rewind($stream);
+
+        return $stream;
+    }
+
+    /**
+     * Creates a pair of non-blocking stream socket resources.
+     *
+     * @return resource[]
+     */
+    private function createStreamSocketPair()
+    {
+        $sockets = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, STREAM_IPPROTO_IP);
+        stream_set_blocking($sockets[0], 0);
+        stream_set_blocking($sockets[1], 0);
+
+        return $sockets;
+    }
+
+    /**
+     * Create a testing context.
+     *
+     * @param callable $callback
+     *
+     * @return array
+     */
+    private function createTestingContext($callback = null)
+    {
+        if (null === $callback) {
+            $callback = function () {};
+        }
+
+        $sockets       = $this->createStreamSocketPair();
+        $clientWrapper = new ConnectionWrapper($sockets[0]);
+        $connection    = new StreamSocketConnection($sockets[1]);
+        $handler       = new ConnectionHandler(new CallbackWrapper($callback), $connection);
+        $logger        = new InMemoryLogger();
+
+        $handler->setLogger($logger);
+
+        return [
+            'sockets'       => $sockets,
+            'clientWrapper' => $clientWrapper,
+            'connection'    => $connection,
+            'handler'       => $handler,
+            'logger'        => $logger,
+        ];
+    }
+
+    /**
+     * Create test request data
+     * 
+     * @return array
+     */
+    private function createTestData()
+    {
+        $testData = [
+            'requestBody'   => str_repeat('X', 100000),
+            'requestParams' => [
+                str_repeat('A', 10)  => str_repeat('b', 127),
+                str_repeat('C', 128) => str_repeat('d', 256),
+                str_repeat('E', 520) => str_repeat('f', 50),
+            ],
+            'responseStatusCode' => 201,
+            'responseBody'       => str_repeat('Y', 100000),
+            'responseHeaders'    => ['Header-1' => 'foo', 'Header-2' => 'bar']
+        ];
+
+        $testData['responseBodyStream'] = $this->toStream($testData['responseBody']);
+
+        $testData['symfonyResponse'] = new HttpFoundationResponse($testData['responseBody'], $testData['responseStatusCode'], $testData['responseHeaders']);
+        $testData['psr7Response']    = new Response($testData['responseBodyStream'], $testData['responseStatusCode'], $testData['responseHeaders']);
+
+        $testData['rawSymfonyResponse']  = "Status: 201\r\n";
+        $testData['rawSymfonyResponse'] .= $testData['symfonyResponse']->headers . "\r\n";
+        $testData['rawSymfonyResponse'] .= $testData['responseBody'];
+
+        $testData['rawPsr7Response'] = 'Status: 201 ' . $testData['psr7Response']->getReasonPhrase() . "\r\n";
+        foreach ($testData['psr7Response']->getHeaders() as $name => $value) {
+            $testData['rawPsr7Response'] .=  $name . ': ' . implode(', ', $value) . "\r\n";
+        }
+        $testData['rawPsr7Response'] .= "\r\n" . $testData['responseBody'];
+
+        return $testData;
     }
 }

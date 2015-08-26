@@ -14,12 +14,12 @@ class Request implements RequestInterface
     /**
      * @var array
      */
-    protected $params;
+    private $params;
 
     /**
      * @var resource
      */
-    protected $stdin;
+    private $stdin;
 
     /**
      * Constructor.

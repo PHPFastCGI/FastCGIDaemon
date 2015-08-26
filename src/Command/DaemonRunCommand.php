@@ -19,12 +19,12 @@ class DaemonRunCommand extends Command
     /**
      * @var DaemonFactoryInterface
      */
-    protected $daemonFactory;
+    private $daemonFactory;
 
     /**
      * @var KernelInterface|callable
      */
-    protected $kernel;
+    private $kernel;
 
     /**
      * Constructor.

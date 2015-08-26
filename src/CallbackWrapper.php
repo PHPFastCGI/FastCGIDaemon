@@ -13,7 +13,7 @@ class CallbackWrapper implements KernelInterface
     /**
      * @var callable
      */
-    protected $callback;
+    private $callback;
 
     /**
      * Constructor.

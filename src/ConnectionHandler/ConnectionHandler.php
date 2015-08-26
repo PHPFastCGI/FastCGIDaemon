@@ -29,32 +29,32 @@ class ConnectionHandler implements ConnectionHandlerInterface, LoggerAwareInterf
     /**
      * @var bool
      */
-    protected $shutdown;
+    private $shutdown;
 
     /**
      * @var KernelInterface
      */
-    protected $kernel;
+    private $kernel;
 
     /**
      * @var ConnectionInterface
      */
-    protected $connection;
+    private $connection;
 
     /**
      * @var array
      */
-    protected $requests;
+    private $requests;
 
     /**
      * @var string
      */
-    protected $buffer;
+    private $buffer;
 
     /**
      * @var int
      */
-    protected $bufferLength;
+    private $bufferLength;
 
     /**
      * Constructor.
@@ -127,7 +127,7 @@ class ConnectionHandler implements ConnectionHandlerInterface, LoggerAwareInterf
      *
      * @return array|null The record that has been read
      */
-    protected function readRecord()
+    private function readRecord()
     {
         // Not enough data to read header
         if ($this->bufferLength < 8) {
@@ -157,90 +157,13 @@ class ConnectionHandler implements ConnectionHandlerInterface, LoggerAwareInterf
     }
 
     /**
-     * Write a record to the connection.
-     *
-     * @param int    $requestId The request id to write to
-     * @param int    $type      The type of record
-     * @param string $content   The content of the record
-     */
-    protected function writeRecord($requestId, $type, $content = null)
-    {
-        $contentLength = null === $content ? 0 : strlen($content);
-
-        $headerData = pack('CCnnxx', DaemonInterface::FCGI_VERSION_1, $type, $requestId, $contentLength);
-
-        $this->connection->write($headerData);
-
-        if (null !== $content) {
-            $this->connection->write($content);
-        }
-    }
-
-    /**
-     * Write a response to the connection as FCGI_STDOUT records.
-     *
-     * @param int             $requestId  The request id to write to
-     * @param string          $headerData The header data to write (including terminating CRLFCRLF)
-     * @param StreamInterface $stream     The stream to write
-     */
-    protected function writeResponse($requestId, $headerData, StreamInterface $stream)
-    {
-        $data = $headerData;
-        $eof  = false;
-
-        $stream->rewind();
-
-        do {
-            $dataLength = strlen($data);
-
-            if ($dataLength < 65535 && !$eof && !($eof = $stream->eof())) {
-                $readLength  = 65535 - $dataLength;
-                $data       .= $stream->read($readLength);
-                $dataLength  = strlen($data);
-            }
-
-            $writeSize = min($dataLength, 65535);
-            $writeData = substr($data, 0, $writeSize);
-            $data      = substr($data, $writeSize);
-
-            $this->writeRecord($requestId, DaemonInterface::FCGI_STDOUT, $writeData);
-        } while ($writeSize === 65535);
-
-        $this->writeRecord($requestId, DaemonInterface::FCGI_STDOUT);
-    }
-
-    /**
-     * End the request by writing an FCGI_END_REQUEST record and then removing
-     * the request from memory and closing the connection if necessary.
-     *
-     * @param int $requestId      The request id to end
-     * @param int $appStatus      The application status to declare
-     * @param int $protocolStatus The protocol status to declare
-     */
-    protected function endRequest($requestId, $appStatus = 0, $protocolStatus = DaemonInterface::FCGI_REQUEST_COMPLETE)
-    {
-        $content = pack('NCx3', $appStatus, $protocolStatus);
-        $this->writeRecord($requestId, DaemonInterface::FCGI_END_REQUEST, $content);
-
-        $keepAlive = $this->requests[$requestId]['keepAlive'];
-
-        fclose($this->requests[$requestId]['stdin']);
-
-        unset($this->requests[$requestId]);
-
-        if (!$keepAlive) {
-            $this->close();
-        }
-    }
-
-    /**
      * Process a record.
      *
      * @param array $record The record that has been read
      *
      * @throws ProtocolException If the client sends an unexpected record.
      */
-    protected function processRecord(array $record)
+    private function processRecord(array $record)
     {
         $requestId = $record['requestId'];
 
@@ -276,7 +199,7 @@ class ConnectionHandler implements ConnectionHandlerInterface, LoggerAwareInterf
      *
      * @throws ProtocolException If the FCGI_BEGIN_REQUEST record is unexpected
      */
-    protected function processBeginRequestRecord($requestId, $contentData)
+    private function processBeginRequestRecord($requestId, $contentData)
     {
         if (isset($this->requests[$requestId])) {
             throw new ProtocolException('Unexpected FCGI_BEGIN_REQUEST record');
@@ -313,7 +236,7 @@ class ConnectionHandler implements ConnectionHandlerInterface, LoggerAwareInterf
      *
      * @throws ProtocolException If the FCGI_PARAMS record is unexpected
      */
-    protected function processParamsRecord($requestId, $contentData)
+    private function processParamsRecord($requestId, $contentData)
     {
         if (!isset($this->requests[$requestId])) {
             throw new ProtocolException('Unexpected FCGI_PARAMS record');
@@ -364,7 +287,7 @@ class ConnectionHandler implements ConnectionHandlerInterface, LoggerAwareInterf
      *
      * @throws ProtocolException If the FCGI_STDIN record is unexpected
      */
-    protected function processStdinRecord($requestId, $contentData)
+    private function processStdinRecord($requestId, $contentData)
     {
         if (!isset($this->requests[$requestId])) {
             throw new ProtocolException('Unexpected FCGI_STDIN record');
@@ -386,13 +309,90 @@ class ConnectionHandler implements ConnectionHandlerInterface, LoggerAwareInterf
      *
      * @throws ProtocolException If the FCGI_ABORT_REQUEST record is unexpected
      */
-    protected function processAbortRequestRecord($requestId)
+    private function processAbortRequestRecord($requestId)
     {
         if (!isset($this->requests[$requestId])) {
             throw new ProtocolException('Unexpected FCG_ABORT_REQUEST record');
         }
 
         $this->endRequest($requestId);
+    }
+    
+    /**
+     * End the request by writing an FCGI_END_REQUEST record and then removing
+     * the request from memory and closing the connection if necessary.
+     *
+     * @param int $requestId      The request id to end
+     * @param int $appStatus      The application status to declare
+     * @param int $protocolStatus The protocol status to declare
+     */
+    private function endRequest($requestId, $appStatus = 0, $protocolStatus = DaemonInterface::FCGI_REQUEST_COMPLETE)
+    {
+        $content = pack('NCx3', $appStatus, $protocolStatus);
+        $this->writeRecord($requestId, DaemonInterface::FCGI_END_REQUEST, $content);
+
+        $keepAlive = $this->requests[$requestId]['keepAlive'];
+
+        fclose($this->requests[$requestId]['stdin']);
+
+        unset($this->requests[$requestId]);
+
+        if (!$keepAlive) {
+            $this->close();
+        }
+    }
+
+    /**
+     * Write a record to the connection.
+     *
+     * @param int    $requestId The request id to write to
+     * @param int    $type      The type of record
+     * @param string $content   The content of the record
+     */
+    private function writeRecord($requestId, $type, $content = null)
+    {
+        $contentLength = null === $content ? 0 : strlen($content);
+
+        $headerData = pack('CCnnxx', DaemonInterface::FCGI_VERSION_1, $type, $requestId, $contentLength);
+
+        $this->connection->write($headerData);
+
+        if (null !== $content) {
+            $this->connection->write($content);
+        }
+    }
+
+    /**
+     * Write a response to the connection as FCGI_STDOUT records.
+     *
+     * @param int             $requestId  The request id to write to
+     * @param string          $headerData The header data to write (including terminating CRLFCRLF)
+     * @param StreamInterface $stream     The stream to write
+     */
+    private function writeResponse($requestId, $headerData, StreamInterface $stream)
+    {
+        $data = $headerData;
+        $eof  = false;
+
+        $stream->rewind();
+
+        do {
+            $dataLength = strlen($data);
+
+            if ($dataLength < 65535 && !$eof && !($eof = $stream->eof())) {
+                $readLength  = 65535 - $dataLength;
+                $data       .= $stream->read($readLength);
+                $dataLength  = strlen($data);
+            }
+
+            $writeSize = min($dataLength, 65535);
+            $writeData = substr($data, 0, $writeSize);
+            $data      = substr($data, $writeSize);
+
+            $this->writeRecord($requestId, DaemonInterface::FCGI_STDOUT, $writeData);
+        } while ($writeSize === 65535);
+
+        $this->writeRecord($requestId, DaemonInterface::FCGI_STDOUT);
     }
 
     /**
@@ -402,7 +402,7 @@ class ConnectionHandler implements ConnectionHandlerInterface, LoggerAwareInterf
      *
      * @throws DaemonException If there is an error dispatching the request
      */
-    protected function dispatchRequest($requestId)
+    private function dispatchRequest($requestId)
     {
         $request = new Request(
             $this->requests[$requestId]['params'],
@@ -434,7 +434,7 @@ class ConnectionHandler implements ConnectionHandlerInterface, LoggerAwareInterf
      * @param int               $requestId The request id to respond to
      * @param ResponseInterface $response  The PSR-7 HTTP response message
      */
-    protected function sendResponse($requestId, ResponseInterface $response)
+    private function sendResponse($requestId, ResponseInterface $response)
     {
         $statusCode   = $response->getStatusCode();
         $reasonPhrase = $response->getReasonPhrase();
@@ -456,7 +456,7 @@ class ConnectionHandler implements ConnectionHandlerInterface, LoggerAwareInterf
      * @param int                    $requestId The request id to respond to
      * @param HttpFoundationResponse $response  The HTTP foundation response message
      */
-    protected function sendHttpFoundationResponse($requestId, HttpFoundationResponse $response)
+    private function sendHttpFoundationResponse($requestId, HttpFoundationResponse $response)
     {
         $statusCode = $response->getStatusCode();
 

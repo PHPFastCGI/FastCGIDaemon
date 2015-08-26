@@ -14,22 +14,22 @@ class StreamSocketConnectionPool implements ConnectionPoolInterface
     /**
      * @var resource
      */
-    protected $serverSocket;
+    private $serverSocket;
 
     /**
      * @var resource[]
      */
-    protected $clientSockets;
+    private $clientSockets;
 
     /**
      * @var Connection[]
      */
-    protected $connections;
+    private $connections;
 
     /**
      * @var ConnectionHandlerInterface[]
      */
-    protected $connectionHandlers;
+    private $connectionHandlers;
 
     /**
      * Constructor.
@@ -110,7 +110,7 @@ class StreamSocketConnectionPool implements ConnectionPoolInterface
      *
      * @param ConnectionHandlerFactoryInterface $connectionHandlerFactory The factory used to create connection handlers
      */
-    protected function acceptConnection(ConnectionHandlerFactoryInterface $connectionHandlerFactory)
+    private function acceptConnection(ConnectionHandlerFactoryInterface $connectionHandlerFactory)
     {
         $clientSocket = @stream_socket_accept($this->serverSocket);
 
@@ -131,7 +131,7 @@ class StreamSocketConnectionPool implements ConnectionPoolInterface
     /**
      * Remove connections.
      */
-    protected function removeConnections()
+    private function removeConnections()
     {
         foreach ($this->connections as $id => $connection) {
             if ($connection->isClosed()) {
