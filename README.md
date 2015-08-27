@@ -6,6 +6,8 @@
 
 A FastCGI daemon written in PHP.
 
+Visit the [project website](http://phpfastcgi.github.io/).
+
 ## Introduction
 
 Using this daemon, applications can stay alive between HTTP requests whilst operating behind the protection of a FastCGI enabled web server.
