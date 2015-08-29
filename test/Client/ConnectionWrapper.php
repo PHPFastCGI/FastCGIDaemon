@@ -97,10 +97,7 @@ class ConnectionWrapper
     public function writeRequest($requestId, array $params, $body)
     {
         $this->writeBeginRequestRecord($requestId, DaemonInterface::FCGI_RESPONDER, 0);
-
-        foreach ($params as $name => $value) {
-            $this->writeParamsRecord($requestId, $name, $value);
-        }
+        $this->writeParamsRecord($requestId, $params);
 
         $this->writeParamsRecord($requestId);
 
@@ -147,13 +144,12 @@ class ConnectionWrapper
     /**
      * Write a params record.
      *
-     * @param int    $requestId
-     * @param string $name
-     * @param string $value
+     * @param int   $requestId
+     * @param array $params
      */
-    public function writeParamsRecord($requestId, $name = null, $value = null)
+    public function writeParamsRecord($requestId, array $params = null)
     {
-        if (null === $name && null === $value) {
+        if (null === $params) {
             $this->writeRecord(DaemonInterface::FCGI_PARAMS, $requestId);
 
             return;
@@ -171,11 +167,13 @@ class ConnectionWrapper
             }
         };
 
-        $addLength($name);
-        $addLength($value);
+        foreach ($params as $name => $value) {
+            $addLength($name);
+            $addLength($value);
 
-        $content .= $name;
-        $content .= $value;
+            $content .= $name;
+            $content .= $value;
+        }
 
         $contentLength = strlen($content);
         $paddingLength = ((int) ceil(((float) $contentLength) / 8.0) * 8) - $contentLength;

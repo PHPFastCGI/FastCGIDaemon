@@ -246,37 +246,61 @@ class ConnectionHandler implements ConnectionHandlerInterface, LoggerAwareInterf
             return;
         }
 
-        $initialBytes = unpack('C5', $contentData);
+        do {
+            $this->readNameValuePair($requestId, $contentData);
+        } while (strlen($contentData) > 0);
+    }
 
-        $extendedLengthName  = $initialBytes[1] & 0x80;
-        $extendedLengthValue = $extendedLengthName ? $initialBytes[5] & 0x80 : $initialBytes[2] & 0x80;
-
-        $structureFormat = (
-            ($extendedLengthName  ? 'N' : 'C').'nameLength/'.
-            ($extendedLengthValue ? 'N' : 'C').'valueLength'
-        );
-
-        $structure = unpack($structureFormat, $contentData);
-
-        if ($extendedLengthName) {
-            $structure['nameLength'] &= 0x7FFFFFFF;
-        }
-
-        if ($extendedLengthValue) {
-            $structure['valueLength'] &= 0x7FFFFFFF;
-        }
-
-        $skipLength = ($extendedLengthName ? 4 : 1) + ($extendedLengthValue ? 4 : 1);
+    /**
+     * Read a FastCGI name-value pair from a buffer and add it to the request params
+     * 
+     * @param int    $requestId The request id that sent the name-value pair
+     * @param string $buffer    The buffer to read the pair from (pass by reference)
+     */
+    private function readNameValuePair($requestId, &$buffer)
+    {
+        $nameLength  = $this->readFieldLength($buffer);
+        $valueLength = $this->readFieldLength($buffer);
 
         $contentFormat = (
-            'x'.$skipLength.'/'.
-            'a'.$structure['nameLength'].'name/'.
-            'a'.$structure['valueLength'].'value/'
+            'a'.$nameLength.'name/'.
+            'a'.$valueLength.'value/'
         );
 
-        $content = unpack($contentFormat, $contentData);
-
+        $content = unpack($contentFormat, $buffer);
         $this->requests[$requestId]['params'][$content['name']] = $content['value'];
+
+        $buffer = substr($buffer, $nameLength + $valueLength);
+    }
+
+    /**
+     * Read the field length of a FastCGI name-value pair from a buffer
+     * 
+     * @param string $buffer The buffer to read the field length from (pass by reference)
+     * 
+     * @return int The length of the field
+     */
+    private function readFieldLength(&$buffer)
+    {
+        $block = unpack('C4', $buffer);
+        $skip  = 1;
+
+        if ($block[1] & 0x80) {
+            $length = (
+                (($block[1] & 0x7F) << 24) |
+                 ($block[2]         << 16) |
+                 ($block[3]         <<  8) |
+                  $block[4]
+            );
+
+            $skip = 4;
+        } else {
+            $length = $block[1];
+        }
+
+        $buffer = substr($buffer, $skip);
+
+        return $length;
     }
 
     /**

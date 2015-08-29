@@ -103,7 +103,7 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
 
         // Write half of the first request (id 0)
         $context['clientWrapper']->writeBeginRequestRecord(0, DaemonInterface::FCGI_RESPONDER, DaemonInterface::FCGI_KEEP_CONNECTION);
-        $context['clientWrapper']->writeParamsRecord(0, 'foo', 'bar');
+        $context['clientWrapper']->writeParamsRecord(0, ['foo' => 'bar']);
         $context['clientWrapper']->writeParamsRecord(0);
 
         // Process first half of the first request
