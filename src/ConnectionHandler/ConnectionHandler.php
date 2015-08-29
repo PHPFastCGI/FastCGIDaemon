@@ -169,25 +169,24 @@ class ConnectionHandler implements ConnectionHandlerInterface, LoggerAwareInterf
 
         $content = 0 === $record['contentLength'] ? null : $record['contentData'];
 
-        switch ($record['type']) {
-            case DaemonInterface::FCGI_BEGIN_REQUEST:
-                $this->processBeginRequestRecord($requestId, $content);
-                break;
-
-            case DaemonInterface::FCGI_PARAMS:
-                $this->processParamsRecord($requestId, $content);
-                break;
-
-            case DaemonInterface::FCGI_STDIN:
-                $this->processStdinRecord($requestId, $content);
-                break;
-
-            case DaemonInterface::FCGI_ABORT_REQUEST:
-                $this->processAbortRequestRecord($requestId);
-                break;
-
-            default:
-                throw new ProtocolException('Unexpected packet of unkown type: '.$record['type']);
+        if (DaemonInterface::FCGI_BEGIN_REQUEST === $record['type']) {
+            $this->processBeginRequestRecord($requestId, $content);
+        } elseif (!isset($this->requests[$requestId])) {
+            throw new ProtocolException('Invalid request id for record of type: ' . $record['type']);
+        } elseif (DaemonInterface::FCGI_PARAMS === $record['type']) {
+            while (strlen($content) > 0) {
+                $this->readNameValuePair($requestId, $content);
+            }
+        } elseif (DaemonInterface::FCGI_STDIN === $record['type']) {
+            if (null !== $content) {
+                fwrite($this->requests[$requestId]['stdin'], $content);
+            } else {
+                $this->dispatchRequest($requestId);
+            }
+        } elseif (DaemonInterface::FCGI_ABORT_REQUEST === $record['type']) {
+            $this->endRequest($requestId);
+        } else {
+            throw new ProtocolException('Unexpected packet of type: '.$record['type']);
         }
     }
 
@@ -226,29 +225,6 @@ class ConnectionHandler implements ConnectionHandlerInterface, LoggerAwareInterf
             $this->endRequest($requestId, 0, DaemonInterface::FCGI_UNKNOWN_ROLE);
             return;
         }
-    }
-
-    /**
-     * Process a FCGI_PARAMS record.
-     *
-     * @param int    $requestId   The request id sending the record
-     * @param string $contentData The content of the record
-     *
-     * @throws ProtocolException If the FCGI_PARAMS record is unexpected
-     */
-    private function processParamsRecord($requestId, $contentData)
-    {
-        if (!isset($this->requests[$requestId])) {
-            throw new ProtocolException('Unexpected FCGI_PARAMS record');
-        }
-
-        if (null === $contentData) {
-            return;
-        }
-
-        do {
-            $this->readNameValuePair($requestId, $contentData);
-        } while (strlen($contentData) > 0);
     }
 
     /**
@@ -303,45 +279,6 @@ class ConnectionHandler implements ConnectionHandlerInterface, LoggerAwareInterf
         return $length;
     }
 
-    /**
-     * Process a FCGI_STDIN record.
-     *
-     * @param int    $requestId   The request id sending the record
-     * @param string $contentData The content of the record
-     *
-     * @throws ProtocolException If the FCGI_STDIN record is unexpected
-     */
-    private function processStdinRecord($requestId, $contentData)
-    {
-        if (!isset($this->requests[$requestId])) {
-            throw new ProtocolException('Unexpected FCGI_STDIN record');
-        }
-
-        if (null === $contentData) {
-            $this->dispatchRequest($requestId);
-
-            return;
-        }
-
-        fwrite($this->requests[$requestId]['stdin'], $contentData);
-    }
-
-    /**
-     * Process a FCGI_ABORT_REQUEST record.
-     *
-     * @param int $requestId The request id sending the record
-     *
-     * @throws ProtocolException If the FCGI_ABORT_REQUEST record is unexpected
-     */
-    private function processAbortRequestRecord($requestId)
-    {
-        if (!isset($this->requests[$requestId])) {
-            throw new ProtocolException('Unexpected FCG_ABORT_REQUEST record');
-        }
-
-        $this->endRequest($requestId);
-    }
-    
     /**
      * End the request by writing an FCGI_END_REQUEST record and then removing
      * the request from memory and closing the connection if necessary.

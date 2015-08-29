@@ -220,9 +220,10 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * Test that the daemon correctly handles an unexpected abort request record.
+     * Test that the daemon correctly handles an abort request record with a
+     * request id that hasn't been initiated.
      */
-    public function testUnexpectedAbortRequestRecord()
+    public function testInvalidRequestId()
     {
         $context = $this->createTestingContext();
 
@@ -239,7 +240,7 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
         $expectedLogMessages = [
             [
                 'level'   => 'error',
-                'message' => 'Unexpected FCG_ABORT_REQUEST record',
+                'message' => 'Invalid request id for record of type: '.DaemonInterface::FCGI_ABORT_REQUEST,
                 'context' => [],
             ],
         ];
@@ -257,6 +258,7 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
         $context = $this->createTestingContext();
 
         // Write a record with a type that makes no sense (application doesn't receive stdout)
+        $context['clientWrapper']->writeBeginRequestRecord(0, DaemonInterface::FCGI_RESPONDER, 0);
         $context['clientWrapper']->writeRecord(DaemonInterface::FCGI_STDOUT, 0);
 
         // Run the handler
@@ -269,7 +271,7 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
         $expectedLogMessages = [
             [
                 'level'   => 'error',
-                'message' => 'Unexpected packet of unkown type: '.DaemonInterface::FCGI_STDOUT,
+                'message' => 'Unexpected packet of type: '.DaemonInterface::FCGI_STDOUT,
                 'context' => [],
             ],
         ];
@@ -306,68 +308,6 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
             ],
         ];
 
-        $this->assertEquals($expectedLogMessages, $context['logger']->getMessages());
-
-        // Close the client side socket
-        fclose($context['sockets'][0]);
-    }
-
-    /**
-     * Test that the daemon throws an error if a stdin record is received for
-     * an unknown request id.
-     */
-    public function testUnexpectedStdinRecord()
-    {
-        $context = $this->createTestingContext();
-
-        // Write an unexpected record and close the connection
-        $context['clientWrapper']->writeStdinRecord(0);
-
-        // Run the handler
-        $context['handler']->ready();
-
-        // Check daemon has closed server side connection
-        $this->assertTrue($context['connection']->isClosed());
-
-        // Check the logging has worked
-        $expectedLogMessages = [
-            [
-                'level'   => 'error',
-                'message' => 'Unexpected FCGI_STDIN record',
-                'context' => [],
-            ],
-        ];
-        $this->assertEquals($expectedLogMessages, $context['logger']->getMessages());
-
-        // Close the client side socket
-        fclose($context['sockets'][0]);
-    }
-
-    /**
-     * Test that the daemon throws an error if a params record is received for
-     * an unknown request id.
-     */
-    public function testUnexpectedParamsRecord()
-    {
-        $context = $this->createTestingContext();
-
-        // Write an unexpected record and close the connection
-        $context['clientWrapper']->writeParamsRecord(0);
-
-        // Run the handler
-        $context['handler']->ready();
-
-        // Check daemon has closed server side connection
-        $this->assertTrue($context['connection']->isClosed());
-
-        // Check the logging has worked
-        $expectedLogMessages = [
-            [
-                'level'   => 'error',
-                'message' => 'Unexpected FCGI_PARAMS record',
-                'context' => [],
-            ],
-        ];
         $this->assertEquals($expectedLogMessages, $context['logger']->getMessages());
 
         // Close the client side socket
