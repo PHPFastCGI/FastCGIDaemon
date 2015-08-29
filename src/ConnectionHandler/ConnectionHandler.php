@@ -258,20 +258,15 @@ class ConnectionHandler implements ConnectionHandlerInterface, LoggerAwareInterf
      */
     private function readFieldLength(&$buffer)
     {
-        $block = unpack('C4', $buffer);
-        $skip  = 1;
+        $block  = unpack('C4', $buffer);
 
-        if ($block[1] & 0x80) {
-            $length = (
-                (($block[1] & 0x7F) << 24) |
-                 ($block[2]         << 16) |
-                 ($block[3]         <<  8) |
-                  $block[4]
-            );
+        $length = $block[1];
+        $skip   = 1;
 
-            $skip = 4;
-        } else {
-            $length = $block[1];
+        if ($length & 0x80) {
+            $fullBlock = unpack('N', $buffer);
+            $length    = $fullBlock[1] & 0x7FFFFFFF;
+            $skip      = 4;
         }
 
         $buffer = substr($buffer, $skip);
