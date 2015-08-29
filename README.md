@@ -18,6 +18,12 @@ The [Speedfony Bundle](https://github.com/PHPFastCGI/SpeedfonyBundle) integrates
 The [Slimmer package](https://github.com/PHPFastCGI/Slimmer) integrates this daemon with the Slim v3 framework.
 The [Speedex package](https://github.com/PHPFastCGI/Speedex) integrates this daemon with the Silex framework.
 
+## Current Status
+
+This daemon is currently in early development stages and not considered stable. A stable release is expected by September 2015.
+
+Contributions and suggestions are welcome.
+
 ## Usage
 
 Below is an example of a simple 'Hello, World!' FastCGI application in PHP.
@@ -66,9 +72,3 @@ php /path/to/command.php run --port=5000 --host=localhost
 ```
 
 If you are using a web server such as nginx, you will need to use a process manager to monitor and run your application.
-
-## Current Status
-
-This daemon is currently in early development stages and not considered stable. A stable release is expected by September 2015.
-
-Contributions and suggestions are welcome.
