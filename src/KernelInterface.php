@@ -7,8 +7,8 @@ use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 
 /**
- * Objects that implement the KernelInterface can be used by the FastCGIDaemon
- * to 
+ * The FastCGIDaemon uses Objects that implement the KernelInterface to respond
+ * to HTTP requests.
  */
 interface KernelInterface
 {
