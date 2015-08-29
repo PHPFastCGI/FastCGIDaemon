@@ -4,17 +4,12 @@ namespace PHPFastCGI\Test\FastCGIDaemon\Connection;
 
 use PHPFastCGI\FastCGIDaemon\Connection\ConnectionPoolInterface;
 use PHPFastCGI\FastCGIDaemon\ConnectionHandler\ConnectionHandlerFactoryInterface;
-use Psr\Log\LoggerAwareInterface;
-use Psr\Log\LoggerAwareTrait;
-use Psr\Log\LoggerInterface;
 
 /**
  * Implementation of ConnectionHandlerInterface using callbacks.
  */
-class CallableConnectionPool implements ConnectionPoolInterface, LoggerAwareInterface
+class CallableConnectionPool implements ConnectionPoolInterface
 {
-    use LoggerAwareTrait;
-
     /**
      * @var callable
      */
@@ -35,16 +30,6 @@ class CallableConnectionPool implements ConnectionPoolInterface, LoggerAwareInte
     {
         $this->callback         = $callback;
         $this->shutdownCallback = $shutdownCallback;
-    }
-
-    /**
-     * Return the current logger
-     * 
-     * @return LoggerInterface
-     */
-    public function getLogger()
-    {
-        return $this->logger;
     }
 
     /**

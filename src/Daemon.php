@@ -6,7 +6,6 @@ use PHPFastCGI\FastCGIDaemon\Connection\ConnectionPoolInterface;
 use PHPFastCGI\FastCGIDaemon\ConnectionHandler\ConnectionHandlerFactoryInterface;
 use PHPFastCGI\FastCGIDaemon\Exception\ShutdownException;
 use Psr\Log\LoggerAwareInterface;
-use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
@@ -16,8 +15,6 @@ use Psr\Log\NullLogger;
  */
 class Daemon implements DaemonInterface, LoggerAwareInterface
 {
-    use LoggerAwareTrait;
-
     /**
      * @var ConnectionPoolInterface
      */
@@ -27,6 +24,11 @@ class Daemon implements DaemonInterface, LoggerAwareInterface
      * @var ConnectionHandlerFactoryInterface
      */
     private $connectionHandlerFactory;
+
+    /**
+     * @var LoggerInterface
+     */
+    private $logger;
 
     /**
      * Constructor.
@@ -41,10 +43,14 @@ class Daemon implements DaemonInterface, LoggerAwareInterface
         $this->connectionHandlerFactory = $connectionHandlerFactory;
 
         $this->setLogger((null === $logger) ? new NullLogger() : $logger);
+    }
 
-        if ($this->connectionPool instanceof LoggerAwareInterface) {
-            $this->connectionPool->setLogger($this->logger);
-        }
+    /**
+     * {@inheritdoc}
+     */
+    public function setLogger(LoggerInterface $logger)
+    {
+        $this->logger = $logger;
 
         if ($this->connectionHandlerFactory instanceof LoggerAwareInterface) {
             $this->connectionHandlerFactory->setLogger($this->logger);

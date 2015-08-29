@@ -37,7 +37,6 @@ class DaemonTest extends \PHPUnit_Framework_TestCase
 
         // Test loggers have been set
         $this->assertSame($logger, $mockConnectionHandlerFactory->getLogger());
-        $this->assertSame($logger, $mockConnectionPool->getLogger());
 
         try {
             $daemon->run();
