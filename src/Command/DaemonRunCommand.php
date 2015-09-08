@@ -5,6 +5,7 @@ namespace PHPFastCGI\FastCGIDaemon\Command;
 use PHPFastCGI\FastCGIDaemon\DaemonFactory;
 use PHPFastCGI\FastCGIDaemon\DaemonFactoryInterface;
 use PHPFastCGI\FastCGIDaemon\KernelInterface;
+use Psr\Log\LoggerAwareInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -80,7 +81,9 @@ class DaemonRunCommand extends Command
             $daemon = $this->daemonFactory->createDaemon($this->kernel);
         }
 
-        $daemon->setLogger(new ConsoleLogger($output));
+        if ($daemon instanceof LoggerAwareInterface) {
+            $daemon->setLogger(new ConsoleLogger($output));
+        }
 
         $daemon->run();
     }

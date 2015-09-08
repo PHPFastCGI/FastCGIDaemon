@@ -4,6 +4,7 @@ namespace PHPFastCGI\FastCGIDaemon;
 
 use PHPFastCGI\FastCGIDaemon\Connection\StreamSocketConnectionPool;
 use PHPFastCGI\FastCGIDaemon\ConnectionHandler\ConnectionHandlerFactory;
+use PHPFastCGI\FastCGIDaemon\FastCGIExtensionDaemon;
 
 /**
  * The default implementation of the DaemonFactoryInterface.
@@ -17,6 +18,11 @@ class DaemonFactory implements DaemonFactoryInterface
      */
     public function createDaemon($kernel)
     {
+        /* if (extension_loaded('fastcgi')) {
+            return new FastCGIExtensionDaemon($kernel);
+        } */
+
+        // Fallback on raw PHP implementation
         $socket = fopen('php://fd/'.DaemonInterface::FCGI_LISTENSOCK_FILENO, 'r');
 
         if (false === $socket) {
