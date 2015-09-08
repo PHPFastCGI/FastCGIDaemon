@@ -18,9 +18,9 @@ class DaemonFactory implements DaemonFactoryInterface
      */
     public function createDaemon($kernel)
     {
-        /* if (extension_loaded('fastcgi')) {
+        if (extension_loaded('fastcgi')) {
             return new FastCGIExtensionDaemon($kernel);
-        } */
+        }
 
         // Fallback on raw PHP implementation
         $socket = fopen('php://fd/'.DaemonInterface::FCGI_LISTENSOCK_FILENO, 'r');
