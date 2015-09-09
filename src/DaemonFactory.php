@@ -19,7 +19,7 @@ class DaemonFactory implements DaemonFactoryInterface
     public function createDaemon($kernel)
     {
         if (extension_loaded('fastcgi')) {
-            return new FastCGIExtensionDaemon($kernel);
+            return new FastCGIExtensionDaemon(new \FastCGIApplication, $kernel);
         }
 
         // Fallback on raw PHP implementation
@@ -39,6 +39,10 @@ class DaemonFactory implements DaemonFactoryInterface
      */
     public function createTcpDaemon($kernel, $port, $host = 'localhost')
     {
+        if ('localhost' === $host && extension_loaded('fastcgi')) {
+            return new FastCGIExtensionDaemon(new \FastCGIApplication(':'.$port), $kernel);
+        }
+
         $address = 'tcp://'.$host.':'.$port;
         $socket  = stream_socket_server($address);
 

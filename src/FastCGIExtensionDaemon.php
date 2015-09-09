@@ -12,6 +12,13 @@ use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
  */
 class FastCGIExtensionDaemon implements DaemonInterface
 {
+    const BUFFER_SIZE = 20480; // 20 KB
+
+    /**
+     * @var FastCGIApplicationInterface
+     */
+    private $fastCGIApplication;
+
     /**
      * @var KernelInterface
      */
@@ -20,10 +27,21 @@ class FastCGIExtensionDaemon implements DaemonInterface
     /**
      * Constructor.
      * 
-     * @param KernelInterface|callable $kernel
+     * @param FastCGIApplicationInterface $fastCGIApplication
+     * @param KernelInterface|callable    $kernel
      */
-    public function __construct($kernel)
+    public function __construct($fastCGIApplication, $kernel)
     {
+        if (!extension_loaded('fastcgi')) {
+            throw new \RuntimeException('This implementation of DaemonInterface requires the PHPFastCGI php5-fastcgi extension to be installed and enabled');
+        }
+
+        if (!$fastCGIApplication instanceof \FastCGIApplicationInterface) {
+            throw new \InvalidArgumentException('First argument passed must be instance of FastCGIApplicationInterface');
+        }
+
+        $this->fastCGIApplication = $fastCGIApplication;
+
         if ($kernel instanceof KernelInterface) {
             $this->kernel = $kernel;
         } else {
@@ -36,29 +54,36 @@ class FastCGIExtensionDaemon implements DaemonInterface
      */
     public function run()
     {
-        fastcgi_accept(function (array $params, $stdin) {
+        while ($this->fastCGIApplication->accept()) {
+            $params = $this->fastCGIApplication->getParams();
+            $stdin  = fopen('php://temp', 'r+');
+
+            while (!$this->fastCGIApplication->stdinEof()) {
+                fwrite($stdin, $this->fastCGIApplication->stdinRead(self::BUFFER_SIZE));
+            }
+
+            rewind($stdin);
+
             $request = new Request($params, $stdin);
 
             $response = $this->kernel->handleRequest($request);
 
             if ($response instanceof ResponseInterface) {
-                $stdout = $this->getStdoutFromResponse($response);
+                $this->writeResponse($response);
             } elseif ($response instanceof HttpFoundationResponse) {
-                $stdout = $this->getStdoutFromHttpFoundationResponse($response);
+                $this->writeHttpFoundationResponse($response);
             } else {
                 throw new \LogicException('Kernel must return a PSR-7 or HttpFoundation response message');
             }
-
-            return $stdout;
-        });
+        }
     }
 
     /**
-     * Get the standard output stream from a PSR-7 response
+     * Write a PSR-7 response to the FastCGI application standard output
      * 
      * @param ResponseInterface $response The PSR-7 HTTP response message
      */
-    private function getStdoutFromResponse(ResponseInterface $response)
+    private function writeResponse(ResponseInterface $response)
     {
         $statusCode   = $response->getStatusCode();
         $reasonPhrase = $response->getReasonPhrase();
@@ -71,19 +96,14 @@ class FastCGIExtensionDaemon implements DaemonInterface
 
         $headerData .= "\r\n";
 
-        $stdout = fopen('php://temp', 'r+');
-        fwrite($stdout, $headerData);
+        $this->fastCGIApplication->stdoutWrite($headerData);
 
         $responseBody = $response->getBody();
         $responseBody->rewind();
 
         while (!$responseBody->eof()) {
-            fwrite($stdout, $responseBody->read(20 * 1024));
+            $this->fastCGIApplication->stdoutWrite($responseBody->read(self::BUFFER_SIZE));
         }
-
-        rewind($stdout);
-
-        return $stdout;
     }
 
 
@@ -99,12 +119,7 @@ class FastCGIExtensionDaemon implements DaemonInterface
         $headerData  = "Status: {$statusCode}\r\n";
         $headerData .= $response->headers . "\r\n";
 
-        $stdout = fopen('php://temp', 'r+');
-        fwrite($stdout, $headerData);
-        fwrite($stdout, $response->getContent());
-        
-        rewind($stdout);
-
-        return $stdout;
+        $this->fastCGIApplication->stdoutWrite($headerData);
+        $this->fastCGIApplication->stdoutWrite($response->getContent());
     }
 }
