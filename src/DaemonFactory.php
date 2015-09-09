@@ -40,7 +40,8 @@ class DaemonFactory implements DaemonFactoryInterface
     public function createTcpDaemon($kernel, $port, $host = 'localhost')
     {
         if ('localhost' === $host && extension_loaded('fastcgi')) {
-            return new FastCGIExtensionDaemon(new \FastCGIApplication(':'.$port), $kernel);
+            $fastCGIApplication = new \FastCGIApplication(':'.$port);
+            return new FastCGIExtensionDaemon($fastCGIApplication, $kernel);
         }
 
         $address = 'tcp://'.$host.':'.$port;
