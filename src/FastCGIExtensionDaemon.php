@@ -108,11 +108,11 @@ class FastCGIExtensionDaemon implements DaemonInterface
 
 
     /**
-     * Get the standard output stream from a HttpFoundation response
+     * Write a HttpFoundation response to the FastCGI application standard output
      * 
      * @param HttpFoundationResponse $response The HttpFoundation response message
      */
-    private function getStdoutFromHttpFoundationResponse(HttpFoundationResponse $response)
+    private function writeHttpFoundationResponse(HttpFoundationResponse $response)
     {
         $statusCode = $response->getStatusCode();
 
