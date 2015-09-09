@@ -20,7 +20,7 @@ The [Speedex package](https://github.com/PHPFastCGI/Speedex) integrates this dae
 
 ## Current Status
 
-This daemon is currently in early development stages and not considered stable. A stable release is expected by September 2015.
+This daemon is currently in early development stages and not considered stable. Importantly, this library currently lacks support for uploaded files. A memory leak protection feature is also scheduled for integration that allows the daemon to shutdown after handling 'N' requests.
 
 Contributions and suggestions are welcome.
 
