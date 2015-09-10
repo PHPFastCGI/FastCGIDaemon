@@ -5,10 +5,11 @@ namespace PHPFastCGI\Test\FastCGIDaemon\Connection;
 use PHPFastCGI\FastCGIDaemon\CallbackWrapper;
 use PHPFastCGI\FastCGIDaemon\Connection\StreamSocketConnection;
 use PHPFastCGI\FastCGIDaemon\ConnectionHandler\ConnectionHandler;
-use PHPFastCGI\FastCGIDaemon\Http\RequestInterface;
 use PHPFastCGI\FastCGIDaemon\DaemonInterface;
+use PHPFastCGI\FastCGIDaemon\Exception\ConnectionException;
+use PHPFastCGI\FastCGIDaemon\Exception\ProtocolException;
+use PHPFastCGI\FastCGIDaemon\Http\RequestInterface;
 use PHPFastCGI\Test\FastCGIDaemon\Client\ConnectionWrapper;
-use PHPFastCGI\Test\FastCGIDaemon\Logger\InMemoryLogger;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 use Zend\Diactoros\Response;
 
@@ -76,10 +77,14 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
         fclose($context['sockets'][0]);
 
         // Run the handler
-        $context['handler']->ready();
+        try {
+            $context['handler']->ready();
+            $this->fail('Should have thrown ConnectionException');
+        } catch (ConnectionException $exception) {
+            $this->assertEquals('fread failed', $exception->getMessage());
+        }
 
-        // Check daemon has closed server side connection
-        $this->assertTrue($context['connection']->isClosed());
+        $context['handler']->close();
     }
 
     /**
@@ -157,7 +162,6 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
         // Check response
         $this->assertEquals($expectedResponse, $rawResponse);
 
-        // Close the client side socket
         fclose($context['sockets'][0]);
     }
 
@@ -175,22 +179,14 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
         $context['clientWrapper']->writeStdinRecord(0);
 
         // Run the handler
-        $context['handler']->ready();
+        try {
+            $context['handler']->ready();
+            $this->fail('Should have thrown LogicException');
+        } catch (\LogicException $exception) {
+            $this->assertEquals('Kernel must return a PSR-7 or HttpFoundation response message', $exception->getMessage());
+        }
 
-        // Check daemon has closed server side connection
-        $this->assertTrue($context['connection']->isClosed());
-
-        // Check the logging has worked
-        $expectedLogMessages = [
-            [
-                'level'   => 'error',
-                'message' => 'Kernel must return a PSR-7 or HttpFoundation response message',
-                'context' => [],
-            ],
-        ];
-        $this->assertEquals($expectedLogMessages, $context['logger']->getMessages());
-
-        // Close the client side socket
+        // Close the sockets
         fclose($context['sockets'][0]);
     }
 
@@ -215,7 +211,6 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
         // Check daemon has closed server side connection
         $this->assertTrue($context['connection']->isClosed());
 
-        // Close the client side socket
         fclose($context['sockets'][0]);
     }
 
@@ -231,23 +226,16 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
         $context['clientWrapper']->writeAbortRequestRecord(0);
 
         // Run the handler
-        $context['handler']->ready();
+        try {
+            $context['handler']->ready();
+            $this->fail('Should have thrown ProtocolException');
+        } catch (ProtocolException $exception) {
+            $this->assertEquals('Invalid request id for record of type: '.DaemonInterface::FCGI_ABORT_REQUEST, $exception->getMessage());
+        }
 
-        // Check daemon has closed server side connection
-        $this->assertTrue($context['connection']->isClosed());
-
-        // Check the logging has worked
-        $expectedLogMessages = [
-            [
-                'level'   => 'error',
-                'message' => 'Invalid request id for record of type: '.DaemonInterface::FCGI_ABORT_REQUEST,
-                'context' => [],
-            ],
-        ];
-        $this->assertEquals($expectedLogMessages, $context['logger']->getMessages());
-
-        // Close the client side socket
         fclose($context['sockets'][0]);
+
+        $context['handler']->close();
     }
 
     /**
@@ -262,23 +250,16 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
         $context['clientWrapper']->writeRecord(DaemonInterface::FCGI_STDOUT, 0);
 
         // Run the handler
-        $context['handler']->ready();
+        try {
+            $context['handler']->ready();
+            $this->fail('Should have thrown ProtocolException');
+        } catch (ProtocolException $exception) {
+            $this->assertEquals('Unexpected packet of type: '.DaemonInterface::FCGI_STDOUT, $exception->getMessage());
+        }
 
-        // Check daemon has closed server side connection
-        $this->assertTrue($context['connection']->isClosed());
-
-        // Check the logging has worked
-        $expectedLogMessages = [
-            [
-                'level'   => 'error',
-                'message' => 'Unexpected packet of type: '.DaemonInterface::FCGI_STDOUT,
-                'context' => [],
-            ],
-        ];
-        $this->assertEquals($expectedLogMessages, $context['logger']->getMessages());
-
-        // Close the client side socket
         fclose($context['sockets'][0]);
+
+        $context['handler']->close();
     }
 
     /**
@@ -294,24 +275,16 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
         $context['clientWrapper']->writeBeginRequestRecord(0, DaemonInterface::FCGI_RESPONDER, 0);
 
         // Run the handler
-        $context['handler']->ready();
-
-        // Check daemon has closed server side connection
-        $this->assertTrue($context['connection']->isClosed());
-
-        // Check the logging has worked
-        $expectedLogMessages = [
-            [
-                'level'   => 'error',
-                'message' => 'Unexpected FCGI_BEGIN_REQUEST record',
-                'context' => [],
-            ],
-        ];
-
-        $this->assertEquals($expectedLogMessages, $context['logger']->getMessages());
+        try {
+            $context['handler']->ready();
+            $this->fail('Should have thrown ProtocolException');
+        } catch (ProtocolException $exception) {
+            $this->assertEquals('Unexpected FCGI_BEGIN_REQUEST record', $exception->getMessage());
+        }
 
         // Close the client side socket
         fclose($context['sockets'][0]);
+        fclose($context['sockets'][1]);
     }
 
     /**
@@ -338,7 +311,6 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
         // Check daemon has closed server side connection
         $this->assertTrue($context['connection']->isClosed());
 
-        // Close the client side socket
         fclose($context['sockets'][0]);
     }
 
@@ -389,16 +361,12 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
         $clientWrapper = new ConnectionWrapper($sockets[0]);
         $connection    = new StreamSocketConnection($sockets[1]);
         $handler       = new ConnectionHandler(new CallbackWrapper($callback), $connection);
-        $logger        = new InMemoryLogger();
-
-        $handler->setLogger($logger);
 
         return [
             'sockets'       => $sockets,
             'clientWrapper' => $clientWrapper,
             'connection'    => $connection,
-            'handler'       => $handler,
-            'logger'        => $logger,
+            'handler'       => $handler
         ];
     }
 

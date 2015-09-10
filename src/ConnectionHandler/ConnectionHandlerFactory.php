@@ -5,18 +5,12 @@ namespace PHPFastCGI\FastCGIDaemon\ConnectionHandler;
 use PHPFastCGI\FastCGIDaemon\Connection\ConnectionInterface;
 use PHPFastCGI\FastCGIDaemon\CallbackWrapper;
 use PHPFastCGI\FastCGIDaemon\KernelInterface;
-use Psr\Log\LoggerAwareInterface;
-use Psr\Log\LoggerAwareTrait;
-use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 
 /**
  * The default implementation of the ConnectionHandlerFactoryInterface.
  */
-class ConnectionHandlerFactory implements ConnectionHandlerFactoryInterface, LoggerAwareInterface
+class ConnectionHandlerFactory implements ConnectionHandlerFactoryInterface
 {
-    use LoggerAwareTrait;
-
     /**
      * @var KernelInterface
      */
@@ -26,12 +20,9 @@ class ConnectionHandlerFactory implements ConnectionHandlerFactoryInterface, Log
      * Constructor.
      *
      * @param KernelInterface|callable $kernel The kernel to create handlers for
-     * @param LoggerInterface          $logger A logger to use
      */
-    public function __construct($kernel, LoggerInterface $logger = null)
+    public function __construct($kernel)
     {
-        $this->setLogger((null === $logger) ? new NullLogger() : $logger);
-
         if ($kernel instanceof KernelInterface) {
             $this->kernel = $kernel;
         } else {
@@ -44,6 +35,6 @@ class ConnectionHandlerFactory implements ConnectionHandlerFactoryInterface, Log
      */
     public function createConnectionHandler(ConnectionInterface $connection)
     {
-        return new ConnectionHandler($this->kernel, $connection, $this->logger);
+        return new ConnectionHandler($this->kernel, $connection);
     }
 }
