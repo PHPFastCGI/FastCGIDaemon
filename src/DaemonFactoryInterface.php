@@ -31,16 +31,4 @@ interface DaemonFactoryInterface
      * @return DaemonInterface The FastCGI daemon
      */
     public function createTcpDaemon(KernelInterface $kernel, DaemonOptionsInterface $options, $port, $host = 'localhost');
-
-    /**
-     * Create a FastCGI daemon from a stream socket which is configured for
-     * accepting connections.
-     *
-     * @param KernelInterface        $kernel  The kernel to use for the daemon
-     * @param DaemonOptionsInterface $options The daemon configuration
-     * @param resource               $socket  The socket to accept connections from
-     *
-     * @return DaemonInterface The FastCGI daemon
-     */
-    public function createDaemonFromStreamSocket(KernelInterface $kernel, DaemonOptionsInterface $options, $socket);
 }

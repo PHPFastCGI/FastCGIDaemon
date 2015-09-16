@@ -2,9 +2,8 @@
 
 namespace PHPFastCGI\FastCGIDaemon\Command;
 
-use PHPFastCGI\FastCGIDaemon\DaemonFactory;
-use PHPFastCGI\FastCGIDaemon\DaemonFactoryInterface;
 use PHPFastCGI\FastCGIDaemon\DaemonOptions;
+use PHPFastCGI\FastCGIDaemon\Driver\DriverContainerInterface;
 use PHPFastCGI\FastCGIDaemon\KernelInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -18,28 +17,30 @@ class DaemonRunCommand extends Command
     const DEFAULT_DESCRIPTION = 'Run the FastCGI daemon';
 
     /**
-     * @var DaemonFactoryInterface
-     */
-    private $daemonFactory;
-
-    /**
-     * @var KernelInterface|callable
+     * @var KernelInterface
      */
     private $kernel;
 
     /**
+     * @var DriverContainerInterface
+     */
+    private $driverContainer;
+
+    /**
      * Constructor.
      *
-     * @param KernelInterface|callable $kernel        The kernel to be given to the daemon
-     * @param DaemonFactoryInterface   $daemonFactory The factory to use to create the daemon
-     * @param string                   $name          The name of the daemon run command
-     * @param string                   $description   The description of the daemon run command
+     * @param KernelInterface          $kernel          The kernel to be given to the daemon
+     * @param DriverContainerInterface $driverContainer The driver container
+     * @param string                   $name            The name of the daemon run command
+     * @param string                   $description     The description of the daemon run command
      */
-    public function __construct($kernel, DaemonFactoryInterface $daemonFactory = null, $name = null, $description = null)
+    public function __construct(KernelInterface $kernel, DriverContainerInterface $driverContainer, $name = null, $description = null)
     {
-        $daemonFactory = $daemonFactory ?: new DaemonFactory;
-        $name          = $name          ?: self::DEFAULT_NAME;
-        $description   = $description   ?: self::DEFAULT_DESCRIPTION;
+        $this->kernel          = $kernel;
+        $this->driverContainer = $driverContainer;
+
+        $name        = $name        ?: self::DEFAULT_NAME;
+        $description = $description ?: self::DEFAULT_DESCRIPTION;
 
         parent::__construct($name);
 
@@ -49,11 +50,8 @@ class DaemonRunCommand extends Command
             ->addOption('host',          null, InputOption::VALUE_OPTIONAL, 'TCP host to listen on')
             ->addOption('request-limit', null, InputOption::VALUE_OPTIONAL, 'The maximum number of requests to handle before shutting down')
             ->addOption('memory-limit',  null, InputOption::VALUE_OPTIONAL, 'The memory limit on the daemon instance before shutting down')
-            ->addOption('time-limit',    null, InputOption::VALUE_OPTIONAL, 'The time limit on the daemon in seconds before shutting down');
-
-        $this->daemonFactory = $daemonFactory;
-
-        $this->kernel = $kernel;
+            ->addOption('time-limit',    null, InputOption::VALUE_OPTIONAL, 'The time limit on the daemon in seconds before shutting down')
+            ->addOption('driver',        null, InputOption::VALUE_OPTIONAL, 'The implementation of the FastCGI protocol to use', 'userland');
     }
 
     /**
@@ -86,20 +84,23 @@ class DaemonRunCommand extends Command
 
         $daemonOptions = $this->getDaemonOptions($input, $output);
 
+        $driver        = $input->getOption('driver');
+        $daemonFactory = $this->driverContainer->getFactory($driver);
+
         if (null !== $port) {
             // If we have the port, create a TCP daemon
 
             if (null !== $host) {
-                $daemon = $this->daemonFactory->createTcpDaemon($this->kernel, $daemonOptions, $port, $host);
+                $daemon = $daemonFactory->createTcpDaemon($this->kernel, $daemonOptions, $port, $host);
             } else {
-                $daemon = $this->daemonFactory->createTcpDaemon($this->kernel, $daemonOptions, $port);
+                $daemon = $daemonFactory->createTcpDaemon($this->kernel, $daemonOptions, $port);
             }
         } elseif (null !== $host) {
             // If we have the host but not the port, we cant create a TCP daemon - throw exception
             throw new \InvalidArgumentException('TCP port option must be set if host option is set');
         } else {
             // With no host or port, listen on FCGI_LISTENSOCK_FILENO (default)
-            $daemon = $this->daemonFactory->createDaemon($this->kernel, $daemonOptions);
+            $daemon = $daemonFactory->createDaemon($this->kernel, $daemonOptions);
         }
 
         $daemon->run();

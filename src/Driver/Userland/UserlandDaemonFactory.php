@@ -3,6 +3,7 @@
 namespace PHPFastCGI\FastCGIDaemon\Driver\Userland;
 
 use PHPFastCGI\FastCGIDaemon\DaemonInterface;
+use PHPFastCGI\FastCGIDaemon\DaemonFactoryInterface;
 use PHPFastCGI\FastCGIDaemon\DaemonOptionsInterface;
 use PHPFastCGI\FastCGIDaemon\Driver\Userland\Connection\StreamSocketConnectionPool;
 use PHPFastCGI\FastCGIDaemon\Driver\Userland\ConnectionHandler\ConnectionHandlerFactory;
@@ -11,7 +12,7 @@ use PHPFastCGI\FastCGIDaemon\KernelInterface;
 /**
  * A factory class for instantiating UserlandDaemon objects.
  */
-class UserlandDaemonFactory
+class UserlandDaemonFactory implements DaemonFactoryInterface
 { 
     /**
      * Create a FastCGI daemon listening on FCGI_LISTENSOCK_FILENO using the

@@ -3,6 +3,8 @@
 namespace PHPFastCGI\FastCGIDaemon;
 
 use PHPFastCGI\FastCGIDaemon\Command\DaemonRunCommand;
+use PHPFastCGI\FastCGIDaemon\Driver\DriverContainer;
+use PHPFastCGI\FastCGIDaemon\Driver\DriverContainerInterface;
 use Symfony\Component\Console\Application;
 /**
  * The default implementation of the ApplicationFactoryInterface.
@@ -10,18 +12,18 @@ use Symfony\Component\Console\Application;
 class ApplicationFactory implements ApplicationFactoryInterface
 {
     /**
-     * @var DaemonFactoryInterface
+     * @var DriverContainerInterface
      */
-    private $daemonFactory;
+    private $driverContainer;
 
     /**
      * Constructor.
      * 
-     * @param DaemonFactoryInterface $daemonFactory The factory to use to create daemons
+     * @param DriverContainerInterface $driverContainer The driver container
      */
-    public function __construct(DaemonFactoryInterface $daemonFactory = null)
+    public function __construct(DriverContainerInterface $driverContainer = null)
     {
-        $this->daemonFactory = $daemonFactory;
+        $this->driverContainer = $driverContainer ?: new DriverContainer;
     }
 
     /**
@@ -46,7 +48,7 @@ class ApplicationFactory implements ApplicationFactoryInterface
     {
         $kernelObject = $this->getKernelObject($kernel);
 
-        return new DaemonRunCommand($kernelObject, $this->daemonFactory, $commandName, $commandDescription);
+        return new DaemonRunCommand($kernelObject, $this->driverContainer, $commandName, $commandDescription);
     }
 
     /**
