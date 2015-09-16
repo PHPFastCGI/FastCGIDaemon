@@ -29,7 +29,9 @@ class ApplicationFactory implements ApplicationFactoryInterface
      */
     public function createApplication($kernel, $commandName = null, $commandDescription = null)
     {
-        $command = $this->createCommand($kernel, $commandName, $commandDescription);
+        $kernelObject = $this->getKernelObject($kernel);
+
+        $command = $this->createCommand($kernelObject, $commandName, $commandDescription);
 
         $application = new Application;
         $application->add($command);
@@ -42,6 +44,29 @@ class ApplicationFactory implements ApplicationFactoryInterface
      */
     public function createCommand($kernel, $commandName = null, $commandDescription = null)
     {
-        return new DaemonRunCommand($kernel, $this->daemonFactory, $commandName, $commandDescription);
+        $kernelObject = $this->getKernelObject($kernel);
+
+        return new DaemonRunCommand($kernelObject, $this->daemonFactory, $commandName, $commandDescription);
+    }
+
+    /**
+     * Converts the kernel parameter to an object implementing the KernelInterface
+     * if it is a callable.
+     * 
+     * Otherwise returns the object directly.
+     * 
+     * @param KernelInterface|callable $kernel The kernel
+     * 
+     * @return KernelInterface The kernel as an object implementing the KernelInterface
+     */
+    private function getKernelObject($kernel)
+    {
+        if ($kernel instanceof KernelInterface) {
+            return $kernel;
+        } elseif (is_callable($kernel)) {
+            return new CallbackWrapper($kernel);
+        }
+
+        throw new \InvalidArgumentException('Kernel must be callable or an instance of KernelInterface');
     }
 }

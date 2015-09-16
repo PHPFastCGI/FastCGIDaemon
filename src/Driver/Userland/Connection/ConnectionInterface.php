@@ -1,8 +1,8 @@
 <?php
 
-namespace PHPFastCGI\FastCGIDaemon\Connection;
+namespace PHPFastCGI\FastCGIDaemon\Driver\Userland\Connection;
 
-use PHPFastCGI\FastCGIDaemon\Exception\ConnectionException;
+use PHPFastCGI\FastCGIDaemon\Driver\Userland\Exception\ConnectionException;
 
 /**
  * The connection interface defines a set of methods that abstract operations

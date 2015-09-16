@@ -2,8 +2,7 @@
 
 namespace PHPFastCGI\FastCGIDaemon;
 
-use PHPFastCGI\FastCGIDaemon\Connection\StreamSocketConnectionPool;
-use PHPFastCGI\FastCGIDaemon\ConnectionHandler\ConnectionHandlerFactory;
+use PHPFastCGI\FastCGIDaemon\Driver\Userland\UserlandDaemonFactory;
 
 /**
  * The default implementation of the DaemonFactoryInterface.
@@ -11,19 +10,16 @@ use PHPFastCGI\FastCGIDaemon\ConnectionHandler\ConnectionHandlerFactory;
 class DaemonFactory implements DaemonFactoryInterface
 {
     /**
-     * {@inheritdoc}
-     *
-     * @codeCoverageIgnore
+     * @var UserlandDaemonFactory
      */
-    public function createDaemon($kernel)
+    private $userlandDaemonFactory;
+
+    /**
+     * Constructor.
+     */
+    public function __construct()
     {
-        $socket = fopen('php://fd/'.DaemonInterface::FCGI_LISTENSOCK_FILENO, 'r');
-
-        if (false === $socket) {
-            throw new \RuntimeException('Could not open FCGI_LISTENSOCK_FILENO');
-        }
-
-        return $this->createDaemonFromStreamSocket($kernel, $socket);
+        $this->userlandDaemonFactory = new UserlandDaemonFactory;
     }
 
     /**
@@ -31,26 +27,26 @@ class DaemonFactory implements DaemonFactoryInterface
      *
      * @codeCoverageIgnore
      */
-    public function createTcpDaemon($kernel, $port, $host = 'localhost')
+    public function createDaemon(KernelInterface $kernel, DaemonOptionsInterface $options)
     {
-        $address = 'tcp://'.$host.':'.$port;
-        $socket  = stream_socket_server($address);
+        return $this->userlandDaemonFactory->createDaemon($kernel, $options);
+    }
 
-        if (false === $socket) {
-            throw new \RuntimeException('Could not create stream socket server on: '.$address);
-        }
-
-        return $this->createDaemonFromStreamSocket($kernel, $socket);
+    /**
+     * {@inheritdoc}
+     *
+     * @codeCoverageIgnore
+     */
+    public function createTcpDaemon(KernelInterface $kernel, DaemonOptionsInterface $options, $port, $host = 'localhost')
+    {
+        return $this->userlandDaemonFactory->createTcpDaemon($kernel, $options, $port, $host);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function createDaemonFromStreamSocket($kernel, $socket)
+    public function createDaemonFromStreamSocket(KernelInterface $kernel, DaemonOptionsInterface $options, $socket)
     {
-        $connectionHandlerFactory = new ConnectionHandlerFactory($kernel);
-        $connectionPool           = new StreamSocketConnectionPool($socket);
-
-        return new Daemon($connectionPool, $connectionHandlerFactory);
+        return $this->userlandDaemonFactory->createDaemonFromStreamSocket($kernel, $options, $socket);
     }
 }

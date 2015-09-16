@@ -1,35 +1,35 @@
 <?php
 
-namespace PHPFastCGI\FastCGIDaemon\ConnectionHandler;
+namespace PHPFastCGI\FastCGIDaemon\Driver\Userland\ConnectionHandler;
 
-use PHPFastCGI\FastCGIDaemon\Connection\ConnectionInterface;
 use PHPFastCGI\FastCGIDaemon\DaemonInterface;
+use PHPFastCGI\FastCGIDaemon\Driver\Userland\Connection\ConnectionInterface;
+use PHPFastCGI\FastCGIDaemon\Driver\Userland\Exception\ProtocolException;
 use PHPFastCGI\FastCGIDaemon\Exception\DaemonException;
-use PHPFastCGI\FastCGIDaemon\Exception\ProtocolException;
 use PHPFastCGI\FastCGIDaemon\Http\Request;
 use PHPFastCGI\FastCGIDaemon\KernelInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
-use Psr\Log\LoggerAwareInterface;
-use Psr\Log\LoggerAwareTrait;
-use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 use Zend\Diactoros\Stream;
 
 /**
  * The default implementation of the ConnectionHandlerInterface.
  */
-class ConnectionHandler implements ConnectionHandlerInterface, LoggerAwareInterface
+class ConnectionHandler implements ConnectionHandlerInterface
 {
-    use LoggerAwareTrait;
-
     const READ_LENGTH = 4096;
 
     /**
      * @var bool
      */
     private $shutdown;
+
+    /**
+     * @var bool
+     */
+    private $closed;
+
 
     /**
      * @var KernelInterface
@@ -61,13 +61,12 @@ class ConnectionHandler implements ConnectionHandlerInterface, LoggerAwareInterf
      *
      * @param KernelInterface     $kernel     The kernel to use to handle requests
      * @param ConnectionInterface $connection The connection to handle
-     * @param LoggerInterface     $logger     A logger to use
      */
-    public function __construct(KernelInterface $kernel, ConnectionInterface $connection, LoggerInterface $logger = null)
+    public function __construct(KernelInterface $kernel, ConnectionInterface $connection)
     {
-        $this->setLogger((null === $logger) ? new NullLogger() : $logger);
+        $this->shutdown = false;
+        $this->closed   = false;
 
-        $this->shutdown     = false;
         $this->kernel       = $kernel;
         $this->connection   = $connection;
         $this->requests     = [];
@@ -82,18 +81,19 @@ class ConnectionHandler implements ConnectionHandlerInterface, LoggerAwareInterf
     {
         try {
             $data = $this->connection->read(self::READ_LENGTH);
-            $dataLength = strlen($data);
-
-            $this->buffer       .= $data;
-            $this->bufferLength += $dataLength;
-
-            while (null !== ($record = $this->readRecord())) {
-                $this->processRecord($record);
-            }
-        } catch (DaemonException $exception) {
-            $this->logger->error($exception->getMessage());
-
+        } catch (ConnectionException $exception) {
             $this->close();
+
+            throw $exception;
+        }
+
+        $dataLength = strlen($data);
+
+        $this->buffer       .= $data;
+        $this->bufferLength += $dataLength;
+
+        while (null !== ($record = $this->readRecord())) {
+            $this->processRecord($record);
         }
     }
 
@@ -120,8 +120,21 @@ class ConnectionHandler implements ConnectionHandlerInterface, LoggerAwareInterf
         $this->requests = [];
 
         $this->connection->close();
+
+        $this->closed = true;
     }
 
+    /**
+     * {@inheritdoc}
+     */
+    public function isClosed()
+    {
+        return $this->closed;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     /**
      * Read a record from the connection.
      *
@@ -365,23 +378,17 @@ class ConnectionHandler implements ConnectionHandlerInterface, LoggerAwareInterf
             $this->requests[$requestId]['stdin']
         );
 
-        try {
-            $response = $this->kernel->handleRequest($request);
+        $response = $this->kernel->handleRequest($request);
 
-            if ($response instanceof ResponseInterface) {
-                $this->sendResponse($requestId, $response);
-            } elseif ($response instanceof HttpFoundationResponse) {
-                $this->sendHttpFoundationResponse($requestId, $response);
-            } else {
-                throw new \LogicException('Kernel must return a PSR-7 or HttpFoundation response message');
-            }
-
-            $this->endRequest($requestId);
-        } catch (\Exception $exception) {
-            $this->logger->error($exception->getMessage());
-
-            $this->endRequest($requestId);
+        if ($response instanceof ResponseInterface) {
+            $this->sendResponse($requestId, $response);
+        } elseif ($response instanceof HttpFoundationResponse) {
+            $this->sendHttpFoundationResponse($requestId, $response);
+        } else {
+            throw new \LogicException('Kernel must return a PSR-7 or HttpFoundation response message');
         }
+
+        $this->endRequest($requestId);
     }
 
     /**

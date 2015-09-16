@@ -4,6 +4,7 @@ namespace PHPFastCGI\FastCGIDaemon\Command;
 
 use PHPFastCGI\FastCGIDaemon\DaemonFactory;
 use PHPFastCGI\FastCGIDaemon\DaemonFactoryInterface;
+use PHPFastCGI\FastCGIDaemon\DaemonOptions;
 use PHPFastCGI\FastCGIDaemon\KernelInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -44,16 +45,35 @@ class DaemonRunCommand extends Command
 
         $this
             ->setDescription($description)
-            ->addOption('port', null, InputOption::VALUE_OPTIONAL, 'TCP port to listen on (if not present, daemon will listen on FCGI_LISTENSOCK_FILENO)')
-            ->addOption('host', null, InputOption::VALUE_OPTIONAL, 'TCP host to listen on');
+            ->addOption('port',          null, InputOption::VALUE_OPTIONAL, 'TCP port to listen on (if not present, daemon will listen on FCGI_LISTENSOCK_FILENO)')
+            ->addOption('host',          null, InputOption::VALUE_OPTIONAL, 'TCP host to listen on')
+            ->addOption('request-limit', null, InputOption::VALUE_OPTIONAL, 'The maximum number of requests to handle before shutting down')
+            ->addOption('memory-limit',  null, InputOption::VALUE_OPTIONAL, 'The memory limit on the daemon instance before shutting down')
+            ->addOption('time-limit',    null, InputOption::VALUE_OPTIONAL, 'The time limit on the daemon in seconds before shutting down');
 
         $this->daemonFactory = $daemonFactory;
 
-        if (!$kernel instanceof KernelInterface && !is_callable($kernel)) {
-            throw new \InvalidArgumentException('Kernel parameter must be an instance of KernelInterface or a callable');
-        }
-
         $this->kernel = $kernel;
+    }
+
+    /**
+     * Retrieves the daemon configuration from the Symfony command input and
+     * output objects.
+     * 
+     * @param InputInterface  $input The  Symfony command input
+     * @param OutputInterface $output The Symfony command output
+     * 
+     * @return DaemonOptions The daemon configuration
+     */
+    private function getDaemonOptions(InputInterface $input, OutputInterface $output)
+    {
+        $logger = new ConsoleLogger($output);
+
+        $requestLimit = $input->getOption('request-limit') ?: DaemonOptions::NO_LIMIT;
+        $memoryLimit  = $input->getOption('memory-limit')  ?: DaemonOptions::NO_LIMIT;
+        $timeLimit    = $input->getOption('time-limit')    ?: DaemonOptions::NO_LIMIT;
+
+        return new DaemonOptions($logger, $requestLimit, $memoryLimit, $timeLimit);
     }
 
     /**
@@ -64,23 +84,23 @@ class DaemonRunCommand extends Command
         $port = $input->getOption('port');
         $host = $input->getOption('host');
 
+        $daemonOptions = $this->getDaemonOptions($input, $output);
+
         if (null !== $port) {
             // If we have the port, create a TCP daemon
 
             if (null !== $host) {
-                $daemon = $this->daemonFactory->createTcpDaemon($this->kernel, $port, $host);
+                $daemon = $this->daemonFactory->createTcpDaemon($this->kernel, $daemonOptions, $port, $host);
             } else {
-                $daemon = $this->daemonFactory->createTcpDaemon($this->kernel, $port);
+                $daemon = $this->daemonFactory->createTcpDaemon($this->kernel, $daemonOptions, $port);
             }
         } elseif (null !== $host) {
             // If we have the host but not the port, we cant create a TCP daemon - throw exception
             throw new \InvalidArgumentException('TCP port option must be set if host option is set');
         } else {
             // With no host or port, listen on FCGI_LISTENSOCK_FILENO (default)
-            $daemon = $this->daemonFactory->createDaemon($this->kernel);
+            $daemon = $this->daemonFactory->createDaemon($this->kernel, $daemonOptions);
         }
-
-        $daemon->setLogger(new ConsoleLogger($output));
 
         $daemon->run();
     }

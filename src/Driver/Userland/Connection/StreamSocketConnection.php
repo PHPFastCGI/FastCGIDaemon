@@ -1,8 +1,8 @@
 <?php
 
-namespace PHPFastCGI\FastCGIDaemon\Connection;
+namespace PHPFastCGI\FastCGIDaemon\Driver\Userland\Connection;
 
-use PHPFastCGI\FastCGIDaemon\Exception\ConnectionException;
+use PHPFastCGI\FastCGIDaemon\Driver\Userland\Exception\ConnectionException;
 
 /**
  * The default implementation of the ConnectionInterface using stream socket
@@ -11,14 +11,14 @@ use PHPFastCGI\FastCGIDaemon\Exception\ConnectionException;
 class StreamSocketConnection implements ConnectionInterface
 {
     /**
-     * @var resource
-     */
-    private $socket;
-
-    /**
      * @var bool
      */
     private $closed;
+
+    /**
+     * @var resource
+     */
+    private $socket;
 
     /**
      * Constructor.
@@ -27,8 +27,9 @@ class StreamSocketConnection implements ConnectionInterface
      */
     public function __construct($socket)
     {
-        $this->socket = $socket;
         $this->closed = false;
+
+        $this->socket = $socket;
     }
 
     /**

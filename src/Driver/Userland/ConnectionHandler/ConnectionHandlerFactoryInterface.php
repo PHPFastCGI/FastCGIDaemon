@@ -1,8 +1,9 @@
 <?php
 
-namespace PHPFastCGI\FastCGIDaemon\ConnectionHandler;
+namespace PHPFastCGI\FastCGIDaemon\Driver\Userland\ConnectionHandler;
 
-use PHPFastCGI\FastCGIDaemon\Connection\ConnectionInterface;
+use PHPFastCGI\FastCGIDaemon\Driver\Userland\Connection\ConnectionInterface;
+use PHPFastCGI\FastCGIDaemon\KernelInterface;
 
 /**
  * Objects implementing the ConnectionHandlerFactoryInterface can be used by
@@ -13,9 +14,10 @@ interface ConnectionHandlerFactoryInterface
     /**
      * Create a connection handler.
      *
+     * @param KernelInterface     $kernel     The kernel to use
      * @param ConnectionInterface $connection The connection to handle
      *
      * @return ConnectionHandlerInterface The connection handler
      */
-    public function createConnectionHandler(ConnectionInterface $connection);
+    public function createConnectionHandler(KernelInterface $kernel, ConnectionInterface $connection);
 }
