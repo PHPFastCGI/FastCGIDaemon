@@ -5,7 +5,6 @@ namespace PHPFastCGI\FastCGIDaemon\Driver\Userland\ConnectionHandler;
 use PHPFastCGI\FastCGIDaemon\DaemonInterface;
 use PHPFastCGI\FastCGIDaemon\Driver\Userland\Connection\ConnectionInterface;
 use PHPFastCGI\FastCGIDaemon\Driver\Userland\Exception\ProtocolException;
-use PHPFastCGI\FastCGIDaemon\Exception\DaemonException;
 use PHPFastCGI\FastCGIDaemon\Http\Request;
 use PHPFastCGI\FastCGIDaemon\KernelInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -81,19 +80,19 @@ class ConnectionHandler implements ConnectionHandlerInterface
     {
         try {
             $data = $this->connection->read(self::READ_LENGTH);
-        } catch (ConnectionException $exception) {
+
+            $dataLength = strlen($data);
+
+            $this->buffer       .= $data;
+            $this->bufferLength += $dataLength;
+
+            while (null !== ($record = $this->readRecord())) {
+                $this->processRecord($record);
+            }
+        } catch (\Exception $exception) {
             $this->close();
 
             throw $exception;
-        }
-
-        $dataLength = strlen($data);
-
-        $this->buffer       .= $data;
-        $this->bufferLength += $dataLength;
-
-        while (null !== ($record = $this->readRecord())) {
-            $this->processRecord($record);
         }
     }
 
@@ -155,6 +154,7 @@ class ConnectionHandler implements ConnectionHandlerInterface
 
         // Not enough data to read rest of record
         if ($this->bufferLength - 8 < $record['contentLength'] + $record['paddingLength']) {
+
             return;
         }
 
@@ -369,7 +369,7 @@ class ConnectionHandler implements ConnectionHandlerInterface
      *
      * @param int $requestId The request id that is ready to dispatch
      *
-     * @throws DaemonException If there is an error dispatching the request
+     * @throws \LogicException If the kernel doesn't return a valid response
      */
     private function dispatchRequest($requestId)
     {
