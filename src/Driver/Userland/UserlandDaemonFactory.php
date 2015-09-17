@@ -43,14 +43,14 @@ class UserlandDaemonFactory implements DaemonFactoryInterface
      * 
      * @param KernelInterface        $kernel  The kernel to use for the daemon
      * @param DaemonOptionsInterface $options The daemon configuration
-     * @param int                    $port    The port to bind to
      * @param string                 $host    The host to bind to
+     * @param int                    $port    The port to bind to
      *
      * @return UserlandDaemon The FastCGI daemon
      * 
      * @codeCoverageIgnore
      */
-    public function createTcpDaemon(KernelInterface $kernel, DaemonOptionsInterface $options, $port, $host = 'localhost')
+    public function createTcpDaemon(KernelInterface $kernel, DaemonOptionsInterface $options, $host, $port)
     {
         $address = 'tcp://'.$host.':'.$port;
         $socket  = stream_socket_server($address);

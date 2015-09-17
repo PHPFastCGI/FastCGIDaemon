@@ -25,10 +25,10 @@ interface DaemonFactoryInterface
      *
      * @param KernelInterface        $kernel  The kernel to use for the daemon
      * @param DaemonOptionsInterface $options The daemon configuration
-     * @param int                    $port    The port to bind to
      * @param string                 $host    The host to bind to
+     * @param int                    $port    The port to bind to
      *
      * @return DaemonInterface The FastCGI daemon
      */
-    public function createTcpDaemon(KernelInterface $kernel, DaemonOptionsInterface $options, $port, $host = 'localhost');
+    public function createTcpDaemon(KernelInterface $kernel, DaemonOptionsInterface $options, $host, $port);
 }
