@@ -78,7 +78,7 @@ class UserlandDaemon implements DaemonInterface
             $this->daemonOptions->getLogger()->notice($exception->getMessage());
 
             $this->shutdown();
-        } catch (\RuntimeException $exception) {
+        } catch (\Exception $exception) {
             $this->daemonOptions->getLogger()->emergency($exception->getMessage());
 
             $this->connectionPool->close();
