@@ -1,6 +1,6 @@
 <?php
 
-namespace PHPFastCGI\Test\FastCGIDaemon\Client;
+namespace PHPFastCGI\Test\FastCGIDaemon\Helper\Client;
 
 use PHPFastCGI\FastCGIDaemon\DaemonInterface;
 

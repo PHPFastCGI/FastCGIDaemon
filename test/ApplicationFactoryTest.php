@@ -25,4 +25,14 @@ class ApplicationFactoryTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue($application->has($name));
         $this->assertEquals($description, $application->get($name)->getDescription());
     }
+
+    /**
+     * Tests that an invalid kernel throws an InvalidArgumentException
+     * 
+     * @expectedException \InvalidArgumentException
+     */
+    public function testInvalidKernel()
+    {
+        (new ApplicationFactory)->createApplication('foo');
+    }
 }

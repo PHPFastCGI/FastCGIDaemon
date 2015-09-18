@@ -2,8 +2,8 @@
 
 namespace PHPFastCGI\Test\FastCGIDaemon\Connection;
 
-use PHPFastCGI\FastCGIDaemon\Connection\StreamSocketConnection;
-use PHPFastCGI\FastCGIDaemon\Exception\ConnectionException;
+use PHPFastCGI\FastCGIDaemon\Driver\Userland\Connection\StreamSocketConnection;
+use PHPFastCGI\FastCGIDaemon\Driver\Userland\Exception\ConnectionException;
 
 /**
  * Test to ensure that the StreamSocketConnection class can read, write and
@@ -91,6 +91,8 @@ class StreamSocketConnectionTest extends \PHPUnit_Framework_TestCase
 
         try {
             $streamSocket1->write('hello');
+            $streamSocket1->write('bo');
+            $streamSocket1->write('bo');
             $this->fail('Should have thrown exception');
         } catch (ConnectionException $exception) {
             $this->assertEquals('fwrite failed', $exception->getMessage());
