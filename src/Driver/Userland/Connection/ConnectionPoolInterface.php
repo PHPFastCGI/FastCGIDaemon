@@ -2,7 +2,7 @@
 
 namespace PHPFastCGI\FastCGIDaemon\Driver\Userland\Connection;
 
-use PHPFastCGI\FastCGIDaemon\Driver\Userland\ConnectionHandler\ConnectionHandlerFactoryInterface;
+use PHPFastCGI\FastCGIDaemon\Driver\Userland\Connection\ConnectionInterface;
 
 /**
  * Objects implementing the ConnectionPoolInterface pass incoming connections
