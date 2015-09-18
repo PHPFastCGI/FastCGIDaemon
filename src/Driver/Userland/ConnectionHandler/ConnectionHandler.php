@@ -86,9 +86,13 @@ class ConnectionHandler implements ConnectionHandlerInterface
             $this->buffer       .= $data;
             $this->bufferLength += $dataLength;
 
+            $dispatchedRequests = 0;
+
             while (null !== ($record = $this->readRecord())) {
-                $this->processRecord($record);
+                $dispatchedRequests += $this->processRecord($record);
             }
+
+            return $dispatchedRequests;
         } catch (\Exception $exception) {
             $this->close();
 
@@ -173,6 +177,8 @@ class ConnectionHandler implements ConnectionHandlerInterface
      * Process a record.
      *
      * @param array $record The record that has been read
+     * 
+     * @return int Number of dispatched requests
      *
      * @throws ProtocolException If the client sends an unexpected record.
      */
@@ -195,12 +201,15 @@ class ConnectionHandler implements ConnectionHandlerInterface
                 fwrite($this->requests[$requestId]['stdin'], $content);
             } else {
                 $this->dispatchRequest($requestId);
+                return 1; // One request was dispatched
             }
         } elseif (DaemonInterface::FCGI_ABORT_REQUEST === $record['type']) {
             $this->endRequest($requestId);
         } else {
             throw new ProtocolException('Unexpected packet of type: '.$record['type']);
         }
+
+        return 0; // Zero requests were dispatched
     }
 
     /**
