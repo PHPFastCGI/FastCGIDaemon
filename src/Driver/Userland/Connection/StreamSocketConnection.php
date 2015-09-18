@@ -77,7 +77,7 @@ class StreamSocketConnection implements ConnectionInterface
             throw new ConnectionException('Connection has been closed');
         }
 
-        if (false === @fwrite($this->socket, $buffer)) {
+        if (false == @fwrite($this->socket, $buffer) && !empty($buffer)) {
             throw $this->createExceptionFromLastError('fwrite');
         }
     }
