@@ -32,9 +32,7 @@ class ApplicationFactory implements ApplicationFactoryInterface
      */
     public function createApplication($kernel, $commandName = null, $commandDescription = null)
     {
-        $kernelObject = $this->getKernelObject($kernel);
-
-        $command = $this->createCommand($kernelObject, $commandName, $commandDescription);
+        $command = $this->createCommand($kernel, $commandName, $commandDescription);
 
         $application = new Application();
         $application->add($command);
