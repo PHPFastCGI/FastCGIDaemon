@@ -78,8 +78,6 @@ trait DaemonTrait
      * Checks the current PHP process against the limits specified in a daemon
      * options object.
      *
-     * @param DaemonOptionsInterface $daemonOptions
-     *
      * @throws ShutdownException When limits in the daemon options are exceeded
      */
     private function checkDaemonLimits()
