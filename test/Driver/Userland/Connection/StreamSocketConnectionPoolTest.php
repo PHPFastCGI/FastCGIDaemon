@@ -42,7 +42,14 @@ class StreamSocketConnectionPoolTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(0, $connectionPool->count());
         $clientConnection->close();
 
+        // Test that it closes an open connection
+        $secondClientSocket = stream_socket_client($address);
+        // Accept the connection
+        $connectionPool->getReadableConnections(0);
         $connectionPool->close();
+        fread($secondClientSocket, 1);
+        $this->assertTrue(feof($secondClientSocket));
+        fclose($secondClientSocket);
     }
 
     /**
