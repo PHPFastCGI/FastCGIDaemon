@@ -15,7 +15,7 @@ use Zend\Diactoros\Response;
 /**
  * Tests the daemon.
  */
-class DaemonTest extends \PHPUnit_Framework_TestCase
+class UserlandDaemonTest extends \PHPUnit_Framework_TestCase
 {
     /**
      * Tests that the daemon shuts down after reaching its request .
@@ -89,7 +89,7 @@ class DaemonTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * Tests that the daemon shuts down after receiving a SIGINT
+     * Tests that the daemon shuts down after receiving a SIGINT.
      */
     public function testShutdown()
     {
@@ -118,17 +118,17 @@ class DaemonTest extends \PHPUnit_Framework_TestCase
                         posix_kill(posix_getpid(), SIGINT);
                     }
 
-                    return new Response;
-                }
+                    return new Response();
+                },
             ]),
-            'logger'  => new InMemoryLogger,
+            'logger'  => new InMemoryLogger(),
             'address' => 'tcp://localhost:7000',
         ];
 
         $context['serverSocket']   = stream_socket_server($context['address']);
         $context['connectionPool'] = new StreamSocketConnectionPool($context['serverSocket']);
         $context['options']        = new DaemonOptions($context['logger'], $requestLimit, $memoryLimit, $timeLimit);
-        $context['daemon']         = new UserlandDaemon($context['kernel'], $context['options'], $context['connectionPool'], new ConnectionHandlerFactory);
+        $context['daemon']         = new UserlandDaemon($context['kernel'], $context['options'], $context['connectionPool'], new ConnectionHandlerFactory());
 
         return $context;
     }

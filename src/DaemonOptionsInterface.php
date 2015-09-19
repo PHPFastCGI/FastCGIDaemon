@@ -14,7 +14,7 @@ interface DaemonOptionsInterface
 
     /**
      * Get a logger to use.
-     * 
+     *
      * @return LoggerInterface
      */
     public function getLogger();
@@ -23,7 +23,7 @@ interface DaemonOptionsInterface
      * Get request limit. A value of 0 (DaemonOptionsInterface::NO_LIMIT)
      * represents that there is no number of requests that should trigger the
      * daemon to shutdown.
-     * 
+     *
      * @return int
      */
     public function getRequestLimit();
@@ -32,7 +32,7 @@ interface DaemonOptionsInterface
      * Get the memory limit in bytes. A value of 0
      * (DaemonOptionsInterface::NO_LIMIT) represents that there is no amount of
      * memory allocated to the daemon instance that should trigger a shutdown.
-     * 
+     *
      * @return int
      */
     public function getMemoryLimit();
@@ -42,7 +42,7 @@ interface DaemonOptionsInterface
      * (DaemonOptionsInterface::NO_LIMIT) represents that there is no time
      * limit on the execution of the daemon instance that should trigger a
      * shutdown.
-     * 
+     *
      * @return int
      */
     public function getTimeLimit();

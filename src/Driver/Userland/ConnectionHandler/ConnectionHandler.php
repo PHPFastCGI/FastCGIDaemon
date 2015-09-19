@@ -29,7 +29,6 @@ class ConnectionHandler implements ConnectionHandlerInterface
      */
     private $closed;
 
-
     /**
      * @var KernelInterface
      */
@@ -158,7 +157,6 @@ class ConnectionHandler implements ConnectionHandlerInterface
 
         // Not enough data to read rest of record
         if ($this->bufferLength - 8 < $record['contentLength'] + $record['paddingLength']) {
-
             return;
         }
 
@@ -177,7 +175,7 @@ class ConnectionHandler implements ConnectionHandlerInterface
      * Process a record.
      *
      * @param array $record The record that has been read
-     * 
+     *
      * @return int Number of dispatched requests
      *
      * @throws ProtocolException If the client sends an unexpected record.
@@ -191,7 +189,7 @@ class ConnectionHandler implements ConnectionHandlerInterface
         if (DaemonInterface::FCGI_BEGIN_REQUEST === $record['type']) {
             $this->processBeginRequestRecord($requestId, $content);
         } elseif (!isset($this->requests[$requestId])) {
-            throw new ProtocolException('Invalid request id for record of type: ' . $record['type']);
+            throw new ProtocolException('Invalid request id for record of type: '.$record['type']);
         } elseif (DaemonInterface::FCGI_PARAMS === $record['type']) {
             while (strlen($content) > 0) {
                 $this->readNameValuePair($requestId, $content);
@@ -201,6 +199,7 @@ class ConnectionHandler implements ConnectionHandlerInterface
                 fwrite($this->requests[$requestId]['stdin'], $content);
             } else {
                 $this->dispatchRequest($requestId);
+
                 return 1; // One request was dispatched
             }
         } elseif (DaemonInterface::FCGI_ABORT_REQUEST === $record['type']) {
@@ -240,18 +239,20 @@ class ConnectionHandler implements ConnectionHandlerInterface
 
         if ($this->shutdown) {
             $this->endRequest($requestId, 0, DaemonInterface::FCGI_OVERLOADED);
+
             return;
         }
 
         if (DaemonInterface::FCGI_RESPONDER !== $content['role']) {
             $this->endRequest($requestId, 0, DaemonInterface::FCGI_UNKNOWN_ROLE);
+
             return;
         }
     }
 
     /**
-     * Read a FastCGI name-value pair from a buffer and add it to the request params
-     * 
+     * Read a FastCGI name-value pair from a buffer and add it to the request params.
+     *
      * @param int    $requestId The request id that sent the name-value pair
      * @param string $buffer    The buffer to read the pair from (pass by reference)
      */
@@ -272,10 +273,10 @@ class ConnectionHandler implements ConnectionHandlerInterface
     }
 
     /**
-     * Read the field length of a FastCGI name-value pair from a buffer
-     * 
+     * Read the field length of a FastCGI name-value pair from a buffer.
+     *
      * @param string $buffer The buffer to read the field length from (pass by reference)
-     * 
+     *
      * @return int The length of the field
      */
     private function readFieldLength(&$buffer)
@@ -424,7 +425,7 @@ class ConnectionHandler implements ConnectionHandlerInterface
 
     /**
      * Send a HttpFoundation response to the client.
-     * 
+     *
      * @param int                    $requestId The request id to respond to
      * @param HttpFoundationResponse $response  The HTTP foundation response message
      */
@@ -433,7 +434,7 @@ class ConnectionHandler implements ConnectionHandlerInterface
         $statusCode = $response->getStatusCode();
 
         $headerData  = "Status: {$statusCode}\r\n";
-        $headerData .= $response->headers . "\r\n";
+        $headerData .= $response->headers."\r\n";
 
         $stream = new Stream('php://memory', 'r+');
         $stream->write($response->getContent());

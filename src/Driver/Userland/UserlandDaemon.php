@@ -95,7 +95,7 @@ class UserlandDaemon implements DaemonInterface
             if (!isset($this->connectionHandlers[$id])) {
                 $this->connectionHandlers[$id] = $this->connectionHandlerFactory->createConnectionHandler($this->kernel, $connection);
             }
- 
+
             $dispatchedRequests = $this->connectionHandlers[$id]->ready();
             $this->incrementRequestCount($dispatchedRequests);
 

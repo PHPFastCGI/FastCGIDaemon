@@ -12,7 +12,7 @@ use Symfony\Component\Console\Command\Command;
 interface ApplicationFactoryInterface
 {
     /**
-     * Create a Symfony console application
+     * Create a Symfony console application.
      *
      * @param KernelInterface|callable $kernel             The kernel to use
      * @param string                   $commandName        The name of the daemon run command
@@ -23,7 +23,7 @@ interface ApplicationFactoryInterface
     public function createApplication($kernel, $commandName = null, $commandDescription = null);
 
     /**
-     * Create a Symfony console command
+     * Create a Symfony console command.
      *
      * @param KernelInterface|callable $kernel             The kernel to use
      * @param string                   $commandName        The name of the daemon run command

@@ -13,16 +13,16 @@ use PHPFastCGI\FastCGIDaemon\KernelInterface;
  * A factory class for instantiating UserlandDaemon objects.
  */
 class UserlandDaemonFactory implements DaemonFactoryInterface
-{ 
+{
     /**
      * Create a FastCGI daemon listening on FCGI_LISTENSOCK_FILENO using the
      * userland FastCGI implementation.
-     * 
+     *
      * @param KernelInterface        $kernel  The kernel to use for the daemon
      * @param DaemonOptionsInterface $options The daemon configuration
      *
      * @return UserlandDaemon
-     * 
+     *
      * @codeCoverageIgnore The FastCGI daemon
      */
     public function createDaemon(KernelInterface $kernel, DaemonOptionsInterface $options)
@@ -40,14 +40,14 @@ class UserlandDaemonFactory implements DaemonFactoryInterface
      * Create a FastCGI daemon listening for TCP connections on a given address
      * using the userland FastCGI implementation. The default host is
      * 'localhost'.
-     * 
+     *
      * @param KernelInterface        $kernel  The kernel to use for the daemon
      * @param DaemonOptionsInterface $options The daemon configuration
      * @param string                 $host    The host to bind to
      * @param int                    $port    The port to bind to
      *
      * @return UserlandDaemon The FastCGI daemon
-     * 
+     *
      * @codeCoverageIgnore
      */
     public function createTcpDaemon(KernelInterface $kernel, DaemonOptionsInterface $options, $host, $port)
@@ -75,7 +75,7 @@ class UserlandDaemonFactory implements DaemonFactoryInterface
     public function createDaemonFromStreamSocket(KernelInterface $kernel, DaemonOptionsInterface $options, $socket)
     {
         $connectionPool           = new StreamSocketConnectionPool($socket);
-        $connectionHandlerFactory = new ConnectionHandlerFactory;
+        $connectionHandlerFactory = new ConnectionHandlerFactory();
 
         return new UserlandDaemon($kernel, $options, $connectionPool, $connectionHandlerFactory);
     }

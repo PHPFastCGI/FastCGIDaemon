@@ -31,15 +31,15 @@ class DaemonOptions implements DaemonOptionsInterface
 
     /**
      * Constructor.
-     * 
+     *
      * For the $requestLimit parameter, DaemonOptionsInterface::NO_LIMIT can be
      * used to specify that no number of requests should cause the daemon to
      * shutdown.
-     * 
+     *
      * For the $memoryLimit parameter, DaemonOptionsInterface::NO_LIMIT can be
      * used to specify that no detected memory usage should cause the daemon
      * to shutdown.
-     * 
+     *
      * @param LoggerInterface $logger       A logger to use
      * @param int             $requestLimit Number of requests to handle before shutting down
      * @param int             $memoryLimit  Upper bound on amount of memory in bytes allocated to script before shutting down

@@ -11,11 +11,11 @@ use Psr\Log\NullLogger;
 class DaemonOptionsTest extends \PHPUnit_Framework_TestCase
 {
     /**
-     * Tests that the daemon options object works properly
+     * Tests that the daemon options object works properly.
      */
     public function testDaemonOptions()
     {
-        $logger = new NullLogger;
+        $logger = new NullLogger();
         $requestLimit = 10;
         $memoryLimit  = 11;
         $timeLimit    = 12;

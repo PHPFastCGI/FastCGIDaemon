@@ -22,7 +22,7 @@ class DaemonRunCommandTest extends \PHPUnit_Framework_TestCase
      */
     public function testConfiguration()
     {
-        $command = new DaemonRunCommand(new MockKernel, new MockDriverContainer);
+        $command = new DaemonRunCommand(new MockKernel(), new MockDriverContainer());
 
         $definition = $command->getDefinition();
 
@@ -49,7 +49,7 @@ class DaemonRunCommandTest extends \PHPUnit_Framework_TestCase
 
         $context = $this->createTestingContext($expectations);
 
-        $context['command']->run(new ArrayInput([]), new NullOutput);
+        $context['command']->run(new ArrayInput([]), new NullOutput());
 
         $this->assertEquals('run',          $context['daemon']->getDelegatedCalls()[0][0]);
         $this->assertEquals('createDaemon', $context['daemonFactory']->getDelegatedCalls()[0][0]);
@@ -57,7 +57,7 @@ class DaemonRunCommandTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * Test that the daemon options object is correctly configured
+     * Test that the daemon options object is correctly configured.
      */
     public function testDaemonOptions()
     {
@@ -70,7 +70,7 @@ class DaemonRunCommandTest extends \PHPUnit_Framework_TestCase
             '--memory-limit'  => $memoryLimit,
             '--time-limit'    => $timeLimit,
         ]);
-        $output = new NullOutput;
+        $output = new NullOutput();
 
         $logger  = new ConsoleLogger($output);
         $options = new DaemonOptions($logger, $requestLimit, $memoryLimit, $timeLimit);
@@ -98,7 +98,7 @@ class DaemonRunCommandTest extends \PHPUnit_Framework_TestCase
 
         $input = new ArrayInput(['--host' => 'foo']);
 
-        $context['command']->run($input, new NullOutput);
+        $context['command']->run($input, new NullOutput());
     }
 
     /**
@@ -116,7 +116,7 @@ class DaemonRunCommandTest extends \PHPUnit_Framework_TestCase
 
         $input = new ArrayInput(['--port' => $expectations['port']]);
 
-        $context['command']->run($input, new NullOutput);
+        $context['command']->run($input, new NullOutput());
 
         $this->assertEquals('run',             $context['daemon']->getDelegatedCalls()[0][0]);
         $this->assertEquals('createTcpDaemon', $context['daemonFactory']->getDelegatedCalls()[0][0]);
@@ -126,9 +126,9 @@ class DaemonRunCommandTest extends \PHPUnit_Framework_TestCase
     /**
      * Construct mock objects set to test for expected values of different
      * parameters when specified.
-     * 
+     *
      * @param array $expectations
-     * 
+     *
      * @return array An associative array containing the constructed objects.
      */
     private function createTestingContext(array $expectations)
@@ -139,7 +139,7 @@ class DaemonRunCommandTest extends \PHPUnit_Framework_TestCase
             }
         };
 
-        $mockKernel = new MockKernel;
+        $mockKernel = new MockKernel();
         $mockDaemon = new MockDaemon(['run' => false]);
 
         $mockDaemonFactory = new MockDaemonFactory([
@@ -166,7 +166,7 @@ class DaemonRunCommandTest extends \PHPUnit_Framework_TestCase
                 $assertExpected('driver', $driver);
 
                 return $mockDaemonFactory;
-            }
+            },
         ]);
 
         return [

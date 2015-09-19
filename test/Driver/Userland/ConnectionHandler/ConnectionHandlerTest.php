@@ -38,13 +38,13 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
 
         $scenarios = [
             ['responseKey' => 'symfonyResponse', 'rawResponseKey' => 'rawSymfonyResponse'],
-            ['responseKey' => 'psr7Response',    'rawResponseKey' => 'rawPsr7Response']
+            ['responseKey' => 'psr7Response',    'rawResponseKey' => 'rawPsr7Response'],
         ];
 
         foreach ($scenarios as $scenario) {
             $callback = $callbackGenerator($testData[$scenario['responseKey']]);
             $context  = $this->createTestingContext($callback);
-            
+
             $requestId = 1;
 
             $context['clientWrapper']->writeRequest($requestId, $testData['requestParams'], $testData['requestBody']);
@@ -80,7 +80,8 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
         try {
             $context['handler']->ready();
             $this->fail('Should have thrown ConnectionException');
-        } catch (ConnectionException $exception) { }
+        } catch (ConnectionException $exception) {
+        }
 
         // Check daemon has closed server side connection
         $this->assertTrue($context['connection']->isClosed());
@@ -88,7 +89,7 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
 
     /**
      * Test that the daemon doesn't accept new requests once it has been
-     * shutdown but still handles old ones
+     * shutdown but still handles old ones.
      */
     public function testShutdown()
     {
@@ -157,7 +158,7 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
         } while (DaemonInterface::FCGI_END_REQUEST !== $record['type']);
 
         $expectedResponse = "Status: 200 OK\r\n\r\nHello World";
-  
+
         // Check response
         $this->assertEquals($expectedResponse, $rawResponse);
 
@@ -182,7 +183,8 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
         try {
             $context['handler']->ready();
             $this->fail('Should have thrown LogicException');
-        } catch (\LogicException $exception) { }
+        } catch (\LogicException $exception) {
+        }
 
         // Check daemon has closed server side connection
         $this->assertTrue($context['connection']->isClosed());
@@ -368,13 +370,13 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
             'sockets'       => $sockets,
             'clientWrapper' => $clientWrapper,
             'connection'    => $connection,
-            'handler'       => $handler
+            'handler'       => $handler,
         ];
     }
 
     /**
-     * Create test request data
-     * 
+     * Create test request data.
+     *
      * @return array
      */
     private function createTestData()
@@ -388,7 +390,7 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
             ],
             'responseStatusCode' => 201,
             'responseBody'       => str_repeat('Y', 100000),
-            'responseHeaders'    => ['Header-1' => 'foo', 'Header-2' => 'bar']
+            'responseHeaders'    => ['Header-1' => 'foo', 'Header-2' => 'bar'],
         ];
 
         $testData['responseBodyStream'] = $this->toStream($testData['responseBody']);
@@ -397,14 +399,14 @@ class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
         $testData['psr7Response']    = new Response($testData['responseBodyStream'], $testData['responseStatusCode'], $testData['responseHeaders']);
 
         $testData['rawSymfonyResponse']  = "Status: 201\r\n";
-        $testData['rawSymfonyResponse'] .= $testData['symfonyResponse']->headers . "\r\n";
+        $testData['rawSymfonyResponse'] .= $testData['symfonyResponse']->headers."\r\n";
         $testData['rawSymfonyResponse'] .= $testData['responseBody'];
 
-        $testData['rawPsr7Response'] = 'Status: 201 ' . $testData['psr7Response']->getReasonPhrase() . "\r\n";
+        $testData['rawPsr7Response'] = 'Status: 201 '.$testData['psr7Response']->getReasonPhrase()."\r\n";
         foreach ($testData['psr7Response']->getHeaders() as $name => $value) {
-            $testData['rawPsr7Response'] .=  $name . ': ' . implode(', ', $value) . "\r\n";
+            $testData['rawPsr7Response'] .=  $name.': '.implode(', ', $value)."\r\n";
         }
-        $testData['rawPsr7Response'] .= "\r\n" . $testData['responseBody'];
+        $testData['rawPsr7Response'] .= "\r\n".$testData['responseBody'];
 
         return $testData;
     }

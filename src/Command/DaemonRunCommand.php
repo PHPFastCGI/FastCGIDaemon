@@ -57,10 +57,10 @@ class DaemonRunCommand extends Command
     /**
      * Retrieves the daemon configuration from the Symfony command input and
      * output objects.
-     * 
-     * @param InputInterface  $input The  Symfony command input
+     *
+     * @param InputInterface  $input  The  Symfony command input
      * @param OutputInterface $output The Symfony command output
-     * 
+     *
      * @return DaemonOptions The daemon configuration
      */
     private function getDaemonOptions(InputInterface $input, OutputInterface $output)

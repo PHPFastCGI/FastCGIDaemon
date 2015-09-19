@@ -10,11 +10,11 @@ use PHPFastCGI\FastCGIDaemon\ApplicationFactory;
 class ApplicationFactoryTest extends \PHPUnit_Framework_TestCase
 {
     /**
-     * Tests that the factory can create a Symfony console application
+     * Tests that the factory can create a Symfony console application.
      */
     public function testCreateApplication()
     {
-        $applicationFactory = new ApplicationFactory;
+        $applicationFactory = new ApplicationFactory();
 
         $name        = 'foo';
         $description = 'bar';
@@ -27,12 +27,12 @@ class ApplicationFactoryTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * Tests that an invalid kernel throws an InvalidArgumentException
-     * 
+     * Tests that an invalid kernel throws an InvalidArgumentException.
+     *
      * @expectedException \InvalidArgumentException
      */
     public function testInvalidKernel()
     {
-        (new ApplicationFactory)->createApplication('foo');
+        (new ApplicationFactory())->createApplication('foo');
     }
 }

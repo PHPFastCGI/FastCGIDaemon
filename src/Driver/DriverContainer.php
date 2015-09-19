@@ -18,7 +18,7 @@ class DriverContainer implements DriverContainerInterface
             'userland' => [
                 'object'    => null,
                 'classPath' => 'PHPFastCGI\FastCGIDaemon\Driver\Userland\UserlandDaemonFactory',
-            ]
+            ],
         ];
     }
 
@@ -32,7 +32,7 @@ class DriverContainer implements DriverContainerInterface
         }
 
         if (null === $this->drivers[$driver]['object']) {
-            $this->drivers[$driver]['object'] = new $this->drivers[$driver]['classPath'];
+            $this->drivers[$driver]['object'] = new $this->drivers[$driver]['classPath']();
         }
 
         return $this->drivers[$driver]['object'];

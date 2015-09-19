@@ -13,7 +13,7 @@ interface ConnectionHandlerInterface
     /**
      * Triggered when the connection the handler was assigned to is ready to
      * be read.
-     * 
+     *
      * @return int The number of requests dispatched during the function call
      */
     public function ready();
@@ -32,7 +32,7 @@ interface ConnectionHandlerInterface
     /**
      * Returns true if the connection handler has been closed and false if it
      * is still active.
-     * 
+     *
      * @return bool
      */
     public function isClosed();

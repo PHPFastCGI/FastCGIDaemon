@@ -12,12 +12,12 @@ class DriverContainerTest extends \PHPUnit_Framework_TestCase
     /**
      * Tests that the driver container throws an InvalidArgumentException with
      * an unknown driver.
-     * 
+     *
      * @expectedException InvalidArgumentException
      */
     public function testInvalidDriver()
     {
-        $driverContainer = new DriverContainer;
+        $driverContainer = new DriverContainer();
 
         $driverContainer->getFactory('foo');
     }
@@ -27,7 +27,7 @@ class DriverContainerTest extends \PHPUnit_Framework_TestCase
      */
     public function testGetFactory()
     {
-        $driverContainer = new DriverContainer;
+        $driverContainer = new DriverContainer();
 
         $userlandDaemonFactory = $driverContainer->getFactory('userland');
 

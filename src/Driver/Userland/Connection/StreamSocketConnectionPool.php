@@ -30,7 +30,7 @@ class StreamSocketConnectionPool implements ConnectionPoolInterface
 
     /**
      * Constructor.
-     * 
+     *
      * @param resource $socket The stream socket to accept connections from
      */
     public function __construct($socket)
@@ -111,7 +111,7 @@ class StreamSocketConnectionPool implements ConnectionPoolInterface
     /**
      * Uses the stream select function to eliminate all non-readable sockets
      * from the read sockets parameter.
-     * 
+     *
      * @param resource[] $readSockets The sockets to test for readability (output parameter)
      * @param int        $timeout     The stream select call timeout
      */
@@ -126,7 +126,7 @@ class StreamSocketConnectionPool implements ConnectionPoolInterface
                 throw new \RuntimeException('stream_select failed: '.$error['message']);
             }
 
-            $readSockets= [];
+            $readSockets = [];
         }
     }
 

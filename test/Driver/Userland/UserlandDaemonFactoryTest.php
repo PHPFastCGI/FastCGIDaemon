@@ -17,10 +17,10 @@ class UserlandDaemonFactoryTest extends \PHPUnit_Framework_TestCase
      */
     public function testCreateDaemonFromStreamSocket()
     {
-        $daemonFactory = new UserlandDaemonFactory;
+        $daemonFactory = new UserlandDaemonFactory();
 
-        $kernel  = new MockKernel;
-        $options = new DaemonOptions(new NullLogger, DaemonOptions::NO_LIMIT, DaemonOptions::NO_LIMIT, DaemonOptions::NO_LIMIT);
+        $kernel  = new MockKernel();
+        $options = new DaemonOptions(new NullLogger(), DaemonOptions::NO_LIMIT, DaemonOptions::NO_LIMIT, DaemonOptions::NO_LIMIT);
         $socket  = stream_socket_server('tcp://localhost:7000');
 
         $daemon = $daemonFactory->createDaemonFromStreamSocket($kernel, $options, $socket);

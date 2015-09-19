@@ -10,7 +10,7 @@ use PHPFastCGI\FastCGIDaemon\Exception\TimeLimitException;
 trait DaemonTrait
 {
     /**
-     * @var int 
+     * @var int
      */
     private $requestCount;
 
@@ -27,7 +27,7 @@ trait DaemonTrait
     /**
      * Loads to configuration from the daemon options and installs signal
      * handlers.
-     * 
+     *
      * @param DaemonOptionsInterface $daemonOptions
      */
     private function setupDaemon(DaemonOptionsInterface $daemonOptions)
@@ -47,7 +47,7 @@ trait DaemonTrait
 
     /**
      * Increments the request count.
-     * 
+     *
      * @param int $number The number of requests to increment the count by
      */
     private function incrementRequestCount($number)
@@ -58,12 +58,12 @@ trait DaemonTrait
     /**
      * Installs a handler which throws a ShutdownException upon receiving a
      * SIGINT or a SIGALRM.
-     * 
+     *
      * @throws ShutdownException On receiving a SIGINT or SIGALRM
      */
     private function installSignalHandlers()
     {
-        declare(ticks = 1);
+        declare (ticks = 1);
 
         pcntl_signal(SIGINT, function () {
             throw new ShutdownException('Daemon shutdown requested (received SIGINT)');
@@ -77,9 +77,9 @@ trait DaemonTrait
     /**
      * Checks the current PHP process against the limits specified in a daemon
      * options object.
-     * 
+     *
      * @param DaemonOptionsInterface $daemonOptions
-     * 
+     *
      * @throws ShutdownException When limits in the daemon options are exceeded
      */
     private function checkDaemonLimits()

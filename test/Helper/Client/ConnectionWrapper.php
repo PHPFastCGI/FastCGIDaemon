@@ -26,11 +26,11 @@ class ConnectionWrapper
     }
 
     /**
-     * Read a request from the connection
-     * 
+     * Read a request from the connection.
+     *
      * @param \PHPUnit_Framework_TestCase $testCase
      * @param string                      $requestId
-     * 
+     *
      * @return string
      */
     public function readResponse(\PHPUnit_Framework_TestCase $testCase, $requestId)
@@ -89,7 +89,7 @@ class ConnectionWrapper
 
     /**
      * Write a request to the stream.
-     * 
+     *
      * @param string $requestId FastCGI request ID
      * @param array  $params    FastCGI environment variables
      * @param string $body      FastCGI stdin resource stream

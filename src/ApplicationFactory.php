@@ -6,6 +6,7 @@ use PHPFastCGI\FastCGIDaemon\Command\DaemonRunCommand;
 use PHPFastCGI\FastCGIDaemon\Driver\DriverContainer;
 use PHPFastCGI\FastCGIDaemon\Driver\DriverContainerInterface;
 use Symfony\Component\Console\Application;
+
 /**
  * The default implementation of the ApplicationFactoryInterface.
  */
@@ -18,12 +19,12 @@ class ApplicationFactory implements ApplicationFactoryInterface
 
     /**
      * Constructor.
-     * 
+     *
      * @param DriverContainerInterface $driverContainer The driver container
      */
     public function __construct(DriverContainerInterface $driverContainer = null)
     {
-        $this->driverContainer = $driverContainer ?: new DriverContainer;
+        $this->driverContainer = $driverContainer ?: new DriverContainer();
     }
 
     /**
@@ -35,7 +36,7 @@ class ApplicationFactory implements ApplicationFactoryInterface
 
         $command = $this->createCommand($kernelObject, $commandName, $commandDescription);
 
-        $application = new Application;
+        $application = new Application();
         $application->add($command);
 
         return $application;
@@ -54,11 +55,11 @@ class ApplicationFactory implements ApplicationFactoryInterface
     /**
      * Converts the kernel parameter to an object implementing the KernelInterface
      * if it is a callable.
-     * 
+     *
      * Otherwise returns the object directly.
-     * 
+     *
      * @param KernelInterface|callable $kernel The kernel
-     * 
+     *
      * @return KernelInterface The kernel as an object implementing the KernelInterface
      */
     private function getKernelObject($kernel)

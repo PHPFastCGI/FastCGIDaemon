@@ -54,7 +54,7 @@ class StreamSocketConnectionPoolTest extends \PHPUnit_Framework_TestCase
 
     /**
      * Test basic stream_select fail.
-     * 
+     *
      * @expectedException \RuntimeException
      */
     public function testStreamSelectFail()
@@ -69,7 +69,7 @@ class StreamSocketConnectionPoolTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * Test stream_select signal interrupt doesn't trigger \RunTime exception
+     * Test stream_select signal interrupt doesn't trigger \RunTime exception.
      */
     public function testStreamSelectSignalInterrupt()
     {
@@ -79,7 +79,7 @@ class StreamSocketConnectionPoolTest extends \PHPUnit_Framework_TestCase
 
         $alarmCalled = false;
 
-        declare(ticks = 1);
+        declare (ticks = 1);
 
         pcntl_signal(SIGALRM, function () use (&$alarmCalled) {
             $alarmCalled = true;

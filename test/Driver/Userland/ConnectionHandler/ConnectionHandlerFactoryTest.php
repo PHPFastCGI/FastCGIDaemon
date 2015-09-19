@@ -15,14 +15,14 @@ class ConnectionHandlerFactoryTest extends \PHPUnit_Framework_TestCase
      */
     public function testCreatesConnectionHandlerFromKernel()
     {
-        $kernel = new MockKernel;
+        $kernel = new MockKernel();
 
         $connection = $this
             ->getMockBuilder('PHPFastCGI\\FastCGIDaemon\\Driver\\Userland\\Connection\\StreamSocketConnection')
             ->disableOriginalConstructor()
             ->getMock();
 
-        $connectionHandlerFactory = new ConnectionHandlerFactory;
+        $connectionHandlerFactory = new ConnectionHandlerFactory();
 
         $connectionHandler = $connectionHandlerFactory->createConnectionHandler($kernel, $connection);
 

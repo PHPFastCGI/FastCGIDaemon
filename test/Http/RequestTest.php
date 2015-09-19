@@ -8,7 +8,7 @@ use PHPFastCGI\FastCGIDaemon\Http\Request;
  * Test that the request builder is correctly building the PSR-7 request
  * message.
  */
-class RequestBuilderTest extends \PHPUnit_Framework_TestCase
+class RequestTest extends \PHPUnit_Framework_TestCase
 {
     /**
      * Test that the request builder is correctly building the request messages.
@@ -43,7 +43,7 @@ class RequestBuilderTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($expectedPost,    $request->getPost());
         $this->assertEquals($expectedCookies, $request->getCookies());
         $this->assertEquals($stream,          $request->getStdin());
-        
+
         // Check the PSR server request
         rewind($stream);
         $serverRequest = $request->getServerRequest();
@@ -53,7 +53,6 @@ class RequestBuilderTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($expectedCookies,       $serverRequest->getCookieParams());
         $this->assertEquals($content,      (string) $serverRequest->getBody());
 
-        
         // Check the HttpFoundation request
         rewind($stream);
         $httpFoundationRequest = $request->getHttpFoundationRequest();
