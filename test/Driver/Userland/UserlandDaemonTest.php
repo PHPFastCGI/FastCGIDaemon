@@ -22,8 +22,8 @@ class UserlandDaemonTest extends \PHPUnit_Framework_TestCase
      */
     public function testRequestLimit()
     {
-        // Set a memory limit to make sure that it isn't breached
-        $context = $this->createTestingContext(1, memory_get_peak_usage() + (1024 * 1024));
+        // Set a memory limit to make sure that it isn't breached (added 10MB on top of peak usage)
+        $context = $this->createTestingContext(1, memory_get_peak_usage() + (10 * 1024 * 1024));
 
         $socket            = stream_socket_client($context['address']);
         $connectionWrapper = new ConnectionWrapper($socket);
