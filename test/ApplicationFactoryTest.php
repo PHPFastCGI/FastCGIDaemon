@@ -5,7 +5,7 @@ namespace PHPFastCGI\Test\FastCGIDaemon;
 use PHPFastCGI\FastCGIDaemon\ApplicationFactory;
 
 /**
- * Tests the daemon.
+ * Tests the application factory.
  */
 class ApplicationFactoryTest extends \PHPUnit_Framework_TestCase
 {
