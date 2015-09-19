@@ -7,7 +7,7 @@ use Zend\Diactoros\ServerRequest;
 use Zend\Diactoros\ServerRequestFactory;
 
 /**
- * The default implementation of the RequestInterface
+ * The default implementation of the RequestInterface.
  */
 class Request implements RequestInterface
 {
@@ -23,7 +23,7 @@ class Request implements RequestInterface
 
     /**
      * Constructor.
-     * 
+     *
      * @param array    $params The FastCGI server params as an associative array
      * @param resource $stdin  The FastCGI stdin data as a stream resource
      */
