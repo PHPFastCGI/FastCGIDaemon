@@ -7,7 +7,7 @@ use Zend\Diactoros\ServerRequest;
 use Zend\Diactoros\ServerRequestFactory;
 
 /**
- * The default implementation of the RequestInterface
+ * The default implementation of the RequestInterface.
  */
 class Request implements RequestInterface
 {
@@ -23,7 +23,7 @@ class Request implements RequestInterface
 
     /**
      * Constructor.
-     * 
+     *
      * @param array    $params The FastCGI server params as an associative array
      * @param resource $stdin  The FastCGI stdin data as a stream resource
      */
@@ -73,7 +73,7 @@ class Request implements RequestInterface
             $requestMethod = $this->params['REQUEST_METHOD'];
             $contentType   = $this->params['CONTENT_TYPE'];
 
-            if (strcasecmp($requestMethod, 'POST') === 0 && strcasecmp($contentType, 'application/x-www-form-urlencoded') === 0) {
+            if (strcasecmp($requestMethod, 'POST') === 0 && stripos($contentType, 'application/x-www-form-urlencoded') === 0) {
                 $postData = stream_get_contents($this->stdin);
                 rewind($this->stdin);
 

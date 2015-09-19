@@ -12,32 +12,23 @@ interface DaemonFactoryInterface
     /**
      * Create a FastCGI daemon listening on FCGI_LISTENSOCK_FILENO.
      *
-     * @param KernelInterface|callable $kernel The daemon's kernel
+     * @param KernelInterface        $kernel  The kernel to use for the daemon
+     * @param DaemonOptionsInterface $options The daemon configuration
      *
      * @return DaemonInterface The FastCGI daemon
      */
-    public function createDaemon($kernel);
+    public function createDaemon(KernelInterface $kernel, DaemonOptionsInterface $options);
 
     /**
      * Create a FastCGI daemon listening on a given address. The default host is
      * localhost.
      *
-     * @param KernelInterface|callable $kernel The daemon's kernel
-     * @param int                      $port   The port to bind to
-     * @param string                   $host   The host to bind to
+     * @param KernelInterface        $kernel  The kernel to use for the daemon
+     * @param DaemonOptionsInterface $options The daemon configuration
+     * @param string                 $host    The host to bind to
+     * @param int                    $port    The port to bind to
      *
      * @return DaemonInterface The FastCGI daemon
      */
-    public function createTcpDaemon($kernel, $port, $host = 'localhost');
-
-    /**
-     * Create a FastCGI daemon from a stream socket which is configured for
-     * accepting connections.
-     *
-     * @param KernelInterface|callable $kernel The daemon's kernel
-     * @param resource                 $socket The socket to accept connections from
-     *
-     * @return DaemonInterface The FastCGI daemon
-     */
-    public function createDaemonFromStreamSocket($kernel, $socket);
+    public function createTcpDaemon(KernelInterface $kernel, DaemonOptionsInterface $options, $host, $port);
 }

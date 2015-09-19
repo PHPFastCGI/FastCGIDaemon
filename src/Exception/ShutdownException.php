@@ -3,8 +3,10 @@
 namespace PHPFastCGI\FastCGIDaemon\Exception;
 
 /**
- * Thrown AFTER the daemon has been shutdown cleanly. This is used to cleanly
- * distinguish between other faults that could occur during operation.
+ * Shutdown exceptions are thrown to trigger a graceful shutdown of the daemon.
+ *
+ * They may be triggered by a SIGINT or by exceeding limits specified in the
+ * daemon configuration (such as memory and request limits).
  */
 class ShutdownException extends \RuntimeException
 {

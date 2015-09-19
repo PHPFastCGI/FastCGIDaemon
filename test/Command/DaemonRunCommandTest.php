@@ -3,8 +3,13 @@
 namespace PHPFastCGI\Test\FastCGIDaemon;
 
 use PHPFastCGI\FastCGIDaemon\Command\DaemonRunCommand;
-use PHPFastCGI\FastCGIDaemon\DaemonFactory;
+use PHPFastCGI\FastCGIDaemon\DaemonOptions;
+use PHPFastCGI\Test\FastCGIDaemon\Helper\Mocker\Driver\MockDriverContainer;
+use PHPFastCGI\Test\FastCGIDaemon\Helper\Mocker\MockDaemon;
+use PHPFastCGI\Test\FastCGIDaemon\Helper\Mocker\MockDaemonFactory;
+use PHPFastCGI\Test\FastCGIDaemon\Helper\Mocker\MockKernel;
 use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\NullOutput;
 
 /**
@@ -13,151 +18,162 @@ use Symfony\Component\Console\Output\NullOutput;
 class DaemonRunCommandTest extends \PHPUnit_Framework_TestCase
 {
     /**
-     * Tests an \InvalidArgumentException is thrown when it isn't constructed
-     * with a callable.
-     *
-     * @expectedException \InvalidArgumentException
+     * Tests that the command options are configured properly.
      */
-    public function testInvalidArgumentException()
+    public function testConfiguration()
     {
-        new DaemonRunCommand('not a callable function');
-    }
-
-    /**
-     * Tests that two optional options 'port' and 'host' are added to the
-     * command.
-     */
-    public function testOptions()
-    {
-        $command = new DaemonRunCommand(function () { });
+        $command = new DaemonRunCommand(new MockKernel(), new MockDriverContainer());
 
         $definition = $command->getDefinition();
 
-        $portOption = $definition->getOption('port');
-        $this->assertTrue($portOption->isValueOptional());
+        $optionalOptions = ['port', 'host', 'request-limit', 'memory-limit', 'time-limit', 'driver'];
 
-        $hostOption = $definition->getOption('host');
-        $this->assertTrue($hostOption->isValueOptional());
+        foreach ($optionalOptions as $optionName) {
+            $this->assertTrue($definition->getOption($optionName)->isValueOptional());
+        }
+
+        $defaults = ['driver' => 'userland'];
+
+        foreach ($defaults as $optionName => $defaultValue) {
+            $this->assertEquals($defaultValue, $definition->getOption($optionName)->getDefault());
+        }
     }
 
     /**
-     * Test invalid option configuration. An Invalid argument exception should
+     * Test with no options set (default). The command should use ::createDaemon
+     * method on the factory rather than ::createTcpDaemon.
+     */
+    public function testNoOptions()
+    {
+        $expectations = ['driver' => 'userland'];
+
+        $context = $this->createTestingContext($expectations);
+
+        $context['command']->run(new ArrayInput([]), new NullOutput());
+
+        $this->assertEquals('run',          $context['daemon']->getDelegatedCalls()[0][0]);
+        $this->assertEquals('createDaemon', $context['daemonFactory']->getDelegatedCalls()[0][0]);
+        $this->assertEquals('getFactory',   $context['driverContainer']->getDelegatedCalls()[0][0]);
+    }
+
+    /**
+     * Test that the daemon options object is correctly configured.
+     */
+    public function testDaemonOptions()
+    {
+        $requestLimit = 500;
+        $memoryLimit  = 600;
+        $timeLimit    = 700;
+
+        $input = new ArrayInput([
+            '--request-limit' => $requestLimit,
+            '--memory-limit'  => $memoryLimit,
+            '--time-limit'    => $timeLimit,
+        ]);
+        $output = new NullOutput();
+
+        $logger  = new ConsoleLogger($output);
+        $options = new DaemonOptions($logger, $requestLimit, $memoryLimit, $timeLimit);
+
+        $expectations = ['options' => $options, 'driver' => 'userland'];
+
+        $context = $this->createTestingContext($expectations);
+
+        $context['command']->run($input, $output);
+
+        $this->assertEquals('run',          $context['daemon']->getDelegatedCalls()[0][0]);
+        $this->assertEquals('createDaemon', $context['daemonFactory']->getDelegatedCalls()[0][0]);
+        $this->assertEquals('getFactory',   $context['driverContainer']->getDelegatedCalls()[0][0]);
+    }
+
+    /**
+     * Test with only the host option set. An Invalid argument exception should
      * be thrown if the host option is supplied without the port optional also.
      *
      * @expectedException \InvalidArgumentException
      */
-    public function testInvalidOptions()
+    public function testHostOptionOnly()
     {
-        $command = new DaemonRunCommand(function () { });
+        $context = $this->createTestingContext([]);
 
-        $input  = new ArrayInput(['--host' => '_']);
-        $output = new NullOutput();
+        $input = new ArrayInput(['--host' => 'foo']);
 
-        $command->run($input, $output);
+        $context['command']->run($input, new NullOutput());
     }
 
     /**
-     * Create a mock daemon to use for testing.
+     * Test with only the port option set.
      */
-    private function createMockDaemon()
+    public function testPortOptionOnly()
     {
-        $mockDaemon = $this
-            ->getMockBuilder('PHPFastCGI\\FastCGIDaemon\\Daemon')
-            ->disableOriginalConstructor()
-            ->setMethods(['setLogger', 'run'])
-            ->getMock();
+        $expectations = [
+            'port'   => 500,
+            'host'   => 'localhost',
+            'driver' => 'userland',
+        ];
 
-        $mockDaemon->expects($this->once())->method('setLogger');
-        $mockDaemon->expects($this->once())->method('run');
+        $context = $this->createTestingContext($expectations);
 
-        return $mockDaemon;
+        $input = new ArrayInput(['--port' => $expectations['port']]);
+
+        $context['command']->run($input, new NullOutput());
+
+        $this->assertEquals('run',             $context['daemon']->getDelegatedCalls()[0][0]);
+        $this->assertEquals('createTcpDaemon', $context['daemonFactory']->getDelegatedCalls()[0][0]);
+        $this->assertEquals('getFactory',      $context['driverContainer']->getDelegatedCalls()[0][0]);
     }
 
     /**
-     * Create a mock daemon to use for testing.
+     * Construct mock objects set to test for expected values of different
+     * parameters when specified.
+     *
+     * @param array $expectations
+     *
+     * @return array An associative array containing the constructed objects.
      */
-    private function createMockDaemonFactory($createMethod)
+    private function createTestingContext(array $expectations)
     {
-        $mockDaemonFactory = $this
-            ->getMockBuilder('PHPFastCGI\\FastCGIDaemon\\DaemonFactory')
-            ->disableOriginalConstructor()
-            ->setMethods([$createMethod])
-            ->getMock();
+        $assertExpected = function ($property, $value) use ($expectations) {
+            if (isset($expectations[$property])) {
+                $this->assertEquals($expectations[$property], $value);
+            }
+        };
 
-        return $mockDaemonFactory;
-    }
+        $mockKernel = new MockKernel();
+        $mockDaemon = new MockDaemon(['run' => false]);
 
-    /**
-     * Test the creation of the default daemon.
-     */
-    public function testCreateDefaultDaemon()
-    {
-        $input  = new ArrayInput([]);
-        $output = new NullOutput();
+        $mockDaemonFactory = new MockDaemonFactory([
+            'createTcpDaemon' => function ($kernel, $options, $host, $port) use ($assertExpected, $mockKernel, $mockDaemon) {
+                $this->assertEquals($mockKernel, $kernel);
 
-        $mockDaemon        = $this->createMockDaemon();
-        $mockDaemonFactory = $this->createMockDaemonFactory('createDaemon');
+                $assertExpected('port',    $port);
+                $assertExpected('host',    $host);
+                $assertExpected('options', $options);
 
-        $mockDaemonFactory
-            ->expects($this->once())
-            ->method('createDaemon')
-            ->will($this->returnValue($mockDaemon));
+                return $mockDaemon;
+            },
+            'createDaemon' => function ($kernel, $options) use ($assertExpected, $mockKernel, $mockDaemon) {
+                $this->assertEquals($mockKernel, $kernel);
 
-        $command = new DaemonRunCommand(function () { }, $mockDaemonFactory);
+                $assertExpected('options', $options);
 
-        $command->run($input, $output);
-    }
+                return $mockDaemon;
+            },
+        ]);
 
-    /**
-     * Test the creation of the default daemon given the port and the host.
-     */
-    public function testCreateTcpDaemonWithHost()
-    {
-        $host = 'localhost';
-        $port = 5000;
+        $mockDriverContainer = new MockDriverContainer([
+            'getFactory' => function ($driver) use ($assertExpected, $mockDaemonFactory) {
+                $assertExpected('driver', $driver);
 
-        $input  = new ArrayInput(['--host' => $host, '--port' => $port]);
-        $output = new NullOutput();
+                return $mockDaemonFactory;
+            },
+        ]);
 
-        $mockDaemon        = $this->createMockDaemon();
-        $mockDaemonFactory = $this->createMockDaemonFactory('createTcpDaemon');
-
-        $kernel = function () { };
-
-        $mockDaemonFactory
-            ->expects($this->once())
-            ->method('createTcpDaemon')
-            ->with($this->equalTo($kernel), $this->equalTo($port), $this->equalTo($host))
-            ->will($this->returnValue($mockDaemon));
-
-        $command = new DaemonRunCommand($kernel, $mockDaemonFactory);
-
-        $command->run($input, $output);
-    }
-
-    /**
-     * Test the creation of the TCP daemon given only the port.
-     */
-    public function testCreateTcpDaemonWithoutHost()
-    {
-        $port = 5000;
-
-        $input  = new ArrayInput(['--port' => $port]);
-        $output = new NullOutput();
-
-        $mockDaemon        = $this->createMockDaemon();
-        $mockDaemonFactory = $this->createMockDaemonFactory('createTcpDaemon');
-
-        $kernel = function () { };
-
-        $mockDaemonFactory
-            ->expects($this->once())
-            ->method('createTcpDaemon')
-            ->with($this->equalTo($kernel), $this->equalTo($port), $this->equalTo('localhost'))
-            ->will($this->returnValue($mockDaemon));
-
-        $command = new DaemonRunCommand($kernel, $mockDaemonFactory);
-
-        $command->run($input, $output);
+        return [
+            'command'         => new DaemonRunCommand($mockKernel, $mockDriverContainer),
+            'daemon'          => $mockDaemon,
+            'daemonFactory'   => $mockDaemonFactory,
+            'driverContainer' => $mockDriverContainer,
+        ];
     }
 }
