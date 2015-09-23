@@ -30,4 +30,26 @@ class DaemonOptionsTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($memoryLimit,  $options->getOption(DaemonOptions::MEMORY_LIMIT));
         $this->assertEquals($timeLimit,    $options->getOption(DaemonOptions::TIME_LIMIT));
     }
+
+    /**
+     * Test that an InvalidArgumentException is thrown when the object is
+     * constructed with an unknown option.
+     * 
+     * @expectedException \InvalidArgumentException
+     */
+    public function testUnknownOptionInConstructor()
+    {
+        new DaemonOptions(['hello' => 'world']);
+    }
+
+    /**
+     * Test that an InvalidArgumentException is thrown when ::getOption is
+     * called with an unknown option.
+     * 
+     * @expectedException \InvalidArgumentException
+     */
+    public function testGetUnknownOption()
+    {
+        (new DaemonOptions())->getOption('hello');
+    }
 }
