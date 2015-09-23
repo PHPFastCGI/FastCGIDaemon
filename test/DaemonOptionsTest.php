@@ -32,6 +32,17 @@ class DaemonOptionsTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * Test that an InvalidArgumentException is thrown when an invalid logger
+     * is provided.
+     * 
+     * @expectedException \InvalidArgumentException
+     */
+    public function testInvalidLogger()
+    {
+        new DaemonOptions([DaemonOptions::LOGGER => 'foo']);
+    }
+
+    /**
      * Test that an InvalidArgumentException is thrown when the object is
      * constructed with an unknown option.
      * 
