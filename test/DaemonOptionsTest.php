@@ -15,16 +15,19 @@ class DaemonOptionsTest extends \PHPUnit_Framework_TestCase
      */
     public function testDaemonOptions()
     {
-        $logger = new NullLogger();
+        $logger       = new NullLogger();
         $requestLimit = 10;
-        $memoryLimit  = 11;
-        $timeLimit    = 12;
+        $memoryLimit  = $timeLimit = DaemonOptions::NO_LIMIT; // implicit as not passed in options array
 
-        $options = new DaemonOptions($logger, $requestLimit, $memoryLimit, $timeLimit);
+        $options = new DaemonOptions([
+            DaemonOptions::LOGGER        => $logger,
+            DaemonOptions::REQUEST_LIMIT => $requestLimit,
+        ]);
 
-        $this->assertSame($logger, $options->getLogger());
-        $this->assertEquals($requestLimit, $options->getRequestLimit());
-        $this->assertEquals($memoryLimit, $options->getMemoryLimit());
-        $this->assertEquals($timeLimit, $options->getTimeLimit());
+        $this->assertSame($logger, $options->getOption(DaemonOptions::LOGGER));
+
+        $this->assertEquals($requestLimit, $options->getOption(DaemonOptions::REQUEST_LIMIT));
+        $this->assertEquals($memoryLimit,  $options->getOption(DaemonOptions::MEMORY_LIMIT));
+        $this->assertEquals($timeLimit,    $options->getOption(DaemonOptions::TIME_LIMIT));
     }
 }

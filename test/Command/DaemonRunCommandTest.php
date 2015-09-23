@@ -61,10 +61,12 @@ class DaemonRunCommandTest extends \PHPUnit_Framework_TestCase
      */
     public function testDaemonOptions()
     {
+        // Limits to use
         $requestLimit = 500;
         $memoryLimit  = 600;
         $timeLimit    = 700;
 
+        // Create symfony input and output objects
         $input = new ArrayInput([
             '--request-limit' => $requestLimit,
             '--memory-limit'  => $memoryLimit,
@@ -72,12 +74,16 @@ class DaemonRunCommandTest extends \PHPUnit_Framework_TestCase
         ]);
         $output = new NullOutput();
 
-        $logger  = new ConsoleLogger($output);
-        $options = new DaemonOptions($logger, $requestLimit, $memoryLimit, $timeLimit);
+        // Create expected daemon configuration
+        $options = new DaemonOptions([
+            DaemonOptions::LOGGER        => new ConsoleLogger($output),
+            DaemonOptions::REQUEST_LIMIT => $requestLimit,
+            DaemonOptions::MEMORY_LIMIT  => $memoryLimit,
+            DaemonOptions::TIME_LIMIT    => $timeLimit,
+        ]);
 
-        $expectations = ['options' => $options, 'driver' => 'userland'];
-
-        $context = $this->createTestingContext($expectations);
+        // Create testing context using expectations
+        $context = $this->createTestingContext(['options' => $options, 'driver' => 'userland']);
 
         $context['command']->run($input, $output);
 

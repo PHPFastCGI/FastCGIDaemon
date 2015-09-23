@@ -126,9 +126,15 @@ class UserlandDaemonTest extends \PHPUnit_Framework_TestCase
             'address' => 'tcp://localhost:7000',
         ];
 
+        $context['options'] = new DaemonOptions([
+            DaemonOptions::LOGGER        => $context['logger'],
+            DaemonOptions::REQUEST_LIMIT => $requestLimit,
+            DaemonOptions::MEMORY_LIMIT  => $memoryLimit,
+            DaemonOptions::TIME_LIMIT    => $timeLimit,
+        ]);
+
         $context['serverSocket']   = stream_socket_server($context['address']);
         $context['connectionPool'] = new StreamSocketConnectionPool($context['serverSocket']);
-        $context['options']        = new DaemonOptions($context['logger'], $requestLimit, $memoryLimit, $timeLimit);
         $context['daemon']         = new UserlandDaemon($context['kernel'], $context['options'], $context['connectionPool'], new ConnectionHandlerFactory());
 
         return $context;

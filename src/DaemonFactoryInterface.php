@@ -17,7 +17,7 @@ interface DaemonFactoryInterface
      *
      * @return DaemonInterface The FastCGI daemon
      */
-    public function createDaemon(KernelInterface $kernel, DaemonOptionsInterface $options);
+    public function createDaemon(KernelInterface $kernel, DaemonOptions $options);
 
     /**
      * Create a FastCGI daemon listening on a given address. The default host is
@@ -30,5 +30,5 @@ interface DaemonFactoryInterface
      *
      * @return DaemonInterface The FastCGI daemon
      */
-    public function createTcpDaemon(KernelInterface $kernel, DaemonOptionsInterface $options, $host, $port);
+    public function createTcpDaemon(KernelInterface $kernel, DaemonOptions $options, $host, $port);
 }

@@ -28,17 +28,17 @@ trait DaemonTrait
      * Loads to configuration from the daemon options and installs signal
      * handlers.
      *
-     * @param DaemonOptionsInterface $daemonOptions
+     * @param DaemonOptions $daemonOptions
      */
-    private function setupDaemon(DaemonOptionsInterface $daemonOptions)
+    private function setupDaemon(DaemonOptions $daemonOptions)
     {
         $this->requestCount = 0;
-        $this->requestLimit = $daemonOptions->getRequestLimit();
-        $this->memoryLimit  = $daemonOptions->getMemoryLimit();
+        $this->requestLimit = $daemonOptions->getOption(DaemonOptions::REQUEST_LIMIT);
+        $this->memoryLimit  = $daemonOptions->getOption(DaemonOptions::MEMORY_LIMIT);
 
-        $timeLimit = $daemonOptions->getTimeLimit();
+        $timeLimit = $daemonOptions->getOption(DaemonOptions::TIME_LIMIT);
 
-        if (DaemonOptionsInterface::NO_LIMIT !== $timeLimit) {
+        if (DaemonOptions::NO_LIMIT !== $timeLimit) {
             pcntl_alarm($timeLimit);
         }
 
@@ -82,13 +82,13 @@ trait DaemonTrait
      */
     private function checkDaemonLimits()
     {
-        if (DaemonOptionsInterface::NO_LIMIT !== $this->requestLimit) {
+        if (DaemonOptions::NO_LIMIT !== $this->requestLimit) {
             if ($this->requestLimit <= $this->requestCount) {
                 throw new RequestLimitException('Daemon request limit reached ('.$this->requestCount.' of '.$this->requestLimit.')');
             }
         }
 
-        if (DaemonOptionsInterface::NO_LIMIT !== $this->memoryLimit) {
+        if (DaemonOptions::NO_LIMIT !== $this->memoryLimit) {
             $memoryUsage = memory_get_usage(true);
 
             if ($this->memoryLimit <= $memoryUsage) {
