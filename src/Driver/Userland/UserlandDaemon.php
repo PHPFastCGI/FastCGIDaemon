@@ -7,6 +7,7 @@ use PHPFastCGI\FastCGIDaemon\DaemonOptions;
 use PHPFastCGI\FastCGIDaemon\DaemonTrait;
 use PHPFastCGI\FastCGIDaemon\Driver\Userland\Connection\ConnectionPoolInterface;
 use PHPFastCGI\FastCGIDaemon\Driver\Userland\ConnectionHandler\ConnectionHandlerFactoryInterface;
+use PHPFastCGI\FastCGIDaemon\Driver\Userland\Exception\UserlandDaemonException;
 use PHPFastCGI\FastCGIDaemon\Exception\ShutdownException;
 use PHPFastCGI\FastCGIDaemon\KernelInterface;
 
@@ -101,8 +102,12 @@ class UserlandDaemon implements DaemonInterface
                 $this->connectionHandlers[$id] = $this->connectionHandlerFactory->createConnectionHandler($this->kernel, $connection);
             }
 
-            $dispatchedRequests = $this->connectionHandlers[$id]->ready();
-            $this->incrementRequestCount($dispatchedRequests);
+            try {
+                $dispatchedRequests = $this->connectionHandlers[$id]->ready();
+                $this->incrementRequestCount($dispatchedRequests);
+            } catch (UserlandDaemonException $exception) {
+                $this->daemonOptions->getOption(DaemonOptions::LOGGER)->error($exception->getMessage());
+            }
 
             if ($this->connectionHandlers[$id]->isClosed()) {
                 unset($this->connectionHandlers[$id]);
