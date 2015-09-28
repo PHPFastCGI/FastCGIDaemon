@@ -3,7 +3,7 @@
 namespace PHPFastCGI\FastCGIDaemon\Driver\FastCGIExtension;
 
 use PHPFastCGI\FastCGIDaemon\DaemonInterface;
-use PHPFastCGI\FastCGIDaemon\DaemonOptionsInterface;
+use PHPFastCGI\FastCGIDaemon\DaemonOptions;
 use PHPFastCGI\FastCGIDaemon\DaemonTrait;
 use PHPFastCGI\FastCGIDaemon\KernelInterface;
 use PHPFastCGI\FastCGIDaemon\Http\Request;
@@ -39,10 +39,10 @@ class FastCGIExtensionDaemon implements DaemonInterface
      * Constructor.
      * 
      * @param KernelInterface             $kernel
-     * @param DaemonOptionsInterface      $options
+     * @param DaemonOptions               $options
      * @param FastCGIApplicationInterface $fastCGIApplication
      */
-    public function __construct(KernelInterface $kernel, DaemonOptionsInterface $options, \FastCGIApplicationInterface $fastCGIApplication)
+    public function __construct(KernelInterface $kernel, DaemonOptions $options, \FastCGIApplicationInterface $fastCGIApplication)
     {
         if (!extension_loaded('fastcgi')) {
             throw new \RuntimeException('This implementation of DaemonInterface requires the PHPFastCGI php5-fastcgi extension to be installed and enabled');
