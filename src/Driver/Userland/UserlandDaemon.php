@@ -3,10 +3,11 @@
 namespace PHPFastCGI\FastCGIDaemon\Driver\Userland;
 
 use PHPFastCGI\FastCGIDaemon\DaemonInterface;
-use PHPFastCGI\FastCGIDaemon\DaemonOptionsInterface;
+use PHPFastCGI\FastCGIDaemon\DaemonOptions;
 use PHPFastCGI\FastCGIDaemon\DaemonTrait;
 use PHPFastCGI\FastCGIDaemon\Driver\Userland\Connection\ConnectionPoolInterface;
 use PHPFastCGI\FastCGIDaemon\Driver\Userland\ConnectionHandler\ConnectionHandlerFactoryInterface;
+use PHPFastCGI\FastCGIDaemon\Driver\Userland\Exception\UserlandDaemonException;
 use PHPFastCGI\FastCGIDaemon\Exception\ShutdownException;
 use PHPFastCGI\FastCGIDaemon\KernelInterface;
 
@@ -24,7 +25,7 @@ class UserlandDaemon implements DaemonInterface
     private $kernel;
 
     /**
-     * @var DaemonOptionsInterface
+     * @var DaemonOptions
      */
     private $daemonOptions;
 
@@ -47,11 +48,11 @@ class UserlandDaemon implements DaemonInterface
      * Constructor.
      *
      * @param KernelInterface                   $kernel                   The kernel for the daemon to use
-     * @param DaemonOptionsInterface            $daemonOptions            The daemon configuration
+     * @param DaemonOptions                     $daemonOptions            The daemon configuration
      * @param ConnectionPoolInterface           $connectionPool           The connection pool to accept connections from
      * @param ConnectionHandlerFactoryInterface $connectionHandlerFactory A factory class for producing connection handlers
      */
-    public function __construct(KernelInterface $kernel, DaemonOptionsInterface $daemonOptions, ConnectionPoolInterface $connectionPool, ConnectionHandlerFactoryInterface $connectionHandlerFactory)
+    public function __construct(KernelInterface $kernel, DaemonOptions $daemonOptions, ConnectionPoolInterface $connectionPool, ConnectionHandlerFactoryInterface $connectionHandlerFactory)
     {
         $this->kernel                   = $kernel;
         $this->daemonOptions            = $daemonOptions;
@@ -75,11 +76,11 @@ class UserlandDaemon implements DaemonInterface
                 $this->checkDaemonLimits();
             }
         } catch (ShutdownException $exception) {
-            $this->daemonOptions->getLogger()->notice($exception->getMessage());
+            $this->daemonOptions->getOption(DaemonOptions::LOGGER)->notice($exception->getMessage());
 
             $this->shutdown();
         } catch (\Exception $exception) {
-            $this->daemonOptions->getLogger()->emergency($exception->getMessage());
+            $this->daemonOptions->getOption(DaemonOptions::LOGGER)->emergency($exception->getMessage());
 
             $this->connectionPool->close();
 
@@ -87,6 +88,11 @@ class UserlandDaemon implements DaemonInterface
         }
     }
 
+    /**
+     * Wait for connections in the pool to become readable. Create connection
+     * handlers for new connections and trigger the ready method when there is
+     * data for the handlers to receive. Clean up closed connections.
+     */
     private function processConnectionPool()
     {
         $readableConnections = $this->connectionPool->getReadableConnections(5);
@@ -96,8 +102,12 @@ class UserlandDaemon implements DaemonInterface
                 $this->connectionHandlers[$id] = $this->connectionHandlerFactory->createConnectionHandler($this->kernel, $connection);
             }
 
-            $dispatchedRequests = $this->connectionHandlers[$id]->ready();
-            $this->incrementRequestCount($dispatchedRequests);
+            try {
+                $dispatchedRequests = $this->connectionHandlers[$id]->ready();
+                $this->incrementRequestCount($dispatchedRequests);
+            } catch (UserlandDaemonException $exception) {
+                $this->daemonOptions->getOption(DaemonOptions::LOGGER)->error($exception->getMessage());
+            }
 
             if ($this->connectionHandlers[$id]->isClosed()) {
                 unset($this->connectionHandlers[$id]);
@@ -105,6 +115,9 @@ class UserlandDaemon implements DaemonInterface
         }
     }
 
+    /**
+     * Gracefully shutdown the daemon.
+     */
     private function shutdown()
     {
         $this->connectionPool->shutdown();

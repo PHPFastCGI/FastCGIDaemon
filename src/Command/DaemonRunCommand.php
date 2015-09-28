@@ -55,7 +55,7 @@ class DaemonRunCommand extends Command
     }
 
     /**
-     * Retrieves the daemon configuration from the Symfony command input and
+     * Creates a daemon configuration object from the Symfony command input and
      * output objects.
      *
      * @param InputInterface  $input  The  Symfony command input
@@ -71,7 +71,12 @@ class DaemonRunCommand extends Command
         $memoryLimit  = $input->getOption('memory-limit')  ?: DaemonOptions::NO_LIMIT;
         $timeLimit    = $input->getOption('time-limit')    ?: DaemonOptions::NO_LIMIT;
 
-        return new DaemonOptions($logger, $requestLimit, $memoryLimit, $timeLimit);
+        return new DaemonOptions([
+            DaemonOptions::LOGGER        => $logger,
+            DaemonOptions::REQUEST_LIMIT => $requestLimit,
+            DaemonOptions::MEMORY_LIMIT  => $memoryLimit,
+            DaemonOptions::TIME_LIMIT    => $timeLimit,
+        ]);
     }
 
     /**

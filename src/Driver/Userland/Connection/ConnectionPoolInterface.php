@@ -2,7 +2,6 @@
 
 namespace PHPFastCGI\FastCGIDaemon\Driver\Userland\Connection;
 
-
 /**
  * Objects implementing the ConnectionPoolInterface pass incoming connections
  * off to ConnectionHandler instances that have been created from a connection
@@ -20,6 +19,8 @@ interface ConnectionPoolInterface
      * @param int $timeout Upper bound on the amount of time to wair for readable connections
      *
      * @return ConnectionInterface[]
+     * 
+     * @throws \RuntimeException On encountering fatal error
      */
     public function getReadableConnections($timeout);
 
