@@ -1,6 +1,6 @@
 <?php
 
-namespace PHPFastCGI\Test\FastCGIDaemon\Connection;
+namespace PHPFastCGI\Test\FastCGIDaemon\Driver\Userland\Connection;
 
 use PHPFastCGI\FastCGIDaemon\Driver\Userland\Connection\StreamSocketConnection;
 use PHPFastCGI\FastCGIDaemon\Driver\Userland\Exception\ConnectionException;
