@@ -4,9 +4,9 @@
 [![Build Status](https://travis-ci.org/PHPFastCGI/FastCGIDaemon.svg?branch=master)](https://travis-ci.org/PHPFastCGI/FastCGIDaemon)
 [![Coverage Status](https://coveralls.io/repos/PHPFastCGI/FastCGIDaemon/badge.svg?branch=master)](https://coveralls.io/r/PHPFastCGI/FastCGIDaemon?branch=master)
 
-A FastCGI daemon written in PHP.
+A FastCGI daemon written in PHP. Visit the [project website](http://phpfastcgi.github.io/) for more documentation and guides.
 
-Visit the [project website](http://phpfastcgi.github.io/).
+Check out the [project performance benchmarks](http://phpfastcgi.github.io/general/2015/08/24/phpfastcgi-benchmarks-symfony-silex-slim.html) to see how we got a "Hello, World!" Slim application to handle 5,500 rq/s.
 
 ## Introduction
 
