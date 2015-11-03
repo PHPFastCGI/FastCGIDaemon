@@ -1,7 +1,10 @@
 # FastCGI Daemon
 
+[![Latest Stable Version](https://poser.pugx.org/phpfastcgi/fastcgi-daemon/v/stable)](https://packagist.org/packages/phpfastcgi/fastcgi-daemon)
 [![Build Status](https://travis-ci.org/PHPFastCGI/FastCGIDaemon.svg?branch=master)](https://travis-ci.org/PHPFastCGI/FastCGIDaemon)
 [![Coverage Status](https://coveralls.io/repos/PHPFastCGI/FastCGIDaemon/badge.svg?branch=master)](https://coveralls.io/r/PHPFastCGI/FastCGIDaemon?branch=master)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/PHPFastCGI/FastCGIDaemon/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/PHPFastCGI/FastCGIDaemon/?branch=master)
+[![Total Downloads](https://poser.pugx.org/phpfastcgi/fastcgi-daemon/downloads)](https://packagist.org/packages/phpfastcgi/fastcgi-daemon)
 
 A FastCGI daemon written in PHP. Visit the [project website](http://phpfastcgi.github.io/) for more documentation and guides.
 
