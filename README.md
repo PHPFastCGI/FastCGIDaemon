@@ -22,7 +22,7 @@ The [Silex Adapter](https://github.com/PHPFastCGI/SilexAdapter) integrates this 
 
 ## Current Status
 
-This project is currently in early stages of development and not considered stable. Importantly, this library currently lacks support for uploaded files. Also a memory leak protection feature is scheduled for integration that allows the daemon to shutdown after handling 'N' requests.
+This project is currently in early stages of development and not considered stable. Importantly, this library currently lacks support for uploaded files.
 
 Contributions and suggestions are welcome.
 
