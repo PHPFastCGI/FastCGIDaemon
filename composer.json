@@ -2,7 +2,7 @@
     "name": "phpfastcgi/fastcgi-daemon",
     "description": "A FastCGI daemon written in PHP",
     "keywords": ["fastcgi", "server", "fast cgi", "daemon"],
-    "license": "GPL v2",
+    "license": "MIT",
     "authors": [
         {
             "name": "Andrew Carter",
