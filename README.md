@@ -16,9 +16,11 @@ Using this daemon, applications can stay alive between HTTP requests whilst oper
 
 The daemon requires a handler to be defined that accepts request objects and returns PSR-7 or HttpFoundation responses.
 
-The [Speedfony Bundle](https://github.com/PHPFastCGI/SpeedfonyBundle) integrates this daemon with the symfony2 framework.
+The [Speedfony Bundle](https://github.com/PHPFastCGI/SpeedfonyBundle) integrates this daemon with the Symfony2 framework.
 The [Slim Adapter](https://github.com/PHPFastCGI/SlimAdapter) integrates this daemon with the Slim v3 framework.
 The [Silex Adapter](https://github.com/PHPFastCGI/SilexAdapter) integrates this daemon with the Silex framework.
+
+There is also an un-official [ZF2 Adapter](https://github.com/Okeanrst/FastCGIZF2Adapter) that integrates this daemon with Zend Framework 2.
 
 ## Current Status
 
