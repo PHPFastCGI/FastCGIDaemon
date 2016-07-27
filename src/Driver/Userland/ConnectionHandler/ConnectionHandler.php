@@ -399,6 +399,7 @@ class ConnectionHandler implements ConnectionHandlerInterface
         }
 
         $this->endRequest($requestId);
+        $request->cleanUploadedFiles();
     }
 
     /**
