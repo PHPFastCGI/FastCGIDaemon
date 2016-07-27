@@ -12,6 +12,21 @@ use Zend\Diactoros\ServerRequestFactory;
 class Request implements RequestInterface
 {
     /**
+     * @var int
+     */
+    protected static $buffer_size = 10 * 1024 * 1024; // 10 MB
+
+    /**
+     * @var string
+     */
+    protected static $upload_dir = null;
+
+    /**
+     * @var array
+     */
+    protected $uploaded_files = [];
+
+    /**
      * @var array
      */
     private $params;
@@ -46,6 +61,48 @@ class Request implements RequestInterface
     public function getParams()
     {
         return $this->params;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function cleanUploadedFiles()
+    {
+        foreach ($this->uploaded_files as $file) {
+            @unlink($file['tmp_name']);
+        }
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public static function setBufferSize($size)
+    {
+        static::$buffer_size = $size;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public static function getBufferSize()
+    {
+        return static::$buffer_size;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public static function setUploadDir($dir)
+    {
+        static::$upload_dir = $dir;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public static function getUploadDir()
+    {
+        return static::$upload_dir ?: sys_get_temp_dir();
     }
 
     /**
@@ -87,6 +144,76 @@ class Request implements RequestInterface
     /**
      * {@inheritdoc}
      */
+    public function getFile()
+    {
+        if (isset($this->params['REQUEST_METHOD']) && isset($this->params['CONTENT_TYPE'])) {
+            $requestMethod = $this->params['REQUEST_METHOD'];
+            $contentType   = $this->params['CONTENT_TYPE'];
+
+            if (strcasecmp($requestMethod, 'POST') === 0 && stripos($contentType, 'multipart/form-data') === 0) {
+                if (preg_match('/boundary=(.*)?/', $contentType, $matches)) {
+                    list($postData, $this->uploaded_files) = $this->parseMultipartFormData($this->stdin, $matches[1]);
+                    parse_str($postData, $post);
+                    return $post;
+                }
+            }
+        }
+        return false;
+    }
+
+    private function parseMultipartFormData($stream, $boundary) {
+        $post = "";
+        $files = [];
+        $field_type = $field_name = $filename = $mimetype = null;
+        $in_header = $get_content = false;
+
+        while (!feof($stream)) {
+            $get_content = $field_name && !$in_header;
+            $buffer = stream_get_line($stream, static::$buffer_size, "\r\n" . ($get_content ? '--'.$boundary : ''));
+
+            if ($in_header && strlen($buffer) == 0) {
+                $in_header = false;
+            } else {
+                if ($get_content) {
+                    if ($field_type === 'data') {
+                        $post .= (isset($post[0]) ? '&' : '') . $field_name . "=" . urlencode($buffer);
+                    } elseif ($field_type === 'file' && $filename) {
+                        $tmp_path = $this->getUploadDir().'/'.substr(md5(rand().time()), 0, 16);
+                        $err = file_put_contents($tmp_path, $buffer);
+                        $files[$field_name] = [
+                            'type' => $mime_type ?: 'application/octet-stream',
+                            'name' => $filename,
+                            'tmp_name' => $tmp_path,
+                            'error' => ($err === false) ? true : 0,
+                            'size' => filesize($tmp_path),
+                        ];
+                        $filename = $mime_type = null;
+                    }
+                    $field_name = $field_type = null;
+                } elseif (strpos($buffer, 'Content-Disposition') === 0) {
+                    $in_header = true;
+                    if (preg_match('/name=\"([^\"]*)\"/', $buffer, $matches)) {
+                        $field_name = $matches[1];
+                    }
+                    if ($is_file = preg_match('/filename=\"([^\"]*)\"/', $buffer, $matches)) {
+                        $filename = $matches[1];
+                    }
+                    $field_type = $is_file ? 'file' : 'data';
+                } elseif (strpos($buffer, 'Content-Type') === 0) {
+                    $in_header = true;
+                    if (preg_match('/Content-Type: (.*)?/', $buffer, $matches)) {
+                        $mime_type = trim($matches[1]);
+                    }
+                }
+            }
+        }
+
+        return [$post, $files];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function getCookies()
     {
         $cookies = [];
@@ -121,7 +248,7 @@ class Request implements RequestInterface
         }
 
         $query   = $this->getQuery();
-        $post    = $this->getPost();
+        $post    = $this->getFile() ?: $this->getPost();
         $cookies = $this->getCookies();
 
         $server  = ServerRequestFactory::normalizeServer($this->params);
@@ -129,7 +256,7 @@ class Request implements RequestInterface
         $uri     = ServerRequestFactory::marshalUriFromServer($server, $headers);
         $method  = ServerRequestFactory::get('REQUEST_METHOD', $server, 'GET');
 
-        $request = new ServerRequest($server, [], $uri, $method, $this->stdin, $headers);
+        $request = new ServerRequest($server, $this->uploaded_files, $uri, $method, $this->stdin, $headers);
 
         return $request
             ->withCookieParams($cookies)
@@ -147,9 +274,9 @@ class Request implements RequestInterface
         }
 
         $query   = $this->getQuery();
-        $post    = $this->getPost();
+        $post    = $this->getFile() ?: $this->getPost();
         $cookies = $this->getCookies();
 
-        return new HttpFoundationRequest($query, $post, [], $cookies, [], $this->params, $this->stdin);
+        return new HttpFoundationRequest($query, $post, [], $cookies, $this->uploaded_files, $this->params, $this->stdin);
     }
 }

@@ -400,6 +400,7 @@ class ConnectionHandler implements ConnectionHandlerInterface
         }
 
         $this->endRequest($requestId);
+        $request->cleanUploadedFiles();
 
         // This method exists on PSR-7 and Symfony responses
         return $response->getStatusCode();
