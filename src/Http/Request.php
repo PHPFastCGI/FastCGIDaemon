@@ -14,7 +14,7 @@ class Request implements RequestInterface
     /**
      * @var int
      */
-    protected static $buffer_size = 10 * 1024 * 1024; // 10 MB
+    protected static $buffer_size = 10485760; // 10 MB
 
     /**
      * @var string
