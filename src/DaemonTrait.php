@@ -82,6 +82,8 @@ trait DaemonTrait
      */
     private function checkDaemonLimits()
     {
+        pcntl_signal_dispatch();
+
         if (DaemonOptions::NO_LIMIT !== $this->requestLimit) {
             if ($this->requestLimit <= $this->requestCount) {
                 throw new RequestLimitException('Daemon request limit reached ('.$this->requestCount.' of '.$this->requestLimit.')');
