@@ -2,6 +2,7 @@
 
 namespace PHPFastCGI\FastCGIDaemon\Command;
 
+use PHPFastCGI\FastCGIDaemon\DaemonInterface;
 use PHPFastCGI\FastCGIDaemon\DaemonOptions;
 use PHPFastCGI\FastCGIDaemon\Driver\DriverContainerInterface;
 use PHPFastCGI\FastCGIDaemon\KernelInterface;
@@ -48,6 +49,7 @@ class DaemonRunCommand extends Command
             ->setDescription($description)
             ->addOption('port',          null, InputOption::VALUE_OPTIONAL, 'TCP port to listen on (if not present, daemon will listen on FCGI_LISTENSOCK_FILENO)')
             ->addOption('host',          null, InputOption::VALUE_OPTIONAL, 'TCP host to listen on')
+            ->addOption('fd',            null, InputOption::VALUE_OPTIONAL, 'File descriptor to listen on - defaults to FCGI_LISTENSOCK_FILENO', DaemonInterface::FCGI_LISTENSOCK_FILENO)
             ->addOption('request-limit', null, InputOption::VALUE_OPTIONAL, 'The maximum number of requests to handle before shutting down')
             ->addOption('memory-limit',  null, InputOption::VALUE_OPTIONAL, 'The memory limit on the daemon instance before shutting down')
             ->addOption('time-limit',    null, InputOption::VALUE_OPTIONAL, 'The time limit on the daemon in seconds before shutting down')
@@ -86,6 +88,7 @@ class DaemonRunCommand extends Command
     {
         $port = $input->getOption('port');
         $host = $input->getOption('host');
+        $fd = $input->getOption('fd');
 
         $daemonOptions = $this->getDaemonOptions($input, $output);
 
@@ -100,7 +103,7 @@ class DaemonRunCommand extends Command
             throw new \InvalidArgumentException('TCP port option must be set if host option is set');
         } else {
             // With no host or port, listen on FCGI_LISTENSOCK_FILENO (default)
-            $daemon = $daemonFactory->createDaemon($this->kernel, $daemonOptions);
+            $daemon = $daemonFactory->createDaemon($this->kernel, $daemonOptions, $fd);
         }
 
         $daemon->run();

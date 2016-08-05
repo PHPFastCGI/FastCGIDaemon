@@ -15,22 +15,23 @@ use PHPFastCGI\FastCGIDaemon\KernelInterface;
 class UserlandDaemonFactory implements DaemonFactoryInterface
 {
     /**
-     * Create a FastCGI daemon listening on FCGI_LISTENSOCK_FILENO using the
+     * Create a FastCGI daemon listening on file descriptor using the
      * userland FastCGI implementation.
      *
      * @param KernelInterface $kernel  The kernel to use for the daemon
      * @param DaemonOptions   $options The daemon configuration
+     * @param int $fd file descriptor for listening defaults to FCGI_LISTENSOCK_FILENO
      *
      * @return UserlandDaemon
      *
      * @codeCoverageIgnore The FastCGI daemon
      */
-    public function createDaemon(KernelInterface $kernel, DaemonOptions $options)
+    public function createDaemon(KernelInterface $kernel, DaemonOptions $options, $fd = DaemonInterface::FCGI_LISTENSOCK_FILENO)
     {
-        $socket = fopen('php://fd/'.DaemonInterface::FCGI_LISTENSOCK_FILENO, 'r');
+        $socket = fopen('php://fd/'.$fd, 'r');
 
         if (false === $socket) {
-            throw new \RuntimeException('Could not open FCGI_LISTENSOCK_FILENO');
+            throw new \RuntimeException('Could not open ' . $fd);
         }
 
         return $this->createDaemonFromStreamSocket($kernel, $options, $socket);

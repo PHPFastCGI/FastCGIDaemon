@@ -10,14 +10,15 @@ namespace PHPFastCGI\FastCGIDaemon;
 interface DaemonFactoryInterface
 {
     /**
-     * Create a FastCGI daemon listening on FCGI_LISTENSOCK_FILENO.
+     * Create a FastCGI daemon listening on file descriptor.
      *
-     * @param KernelInterface        $kernel  The kernel to use for the daemon
-     * @param DaemonOptionsInterface $options The daemon configuration
+     * @param KernelInterface $kernel The kernel to use for the daemon
+     * @param DaemonOptions|DaemonOptionsInterface $options The daemon configuration
+     * @param int $fd file descriptor for listening defaults to FCGI_LISTENSOCK_FILENO
      *
      * @return DaemonInterface The FastCGI daemon
      */
-    public function createDaemon(KernelInterface $kernel, DaemonOptions $options);
+    public function createDaemon(KernelInterface $kernel, DaemonOptions $options, $fd = DaemonInterface::FCGI_LISTENSOCK_FILENO);
 
     /**
      * Create a FastCGI daemon listening on a given address. The default host is
