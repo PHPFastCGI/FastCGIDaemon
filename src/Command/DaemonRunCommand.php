@@ -28,6 +28,11 @@ class DaemonRunCommand extends Command
     private $driverContainer;
 
     /**
+     * @var DaemonInterface
+     */
+    private $daemon;
+
+    /**
      * Constructor.
      *
      * @param KernelInterface          $kernel          The kernel to be given to the daemon
@@ -39,6 +44,7 @@ class DaemonRunCommand extends Command
     {
         $this->kernel          = $kernel;
         $this->driverContainer = $driverContainer;
+        $this->daemon          = null;
 
         $name        = $name        ?: self::DEFAULT_NAME;
         $description = $description ?: self::DEFAULT_DESCRIPTION;
@@ -97,15 +103,27 @@ class DaemonRunCommand extends Command
 
         if (null !== $port) {
             // If we have the port, create a TCP daemon
-            $daemon = $daemonFactory->createTcpDaemon($this->kernel, $daemonOptions, $host ?: 'localhost', $port);
+            $this->daemon = $daemonFactory->createTcpDaemon($this->kernel, $daemonOptions, $host ?: 'localhost', $port);
         } elseif (null !== $host) {
             // If we have the host but not the port, we cant create a TCP daemon - throw exception
             throw new \InvalidArgumentException('TCP port option must be set if host option is set');
         } else {
             // With no host or port, listen on FCGI_LISTENSOCK_FILENO (default)
-            $daemon = $daemonFactory->createDaemon($this->kernel, $daemonOptions, $fd);
+            $this->daemon = $daemonFactory->createDaemon($this->kernel, $daemonOptions, $fd);
         }
 
-        $daemon->run();
+        $this->daemon->run();
+    }
+
+    /**
+     * Flag the daemon for shutdown.
+     */
+    public function flagShutdown()
+    {
+        if (null === $this->daemon) {
+            throw new \RuntimeException('There is no daemon running');
+        }
+
+        $this->daemon->flagShutdown();
     }
 }
