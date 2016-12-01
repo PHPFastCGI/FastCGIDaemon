@@ -51,6 +51,8 @@ interface DaemonInterface
     /**
      * Flag the daemon for shutting down. This will stop it from accepting
      * requests.
+     * 
+     * @param string|null Optional message.
      */
-    public function flagShutdown();
+    public function flagShutdown($message = null);
 }
