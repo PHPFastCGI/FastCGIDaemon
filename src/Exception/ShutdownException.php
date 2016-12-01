@@ -8,6 +8,6 @@ namespace PHPFastCGI\FastCGIDaemon\Exception;
  * They may be triggered by a SIGINT or by exceeding limits specified in the
  * daemon configuration (such as memory and request limits).
  */
-class ShutdownException extends \RuntimeException
+class ShutdownException extends DaemonException
 {
 }

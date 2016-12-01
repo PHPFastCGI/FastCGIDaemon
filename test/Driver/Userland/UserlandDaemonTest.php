@@ -19,7 +19,21 @@ use Zend\Diactoros\Response;
 class UserlandDaemonTest extends \PHPUnit_Framework_TestCase
 {
     /**
-     * Tests that the daemon shuts down after reaching its request .
+     * Tests that the daemon shuts down after being flagged for shutdown.
+     */
+    public function testFlagShutdown()
+    {
+        // Set a memory limit to make sure that it isn't breached (added 10MB on top of peak usage)
+        $context = $this->createTestingContext(1, memory_get_peak_usage() + (10 * 1024 * 1024));
+
+        $context['daemon']->flagShutdown();
+        $context['daemon']->run();
+
+        $this->assertEquals('Daemon flagged for shutdown', $context['logger']->getMessages()[0]['message']);
+    }
+
+    /**
+     * Tests that the daemon shuts down after reaching its request.
      */
     public function testRequestLimit()
     {

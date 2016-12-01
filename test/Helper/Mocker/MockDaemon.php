@@ -12,4 +12,8 @@ class MockDaemon implements DaemonInterface
     {
         return $this->delegateCall('run', func_get_args());
     }
+
+    public function flagShutdown()
+    {
+    }
 }
