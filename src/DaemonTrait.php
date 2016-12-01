@@ -10,6 +10,11 @@ use PHPFastCGI\FastCGIDaemon\Exception\TimeLimitException;
 trait DaemonTrait
 {
     /**
+     * @var bool
+     */
+    private $isShutdown = false;
+
+    /**
      * @var int
      */
     private $requestCount;
@@ -23,6 +28,14 @@ trait DaemonTrait
      * @var int
      */
     private $memoryLimit;
+
+    /**
+     * Flags the daemon for shutting down.
+     */
+    public function flagShutdown()
+    {
+        $this->isShutdown = true;
+    }
 
     /**
      * Loads to configuration from the daemon options and installs signal
@@ -76,12 +89,17 @@ trait DaemonTrait
 
     /**
      * Checks the current PHP process against the limits specified in a daemon
-     * options object.
+     * options object. This function will also throw an exception if the daemon
+     * has been flagged for shutdown.
      *
      * @throws ShutdownException When limits in the daemon options are exceeded
      */
     private function checkDaemonLimits()
     {
+        if ($this->isShutdown) {
+            throw new ShutdownException('Daemon flagged for shutdown');
+        }
+
         pcntl_signal_dispatch();
 
         if (DaemonOptions::NO_LIMIT !== $this->requestLimit) {

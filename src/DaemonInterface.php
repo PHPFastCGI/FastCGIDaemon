@@ -47,4 +47,10 @@ interface DaemonInterface
      * @throws \Exception On fatal error
      */
     public function run();
+
+    /**
+     * Flag the daemon for shutting down. This will stop it from accepting
+     * requests.
+     */
+    public function flagShutdown();
 }

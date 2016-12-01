@@ -130,6 +130,35 @@ class DaemonRunCommandTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * Test flag shutdown.
+     */
+    public function testShutdown()
+    {
+        $expectations = ['driver' => 'userland'];
+
+        $context = $this->createTestingContext($expectations);
+
+        $context['command']->run(new ArrayInput([]), new NullOutput());
+        $context['command']->flagShutdown();
+
+        $this->assertEquals('run',          $context['daemon']->getDelegatedCalls()[0][0]);
+        $this->assertEquals('flagShutdown', $context['daemon']->getDelegatedCalls()[1][0]);
+        $this->assertEquals('createDaemon', $context['daemonFactory']->getDelegatedCalls()[0][0]);
+        $this->assertEquals('getFactory',   $context['driverContainer']->getDelegatedCalls()[0][0]);
+    }
+
+    /**
+     * Test flag shutdown with no daemon.
+     * 
+     * @expectedException \RuntimeException
+     */
+    public function testShutdownNoDaemon()
+    {
+        $command = new DaemonRunCommand(new MockKernel(), new MockDriverContainer());
+        $command->flagShutdown();
+    }
+
+    /**
      * Construct mock objects set to test for expected values of different
      * parameters when specified.
      *
@@ -146,7 +175,7 @@ class DaemonRunCommandTest extends \PHPUnit_Framework_TestCase
         };
 
         $mockKernel = new MockKernel();
-        $mockDaemon = new MockDaemon(['run' => false]);
+        $mockDaemon = new MockDaemon(['run' => false, 'flagShutdown' => false]);
 
         $mockDaemonFactory = new MockDaemonFactory([
             'createTcpDaemon' => function ($kernel, $options, $host, $port) use ($assertExpected, $mockKernel, $mockDaemon) {
