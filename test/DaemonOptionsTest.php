@@ -29,6 +29,7 @@ class DaemonOptionsTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($requestLimit, $options->getOption(DaemonOptions::REQUEST_LIMIT));
         $this->assertEquals($memoryLimit,  $options->getOption(DaemonOptions::MEMORY_LIMIT));
         $this->assertEquals($timeLimit,    $options->getOption(DaemonOptions::TIME_LIMIT));
+        $this->assertEquals(false,         $options->getOption(DaemonOptions::AUTO_SHUTDOWN));
     }
 
     /**

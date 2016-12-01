@@ -17,6 +17,7 @@ class DaemonOptions
     const REQUEST_LIMIT = 'request-limit';
     const MEMORY_LIMIT  = 'memory-limit';
     const TIME_LIMIT    = 'time-limit';
+    const AUTO_SHUTDOWN = 'auto-shutdown';
 
     /**
      * @var array
@@ -44,6 +45,7 @@ class DaemonOptions
             self::REQUEST_LIMIT => self::NO_LIMIT,
             self::MEMORY_LIMIT  => self::NO_LIMIT,
             self::TIME_LIMIT    => self::NO_LIMIT,
+            self::AUTO_SHUTDOWN => false,
         ];
 
         foreach ($options as $option => $value) {

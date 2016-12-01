@@ -142,7 +142,27 @@ class UserlandDaemonTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('Daemon shutdown requested (received SIGINT)', $context['logger']->getMessages()[0]['message']);
     }
 
-    private function createTestingContext($requestLimit = DaemonOptions::NO_LIMIT, $memoryLimit = DaemonOptions::NO_LIMIT, $timeLimit = DaemonOptions::NO_LIMIT)
+    /**
+     * Tests that daemon auto-shutdown
+     */
+    public function testAutoShutdown()
+    {
+        $context = $this->createTestingContext(
+            DaemonOptions::NO_LIMIT, DaemonOptions::NO_LIMIT,
+            DaemonOptions::NO_LIMIT, true
+        );
+
+        $socket            = stream_socket_client($context['address']);
+        $connectionWrapper = new ConnectionWrapper($socket);
+
+        $connectionWrapper->writeRequest(1, ['TEST_AUTO_SHUTDOWN' => ''], '');
+
+        $context['daemon']->run();
+
+        $this->assertEquals('Automatic shutdown following status code: 500', $context['logger']->getMessages()[0]['message']);
+    }
+
+    private function createTestingContext($requestLimit = DaemonOptions::NO_LIMIT, $memoryLimit = DaemonOptions::NO_LIMIT, $timeLimit = DaemonOptions::NO_LIMIT, $autoShutdown = false)
     {
         $context = [
             'kernel' => new MockKernel([
@@ -155,6 +175,8 @@ class UserlandDaemonTest extends \PHPUnit_Framework_TestCase
                         throw new UserlandDaemonException($params['DAEMON_EXCEPTION']);
                     } elseif (isset($params['SHUTDOWN'])) {
                         posix_kill(posix_getpid(), SIGINT);
+                    } elseif (isset($params['TEST_AUTO_SHUTDOWN'])) {
+                        return new Response('php://memory', 500);
                     }
 
                     return new Response();
@@ -169,6 +191,7 @@ class UserlandDaemonTest extends \PHPUnit_Framework_TestCase
             DaemonOptions::REQUEST_LIMIT => $requestLimit,
             DaemonOptions::MEMORY_LIMIT  => $memoryLimit,
             DaemonOptions::TIME_LIMIT    => $timeLimit,
+            DaemonOptions::AUTO_SHUTDOWN => $autoShutdown,
         ]);
 
         $context['serverSocket']   = stream_socket_server($context['address']);

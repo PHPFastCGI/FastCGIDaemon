@@ -32,11 +32,10 @@ class DaemonRunCommandTest extends \PHPUnit_Framework_TestCase
             $this->assertTrue($definition->getOption($optionName)->isValueOptional());
         }
 
-        $defaults = ['driver' => 'userland'];
+        $this->assertFalse($definition->getOption('auto-shutdown')->isValueRequired());
+        $this->assertFalse($definition->getOption('auto-shutdown')->isValueOptional());
 
-        foreach ($defaults as $optionName => $defaultValue) {
-            $this->assertEquals($defaultValue, $definition->getOption($optionName)->getDefault());
-        }
+        $this->assertEquals('userland', $definition->getOption('driver')->getDefault());
     }
 
     /**
@@ -74,12 +73,13 @@ class DaemonRunCommandTest extends \PHPUnit_Framework_TestCase
         ]);
         $output = new NullOutput();
 
-        // Create expected daemon configuration
+        // Create expected daemon configuration 
         $options = new DaemonOptions([
             DaemonOptions::LOGGER        => new ConsoleLogger($output),
             DaemonOptions::REQUEST_LIMIT => $requestLimit,
             DaemonOptions::MEMORY_LIMIT  => $memoryLimit,
             DaemonOptions::TIME_LIMIT    => $timeLimit,
+            DaemonOptions::AUTO_SHUTDOWN => false,
         ]);
 
         // Create testing context using expectations

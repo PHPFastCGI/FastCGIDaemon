@@ -59,6 +59,7 @@ class DaemonRunCommand extends Command
             ->addOption('request-limit', null, InputOption::VALUE_OPTIONAL, 'The maximum number of requests to handle before shutting down')
             ->addOption('memory-limit',  null, InputOption::VALUE_OPTIONAL, 'The memory limit on the daemon instance before shutting down')
             ->addOption('time-limit',    null, InputOption::VALUE_OPTIONAL, 'The time limit on the daemon in seconds before shutting down')
+            ->addOption('auto-shutdown', null, InputOption::VALUE_NONE,     'Perform a graceful shutdown after receiving a 5XX HTTP status code')
             ->addOption('driver',        null, InputOption::VALUE_OPTIONAL, 'The implementation of the FastCGI protocol to use', 'userland');
     }
 
@@ -78,12 +79,14 @@ class DaemonRunCommand extends Command
         $requestLimit = $input->getOption('request-limit') ?: DaemonOptions::NO_LIMIT;
         $memoryLimit  = $input->getOption('memory-limit')  ?: DaemonOptions::NO_LIMIT;
         $timeLimit    = $input->getOption('time-limit')    ?: DaemonOptions::NO_LIMIT;
+        $autoShutdown = $input->getOption('auto-shutdown');
 
         return new DaemonOptions([
             DaemonOptions::LOGGER        => $logger,
             DaemonOptions::REQUEST_LIMIT => $requestLimit,
             DaemonOptions::MEMORY_LIMIT  => $memoryLimit,
             DaemonOptions::TIME_LIMIT    => $timeLimit,
+            DaemonOptions::AUTO_SHUTDOWN => $autoShutdown,
         ]);
     }
 
