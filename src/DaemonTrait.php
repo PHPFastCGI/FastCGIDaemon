@@ -2,10 +2,7 @@
 
 namespace PHPFastCGI\FastCGIDaemon;
 
-use PHPFastCGI\FastCGIDaemon\Exception\MemoryLimitException;
-use PHPFastCGI\FastCGIDaemon\Exception\RequestLimitException;
 use PHPFastCGI\FastCGIDaemon\Exception\ShutdownException;
-use PHPFastCGI\FastCGIDaemon\Exception\TimeLimitException;
 
 trait DaemonTrait
 {
@@ -13,6 +10,11 @@ trait DaemonTrait
      * @var bool
      */
     private $isShutdown = false;
+
+    /**
+     * @var string
+     */
+    private $shutdownMessage = '';
 
     /**
      * @var int
@@ -30,11 +32,19 @@ trait DaemonTrait
     private $memoryLimit;
 
     /**
-     * Flags the daemon for shutting down.
+     * @var bool
      */
-    public function flagShutdown()
+    private $autoShutdown;
+
+    /**
+     * Flags the daemon for shutting down.
+     * 
+     * @param string $message Optional shutdown message
+     */
+    public function flagShutdown($message = null)
     {
         $this->isShutdown = true;
+        $this->shutdownMessage = (null === $message ? 'Daemon flagged for shutdown' : $message);
     }
 
     /**
@@ -48,6 +58,7 @@ trait DaemonTrait
         $this->requestCount = 0;
         $this->requestLimit = $daemonOptions->getOption(DaemonOptions::REQUEST_LIMIT);
         $this->memoryLimit  = $daemonOptions->getOption(DaemonOptions::MEMORY_LIMIT);
+        $this->autoShutdown = $daemonOptions->getOption(DaemonOptions::AUTO_SHUTDOWN);
 
         $timeLimit = $daemonOptions->getOption(DaemonOptions::TIME_LIMIT);
 
@@ -59,13 +70,22 @@ trait DaemonTrait
     }
 
     /**
-     * Increments the request count.
+     * Increments the request count and looks for application errors.
      *
-     * @param int $number The number of requests to increment the count by
+     * @param int[] $statusCodes The status codes of sent responses
      */
-    private function incrementRequestCount($number)
+    private function considerStatusCodes($statusCodes)
     {
-        $this->requestCount += $number;
+        $this->requestCount += count($statusCodes);
+
+        if ($this->autoShutdown) {
+            foreach ($statusCodes as $statusCode) {
+                if ($statusCode >= 500 && $statusCode < 600) {
+                    $this->flagShutdown('Automatic shutdown following status code: ' . $statusCode);
+                    break;
+                }
+            }
+        }
     }
 
     /**
@@ -83,7 +103,7 @@ trait DaemonTrait
         });
 
         pcntl_signal(SIGALRM, function () {
-            throw new TimeLimitException('Daemon time limit reached (received SIGALRM)');
+            throw new ShutdownException('Daemon time limit reached (received SIGALRM)');
         });
     }
 
@@ -97,14 +117,14 @@ trait DaemonTrait
     private function checkDaemonLimits()
     {
         if ($this->isShutdown) {
-            throw new ShutdownException('Daemon flagged for shutdown');
+            throw new ShutdownException($this->shutdownMessage);
         }
 
         pcntl_signal_dispatch();
 
         if (DaemonOptions::NO_LIMIT !== $this->requestLimit) {
             if ($this->requestLimit <= $this->requestCount) {
-                throw new RequestLimitException('Daemon request limit reached ('.$this->requestCount.' of '.$this->requestLimit.')');
+                throw new ShutdownException('Daemon request limit reached ('.$this->requestCount.' of '.$this->requestLimit.')');
             }
         }
 
@@ -112,7 +132,7 @@ trait DaemonTrait
             $memoryUsage = memory_get_usage(true);
 
             if ($this->memoryLimit <= $memoryUsage) {
-                throw new MemoryLimitException('Daemon memory limit reached ('.$memoryUsage.' of '.$this->memoryLimit.' bytes)');
+                throw new ShutdownException('Daemon memory limit reached ('.$memoryUsage.' of '.$this->memoryLimit.' bytes)');
             }
         }
     }

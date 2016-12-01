@@ -85,13 +85,17 @@ class ConnectionHandler implements ConnectionHandlerInterface
             $this->buffer       .= $data;
             $this->bufferLength += $dataLength;
 
-            $dispatchedRequests = 0;
+            $statusCodes = [];
 
             while (null !== ($record = $this->readRecord())) {
-                $dispatchedRequests += $this->processRecord($record);
+                $statusCode = $this->processRecord($record);
+
+                if (null != $statusCode) {
+                    $statusCodes[] = $statusCode;
+                }
             }
 
-            return $dispatchedRequests;
+            return $statusCodes;
         } catch (\Exception $exception) {
             $this->close();
 
@@ -198,9 +202,8 @@ class ConnectionHandler implements ConnectionHandlerInterface
             if (null !== $content) {
                 fwrite($this->requests[$requestId]['stdin'], $content);
             } else {
-                $this->dispatchRequest($requestId);
-
-                return 1; // One request was dispatched
+                // Returns the status code
+                return $this->dispatchRequest($requestId);
             }
         } elseif (DaemonInterface::FCGI_ABORT_REQUEST === $record['type']) {
             $this->endRequest($requestId);
@@ -208,7 +211,7 @@ class ConnectionHandler implements ConnectionHandlerInterface
             throw new ProtocolException('Unexpected packet of type: '.$record['type']);
         }
 
-        return 0; // Zero requests were dispatched
+        return null; // No status code to return
     }
 
     /**
@@ -345,7 +348,7 @@ class ConnectionHandler implements ConnectionHandlerInterface
      * Write a response to the connection as FCGI_STDOUT records.
      *
      * @param int             $requestId  The request id to write to
-     * @param string          $headerData The header data to write (including terminating CRLFCRLF)
+     * @param string          $headerData The header -data to write (including terminating CRLFCRLF)
      * @param StreamInterface $stream     The stream to write
      */
     private function writeResponse($requestId, $headerData, StreamInterface $stream)
@@ -399,6 +402,9 @@ class ConnectionHandler implements ConnectionHandlerInterface
         }
 
         $this->endRequest($requestId);
+
+        // This method exists on PSR-7 and Symfony responses
+        return $response->getStatusCode();
     }
 
     /**

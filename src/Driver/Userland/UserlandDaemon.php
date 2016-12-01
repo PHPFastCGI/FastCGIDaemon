@@ -103,8 +103,8 @@ class UserlandDaemon implements DaemonInterface
             }
 
             try {
-                $dispatchedRequests = $this->connectionHandlers[$id]->ready();
-                $this->incrementRequestCount($dispatchedRequests);
+                $statusCodes = $this->connectionHandlers[$id]->ready();
+                $this->considerStatusCodes($statusCodes);
             } catch (UserlandDaemonException $exception) {
                 $this->daemonOptions->getOption(DaemonOptions::LOGGER)->error($exception->getMessage());
             }
