@@ -56,23 +56,75 @@ $application = (new ApplicationFactory)->createApplication($kernel);
 $application->run();
 ```
 
+## Server Configuration
+
+### NGINX
+
+With NGINX, you need to use a process manager such as [supervisord](http://supervisord.org/) to manage instances of your application. Have a look at [AstroSplash](http://astrosplash.com/) for an [example supervisord configuration](https://github.com/AndrewCarterUK/AstroSplash/blob/master/supervisord.conf).
+
+Below is an example of the modification that you would make to the [Symfony NGINX configuration](https://www.nginx.com/resources/wiki/start/topics/recipes/symfony/). The core principle is to replace the PHP-FPM reference with one to a cluster of workers.
+
+```nginx
+# This shows the modifications that you would make to the Symfony NGINX configuration
+# https://www.nginx.com/resources/wiki/start/topics/recipes/symfony/
+
+upstream workers {
+    server localhost:5000;
+    server localhost:5001;
+    server localhost:5002;
+    server localhost:5003;
+}
+
+server {
+    # ...
+
+    location ~ ^/app\.php(/|$) {
+        # ...
+        fastcgi_pass workers;
+        # ...
+    }
+
+    # ...
+}
+```
+
+### Apache
+
 If you wish to configure your FastCGI application to work with the apache web server, you can use the apache FastCGI module to process manage your application.
 
 This can be done by creating a FCGI script that launches your application and inserting a FastCgiServer directive into your virtual host configuration.
 
+Here is an example `script.fcgi`:
+
 ```sh
 #!/bin/bash
-php /path/to/command.php run
+php /path/to/application.php run
 ```
 
+Or with Symfony:
+
+```sh
+#!/bin/bash
+php /path/to/bin/console speedfony:run --env=prod
 ```
-FastCgiServer /path/to/web/root/script.fcgi
+
+In your configuration, you can use the [FastCgiServer](https://web.archive.org/web/20150913190020/http://www.fastcgi.com/mod_fastcgi/docs/mod_fastcgi.html#FastCgiServer) directive to inform Apache of your application.
+
+```
+FastCgiServer /path/to/script.fcgi
 ```
 
 By default, the daemon will listen on FCGI_LISTENSOCK_FILENO, but it can also be configured to listen on a TCP address. For example:
 
+
 ```sh
-php /path/to/command.php run --port=5000 --host=localhost
+#!/bin/bash
+php /path/to/application.php run --port=5000 --host=localhost
 ```
 
-If you are using a web server such as NGINX, you will need to use a process manager to monitor and run your application.
+Or with Symfony:
+
+```sh
+#!/bin/bash
+php /path/to/bin/console speedfony:run --env=prod --port=5000 --host=localhost
+```
