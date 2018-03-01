@@ -117,9 +117,15 @@ class StreamSocketConnectionPool implements ConnectionPoolInterface
      */
     private function selectConnections(&$readSockets, $timeout)
     {
+        // stream_select will not always preserve array keys
+        // call it with a (deep) copy so the original is preserved
+        $read = [];
+        foreach ($readSockets as $id => $socket) {
+            $read[] = $socket;
+        }
         $writeSockets = $exceptSockets = [];
 
-        if (false === @stream_select($readSockets, $writeSockets, $exceptSockets, $timeout)) {
+        if (false === @stream_select($read, $writeSockets, $exceptSockets, $timeout)) {
             $error = error_get_last();
 
             if (false === stripos($error['message'], 'interrupted system call')) {
@@ -127,6 +133,12 @@ class StreamSocketConnectionPool implements ConnectionPoolInterface
             }
 
             $readSockets = [];
+        } else {
+            $res = [];
+            foreach($read as $socket) {
+                $res[array_search($socket, $readSockets)] = $socket;
+            }
+            $readSockets = $res;
         }
     }
 
