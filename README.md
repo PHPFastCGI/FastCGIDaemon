@@ -87,8 +87,32 @@ server {
     # ...
 }
 ```
+### Apache 2.4.10 + 
 
-### Apache
+If you are using Apache 2.4.10 or later you need to use [mod_proxy_fcgi](https://httpd.apache.org/docs/2.4/mod/mod_proxy_fcgi.html). 
+You need to use a process manager such as [supervisord](http://supervisord.org/) to manage instances of your application.
+For development you only need to start you application with:
+
+```sh
+php /path/to/application.php run --port=5000 --host=localhost
+
+# Or with Symfony:
+php /path/to/bin/console speedfony:run --env=prod --port=5000 --host=localhost
+```
+
+Then add the following to your VirtualHost config: 
+
+```
+<FilesMatch ^index\.php$>
+  SetHandler "proxy:fcgi://127.0.0.1:5000"
+</FilesMatch>
+```
+
+Go to `http://127.0.0.1/index.php` to test your setup. Note that index.php needs 
+to exist but could be an empty file.   
+
+
+### Apache 2.0 - 2.2
 
 If you wish to configure your FastCGI application to work with the apache web server, you can use the apache FastCGI module to process manage your application.
 
