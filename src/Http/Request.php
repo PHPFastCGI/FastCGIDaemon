@@ -116,6 +116,10 @@ class Request implements RequestInterface
      */
     public function getServerRequest()
     {
+        if (!class_exists(ServerRequest::class)) {
+            throw new \RuntimeException('You need to install zendframework/zend-diactoros^1.8 to use PSR-7 requests.');
+        }
+
         $query   = $this->getQuery();
         $post    = $this->getPost();
         $cookies = $this->getCookies();
@@ -138,6 +142,10 @@ class Request implements RequestInterface
      */
     public function getHttpFoundationRequest()
     {
+        if (!class_exists(HttpFoundationRequest::class)) {
+            throw new \RuntimeException('You need to install symfony/http-foundation:^4.0 to use HttpFoundation requests.');
+        }
+
         $query   = $this->getQuery();
         $post    = $this->getPost();
         $cookies = $this->getCookies();

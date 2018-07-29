@@ -8,9 +8,7 @@ use PHPFastCGI\FastCGIDaemon\Driver\Userland\Exception\ProtocolException;
 use PHPFastCGI\FastCGIDaemon\Http\Request;
 use PHPFastCGI\FastCGIDaemon\KernelInterface;
 use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\StreamInterface;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
-use Zend\Diactoros\Stream;
 
 /**
  * The default implementation of the ConnectionHandlerInterface.
@@ -347,32 +345,32 @@ class ConnectionHandler implements ConnectionHandlerInterface
     /**
      * Write a response to the connection as FCGI_STDOUT records.
      *
-     * @param int             $requestId  The request id to write to
-     * @param string          $headerData The header -data to write (including terminating CRLFCRLF)
-     * @param StreamInterface $stream     The stream to write
+     * @param int      $requestId  The request id to write to
+     * @param string   $headerData The header -data to write (including terminating CRLFCRLF)
+     * @param resource $stream     The stream to write
      */
-    private function writeResponse($requestId, $headerData, StreamInterface $stream)
+    private function writeResponse($requestId, $headerData, $stream)
     {
         $data = $headerData;
         $eof  = false;
-
-        $stream->rewind();
+        $maxSize = 65535;
+        fseek($stream, 0, SEEK_SET);
 
         do {
             $dataLength = strlen($data);
 
-            if ($dataLength < 65535 && !$eof && !($eof = $stream->eof())) {
-                $readLength  = 65535 - $dataLength;
-                $data       .= $stream->read($readLength);
+            if ($dataLength < $maxSize && !$eof && !($eof = feof($stream))) {
+                $readLength  = $maxSize - $dataLength;
+                $data       .= fread($stream, $readLength);
                 $dataLength  = strlen($data);
             }
 
-            $writeSize = min($dataLength, 65535);
+            $writeSize = min($dataLength, $maxSize);
             $writeData = substr($data, 0, $writeSize);
             $data      = substr($data, $writeSize);
 
             $this->writeRecord($requestId, DaemonInterface::FCGI_STDOUT, $writeData);
-        } while ($writeSize === 65535);
+        } while ($writeSize === $maxSize);
 
         $this->writeRecord($requestId, DaemonInterface::FCGI_STDOUT);
     }
@@ -426,7 +424,7 @@ class ConnectionHandler implements ConnectionHandlerInterface
 
         $headerData .= "\r\n";
 
-        $this->writeResponse($requestId, $headerData, $response->getBody());
+        $this->writeResponse($requestId, $headerData, $response->getBody()->detach());
     }
 
     /**
@@ -442,9 +440,8 @@ class ConnectionHandler implements ConnectionHandlerInterface
         $headerData  = "Status: {$statusCode}\r\n";
         $headerData .= $response->headers."\r\n";
 
-        $stream = new Stream('php://memory', 'r+');
-        $stream->write($response->getContent());
-        $stream->rewind();
+        $stream = fopen('php://memory', 'r+');
+        fwrite($stream, $response->getContent());
 
         $this->writeResponse($requestId, $headerData, $stream);
     }
