@@ -4,6 +4,7 @@ namespace PHPFastCGI\Test\FastCGIDaemon\Http;
 
 use PHPFastCGI\FastCGIDaemon\Http\Request;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 /**
  * Test that the request builder is correctly building the PSR-7 request
@@ -124,5 +125,26 @@ HTTP;
         $this->assertEquals($expectedPost, $httpFoundationRequest->request->all());
         $this->assertCount(1,              $httpFoundationRequest->files->all());
         $this->assertEquals($content,      $httpFoundationRequest->getContent());
+
+        /** @var UploadedFile $file */
+        $file = $httpFoundationRequest->files->all()['bar'];
+        $path = $file->getRealPath();
+        $this->assertFileExists($path);
+        $request->cleanUploadedFiles();
+        $this->assertFileNotExists($path);
+    }
+
+    public function testBufferSize()
+    {
+        $this->assertEquals(10485760, Request::getBufferSize());
+        Request::setBufferSize(4711);
+        $this->assertEquals(4711, Request::getBufferSize());
+    }
+
+    public function testUploadDir()
+    {
+        $this->assertDirectoryExists(Request::getUploadDir());
+        Request::setUploadDir('/foo/bar');
+        $this->assertEquals('/foo/bar', Request::getUploadDir());
     }
 }
