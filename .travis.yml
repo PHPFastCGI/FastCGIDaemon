@@ -52,5 +52,5 @@ script:
     - $TEST_COMMAND
 
 after_success:
-    - if [[ $COVERAGE = true ]]; then php vendor/bin/coveralls -v; fi
+    - if [[ $COVERAGE = true ]]; then php vendor/bin/php-coveralls -v; fi
 
