@@ -123,6 +123,5 @@ HTTP;
         $this->assertEquals($expectedPost, $httpFoundationRequest->request->all());
         $this->assertCount(1,              $httpFoundationRequest->files->all());
         $this->assertEquals($content,      $httpFoundationRequest->getContent());
-
     }
 }

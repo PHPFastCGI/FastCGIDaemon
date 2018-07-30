@@ -164,7 +164,7 @@ class Request implements RequestInterface
                 if ($fieldType === 'data') {
                     $post .= (isset($post[0]) ? '&' : '') . $fieldName . "=" . urlencode($buffer);
                 } elseif ($fieldType === 'file' && $filename) {
-                    $tmpPath = $this->getUploadDir().'/'.substr(md5(rand().time()), 0, 16);
+                    $tmpPath = tempnam($this->getUploadDir(), 'fastcgi_upload');
                     $err = file_put_contents($tmpPath, $buffer);
                     $files[$fieldName] = [
                         'type' => $mimeType ?: 'application/octet-stream',

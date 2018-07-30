@@ -399,8 +399,11 @@ class ConnectionHandler implements ConnectionHandlerInterface
             throw new \LogicException('Kernel must return a PSR-7 or HttpFoundation response message');
         }
 
-        $this->endRequest($requestId);
-        $request->cleanUploadedFiles();
+        try {
+            $this->endRequest($requestId);
+        } finally {
+            $request->cleanUploadedFiles();
+        }
 
         // This method exists on PSR-7 and Symfony responses
         return $response->getStatusCode();
