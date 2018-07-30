@@ -32,7 +32,8 @@ final class DriverContainer implements DriverContainerInterface
         }
 
         if (null === $this->drivers[$driver]['object']) {
-            $this->drivers[$driver]['object'] = new $this->drivers[$driver]['classPath']();
+            $class = $this->drivers[$driver]['classPath'];
+            $this->drivers[$driver]['object'] = new $class();
         }
 
         return $this->drivers[$driver]['object'];
