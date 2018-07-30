@@ -8,17 +8,8 @@ use Psr\Log\NullLogger;
 /**
  * The default configuration object.
  */
-class DaemonOptions
+final class DaemonOptions implements DaemonOptionsInterface
 {
-    const NO_LIMIT = 0;
-
-    // Possible daemon options
-    const LOGGER        = 'logger';
-    const REQUEST_LIMIT = 'request-limit';
-    const MEMORY_LIMIT  = 'memory-limit';
-    const TIME_LIMIT    = 'time-limit';
-    const AUTO_SHUTDOWN = 'auto-shutdown';
-
     /**
      * @var array
      */
@@ -61,15 +52,6 @@ class DaemonOptions
         }
     }
 
-    /**
-     * Retrieve the value of one of the daemon options.
-     * 
-     * @param string $option The option to return
-     * 
-     * @return mixed The value of the option requested
-     * 
-     * @throws \InvalidArgumentException On unrecognised option
-     */
     public function getOption($option)
     {
         if (!isset($this->options[$option])) {

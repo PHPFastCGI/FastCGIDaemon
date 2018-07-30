@@ -13,7 +13,7 @@ interface DaemonFactoryInterface
      * Create a FastCGI daemon listening on file descriptor.
      *
      * @param KernelInterface $kernel The kernel to use for the daemon
-     * @param DaemonOptions|DaemonOptionsInterface $options The daemon configuration
+     * @param DaemonOptionsInterface $options The daemon configuration
      * @param int $fd file descriptor for listening defaults to FCGI_LISTENSOCK_FILENO
      *
      * @return DaemonInterface The FastCGI daemon
