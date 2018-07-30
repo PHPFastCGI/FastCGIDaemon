@@ -2,14 +2,14 @@
 
 namespace PHPFastCGI\Test\FastCGIDaemon;
 
-use PHPFastCGI\FastCGIDaemon\CallbackWrapper;
+use PHPFastCGI\FastCGIDaemon\CallbackKernel;
 use PHPFastCGI\FastCGIDaemon\Http\Request;
 use Zend\Diactoros\Response;
 
 /**
  * Tests the callback wrapper.
  */
-class CallbackWrapperTest extends \PHPUnit_Framework_TestCase
+class CallbackKernelTest extends \PHPUnit_Framework_TestCase
 {
     /**
      * Tests an \InvalidArgumentException is thrown when it isn't constructed
@@ -19,7 +19,7 @@ class CallbackWrapperTest extends \PHPUnit_Framework_TestCase
      */
     public function testInvalidArgumentException()
     {
-        new CallbackWrapper('not a callable function');
+        new CallbackKernel('not a callable function');
     }
 
     /**
@@ -32,7 +32,7 @@ class CallbackWrapperTest extends \PHPUnit_Framework_TestCase
         $expectedRequest  = new Request([], $stream);
         $expectedResponse = new Response();
 
-        $kernel = new CallbackWrapper(function (Request $request) use ($expectedRequest, $expectedResponse) {
+        $kernel = new CallbackKernel(function (Request $request) use ($expectedRequest, $expectedResponse) {
             $this->assertSame($expectedRequest, $request);
 
             return $expectedResponse;
