@@ -2,13 +2,15 @@
 
 namespace PHPFastCGI\Test\FastCGIDaemon\Driver\Userland\ConnectionHandler;
 
+use PHPFastCGI\FastCGIDaemon\Driver\Userland\Connection\ConnectionInterface;
 use PHPFastCGI\FastCGIDaemon\Driver\Userland\ConnectionHandler\ConnectionHandlerFactory;
 use PHPFastCGI\Test\FastCGIDaemon\Helper\Mocker\MockKernel;
+use PHPUnit\Framework\TestCase;
 
 /**
  * Tests the daemon.
  */
-class ConnectionHandlerFactoryTest extends \PHPUnit_Framework_TestCase
+class ConnectionHandlerFactoryTest extends TestCase
 {
     /**
      * Tests that the factory creates a connection handler from a kernel.
@@ -18,7 +20,7 @@ class ConnectionHandlerFactoryTest extends \PHPUnit_Framework_TestCase
         $kernel = new MockKernel();
 
         $connection = $this
-            ->getMockBuilder('PHPFastCGI\\FastCGIDaemon\\Driver\\Userland\\Connection\\StreamSocketConnection')
+            ->getMockBuilder(ConnectionInterface::class)
             ->disableOriginalConstructor()
             ->getMock();
 

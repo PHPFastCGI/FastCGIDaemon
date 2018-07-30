@@ -8,6 +8,7 @@ use PHPFastCGI\Test\FastCGIDaemon\Helper\Mocker\Driver\MockDriverContainer;
 use PHPFastCGI\Test\FastCGIDaemon\Helper\Mocker\MockDaemon;
 use PHPFastCGI\Test\FastCGIDaemon\Helper\Mocker\MockDaemonFactory;
 use PHPFastCGI\Test\FastCGIDaemon\Helper\Mocker\MockKernel;
+use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\NullOutput;
@@ -15,7 +16,7 @@ use Symfony\Component\Console\Output\NullOutput;
 /**
  * Tests the daemon run command.
  */
-class DaemonRunCommandTest extends \PHPUnit_Framework_TestCase
+class DaemonRunCommandTest extends TestCase
 {
     /**
      * Tests that the command options are configured properly.
@@ -95,8 +96,6 @@ class DaemonRunCommandTest extends \PHPUnit_Framework_TestCase
     /**
      * Test with only the host option set. An Invalid argument exception should
      * be thrown if the host option is supplied without the port optional also.
-     *
-     * @expectedException \InvalidArgumentException
      */
     public function testHostOptionOnly()
     {
@@ -104,6 +103,7 @@ class DaemonRunCommandTest extends \PHPUnit_Framework_TestCase
 
         $input = new ArrayInput(['--host' => 'foo']);
 
+        $this->expectException(\InvalidArgumentException::class);
         $context['command']->run($input, new NullOutput());
     }
 
@@ -149,12 +149,11 @@ class DaemonRunCommandTest extends \PHPUnit_Framework_TestCase
 
     /**
      * Test flag shutdown with no daemon.
-     * 
-     * @expectedException \RuntimeException
      */
     public function testShutdownNoDaemon()
     {
         $command = new DaemonRunCommand(new MockKernel(), new MockDriverContainer());
+        $this->expectException(\RuntimeException::class);
         $command->flagShutdown();
     }
 

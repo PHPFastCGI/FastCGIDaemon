@@ -11,12 +11,13 @@ use PHPFastCGI\FastCGIDaemon\Http\RequestInterface;
 use PHPFastCGI\Test\FastCGIDaemon\Helper\Client\ConnectionWrapper;
 use PHPFastCGI\Test\FastCGIDaemon\Helper\Logger\InMemoryLogger;
 use PHPFastCGI\Test\FastCGIDaemon\Helper\Mocker\MockKernel;
+use PHPUnit\Framework\TestCase;
 use Zend\Diactoros\Response;
 
 /**
  * Tests the daemon.
  */
-class UserlandDaemonTest extends \PHPUnit_Framework_TestCase
+class UserlandDaemonTest extends TestCase
 {
     /**
      * Tests that the daemon shuts down after being flagged for shutdown.

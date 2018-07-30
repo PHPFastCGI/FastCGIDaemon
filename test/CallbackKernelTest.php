@@ -4,21 +4,21 @@ namespace PHPFastCGI\Test\FastCGIDaemon;
 
 use PHPFastCGI\FastCGIDaemon\CallbackKernel;
 use PHPFastCGI\FastCGIDaemon\Http\Request;
+use PHPUnit\Framework\TestCase;
 use Zend\Diactoros\Response;
 
 /**
  * Tests the callback wrapper.
  */
-class CallbackKernelTest extends \PHPUnit_Framework_TestCase
+class CallbackKernelTest extends TestCase
 {
     /**
      * Tests an \InvalidArgumentException is thrown when it isn't constructed
      * with a callable.
-     *
-     * @expectedException \InvalidArgumentException
      */
     public function testInvalidArgumentException()
     {
+        $this->expectException(\InvalidArgumentException::class);
         new CallbackKernel('not a callable function');
     }
 

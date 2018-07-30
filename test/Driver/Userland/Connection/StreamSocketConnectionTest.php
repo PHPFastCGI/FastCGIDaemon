@@ -4,12 +4,13 @@ namespace PHPFastCGI\Test\FastCGIDaemon\Connection;
 
 use PHPFastCGI\FastCGIDaemon\Driver\Userland\Connection\StreamSocketConnection;
 use PHPFastCGI\FastCGIDaemon\Driver\Userland\Exception\ConnectionException;
+use PHPUnit\Framework\TestCase;
 
 /**
  * Test to ensure that the StreamSocketConnection class can read, write and
  * close.
  */
-class StreamSocketConnectionTest extends \PHPUnit_Framework_TestCase
+class StreamSocketConnectionTest extends TestCase
 {
     /**
      * Tests that the StreamSocketConnection class can read, write and close.

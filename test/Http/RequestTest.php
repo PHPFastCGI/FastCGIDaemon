@@ -3,12 +3,13 @@
 namespace PHPFastCGI\Test\FastCGIDaemon\Http;
 
 use PHPFastCGI\FastCGIDaemon\Http\Request;
+use PHPUnit\Framework\TestCase;
 
 /**
  * Test that the request builder is correctly building the PSR-7 request
  * message.
  */
-class RequestTest extends \PHPUnit_Framework_TestCase
+class RequestTest extends TestCase
 {
     /**
      * Test that the request builder is correctly building the request messages.

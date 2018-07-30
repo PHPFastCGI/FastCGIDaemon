@@ -4,11 +4,12 @@ namespace PHPFastCGI\Test\FastCGIDaemon;
 
 use PHPFastCGI\FastCGIDaemon\ApplicationFactory;
 use PHPFastCGI\Test\FastCGIDaemon\Helper\Mocker\MockKernel;
+use PHPUnit\Framework\TestCase;
 
 /**
  * Tests the application factory.
  */
-class ApplicationFactoryTest extends \PHPUnit_Framework_TestCase
+class ApplicationFactoryTest extends TestCase
 {
     /**
      * Tests that the factory can create a Symfony console application with a
@@ -43,11 +44,10 @@ class ApplicationFactoryTest extends \PHPUnit_Framework_TestCase
 
     /**
      * Tests that an invalid kernel throws an InvalidArgumentException.
-     *
-     * @expectedException \InvalidArgumentException
      */
     public function testInvalidKernel()
     {
+        $this->expectException(\InvalidArgumentException::class);
         (new ApplicationFactory())->createApplication('foo');
     }
 }
