@@ -65,9 +65,9 @@ class Request implements RequestInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Remove all uploaded files
      */
-    public function cleanUploadedFiles()
+    public function cleanUploadedFiles(): void
     {
         foreach ($this->uploadedFiles as $file) {
             @unlink($file['tmp_name']);
@@ -75,33 +75,24 @@ class Request implements RequestInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Set a buffer size to read uploaded files
      */
-    public static function setBufferSize($size)
+    public static function setBufferSize(int $size): void
     {
         static::$bufferSize = $size;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public static function getBufferSize()
+    public static function getBufferSize(): int
     {
         return static::$bufferSize;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public static function setUploadDir($dir)
+    public static function setUploadDir(string $dir): void
     {
         static::$uploadDir = $dir;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public static function getUploadDir()
+    public static function getUploadDir(): string
     {
         return static::$uploadDir ?: sys_get_temp_dir();
     }
