@@ -69,6 +69,7 @@ class RequestTest extends TestCase
         $this->assertEquals($expectedQuery,         $serverRequest->getQueryParams());
         $this->assertEquals($expectedPost,          $serverRequest->getParsedBody());
         $this->assertEquals($expectedCookies,       $serverRequest->getCookieParams());
+        $this->assertEquals($content,      (string) $serverRequest->getBody());
 
         // Check the HttpFoundation request
         rewind($stream);
