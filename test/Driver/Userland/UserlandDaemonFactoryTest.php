@@ -5,12 +5,13 @@ namespace PHPFastCGI\Test\FastCGIDaemon\Driver\Userland;
 use PHPFastCGI\FastCGIDaemon\DaemonOptions;
 use PHPFastCGI\FastCGIDaemon\Driver\Userland\UserlandDaemonFactory;
 use PHPFastCGI\Test\FastCGIDaemon\Helper\Mocker\MockKernel;
+use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 
 /**
  * Tests the userland daemon factory.
  */
-class UserlandDaemonFactoryTest extends \PHPUnit_Framework_TestCase
+class UserlandDaemonFactoryTest extends TestCase
 {
     /**
      * Tests that the factory can create a daemon from a stream socket.

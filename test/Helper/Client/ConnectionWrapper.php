@@ -3,6 +3,7 @@
 namespace PHPFastCGI\Test\FastCGIDaemon\Helper\Client;
 
 use PHPFastCGI\FastCGIDaemon\DaemonInterface;
+use PHPUnit\Framework\TestCase;
 
 /**
  * Helper class that wraps a stream resource and provides helper methods for
@@ -28,12 +29,12 @@ class ConnectionWrapper
     /**
      * Read a request from the connection.
      *
-     * @param \PHPUnit_Framework_TestCase $testCase
+     * @param TestCase $testCase
      * @param string                      $requestId
      *
      * @return string
      */
-    public function readResponse(\PHPUnit_Framework_TestCase $testCase, $requestId)
+    public function readResponse(TestCase $testCase, $requestId)
     {
         $response = '';
 
@@ -53,11 +54,11 @@ class ConnectionWrapper
     /**
      * Read a record from the connection.
      *
-     * @param \PHPUnit_Framework_TestCase $testCase
+     * @param TestCase $testCase
      *
      * @return array
      */
-    public function readRecord(\PHPUnit_Framework_TestCase $testCase)
+    public function readRecord(TestCase $testCase)
     {
         $headerData = fread($this->stream, 8);
         $headerFormat = 'Cversion/Ctype/nrequestId/ncontentLength/CpaddingLength/x';

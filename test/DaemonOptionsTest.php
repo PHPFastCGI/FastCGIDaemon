@@ -3,12 +3,13 @@
 namespace PHPFastCGI\Test\FastCGIDaemon;
 
 use PHPFastCGI\FastCGIDaemon\DaemonOptions;
+use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 
 /**
  * Tests the daemon options.
  */
-class DaemonOptionsTest extends \PHPUnit_Framework_TestCase
+class DaemonOptionsTest extends TestCase
 {
     /**
      * Tests that the daemon options object works properly.
@@ -35,33 +36,30 @@ class DaemonOptionsTest extends \PHPUnit_Framework_TestCase
     /**
      * Test that an InvalidArgumentException is thrown when an invalid logger
      * is provided.
-     * 
-     * @expectedException \InvalidArgumentException
      */
     public function testInvalidLogger()
     {
+        $this->expectException(\InvalidArgumentException::class);
         new DaemonOptions([DaemonOptions::LOGGER => 'foo']);
     }
 
     /**
      * Test that an InvalidArgumentException is thrown when the object is
      * constructed with an unknown option.
-     * 
-     * @expectedException \InvalidArgumentException
      */
     public function testUnknownOptionInConstructor()
     {
+        $this->expectException(\InvalidArgumentException::class);
         new DaemonOptions(['hello' => 'world']);
     }
 
     /**
      * Test that an InvalidArgumentException is thrown when ::getOption is
      * called with an unknown option.
-     * 
-     * @expectedException \InvalidArgumentException
      */
     public function testGetUnknownOption()
     {
+        $this->expectException(\InvalidArgumentException::class);
         (new DaemonOptions())->getOption('hello');
     }
 }

@@ -3,22 +3,22 @@
 namespace PHPFastCGI\Test\FastCGIDaemon\Driver;
 
 use PHPFastCGI\FastCGIDaemon\Driver\DriverContainer;
+use PHPUnit\Framework\TestCase;
 
 /**
  * Tests the driver container.
  */
-class DriverContainerTest extends \PHPUnit_Framework_TestCase
+class DriverContainerTest extends TestCase
 {
     /**
      * Tests that the driver container throws an InvalidArgumentException with
      * an unknown driver.
-     *
-     * @expectedException InvalidArgumentException
      */
     public function testInvalidDriver()
     {
         $driverContainer = new DriverContainer();
 
+        $this->expectException(\InvalidArgumentException::class);
         $driverContainer->getFactory('foo');
     }
 

@@ -10,13 +10,14 @@ use PHPFastCGI\FastCGIDaemon\Http\RequestInterface;
 use PHPFastCGI\FastCGIDaemon\DaemonInterface;
 use PHPFastCGI\Test\FastCGIDaemon\Helper\Client\ConnectionWrapper;
 use PHPFastCGI\Test\FastCGIDaemon\Helper\Mocker\MockKernel;
+use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 use Zend\Diactoros\Response;
 
 /**
  * Tests that the connection handler is correctly handling FastCGI connections.
  */
-class ConnectionHandlerTest extends \PHPUnit_Framework_TestCase
+class ConnectionHandlerTest extends TestCase
 {
     /**
      * Test that the daemon is correctly handling requests and PSR-7 and

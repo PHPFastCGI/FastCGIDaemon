@@ -4,12 +4,13 @@ namespace PHPFastCGI\Test\FastCGIDaemon\Driver\Userland\Connection;
 
 use PHPFastCGI\FastCGIDaemon\Driver\Userland\Connection\StreamSocketConnection;
 use PHPFastCGI\FastCGIDaemon\Driver\Userland\Connection\StreamSocketConnectionPool;
+use PHPUnit\Framework\TestCase;
 
 /**
  * Test to ensure that the StreamSocketConnectionPool class can accept new
  * connections and trigger updates when data is sent.
  */
-class StreamSocketConnectionPoolTest extends \PHPUnit_Framework_TestCase
+class StreamSocketConnectionPoolTest extends TestCase
 {
     /**
      * Test basic connection pool.
@@ -54,8 +55,6 @@ class StreamSocketConnectionPoolTest extends \PHPUnit_Framework_TestCase
 
     /**
      * Test basic stream_select fail.
-     *
-     * @expectedException \RuntimeException
      */
     public function testStreamSelectFail()
     {
@@ -65,6 +64,7 @@ class StreamSocketConnectionPoolTest extends \PHPUnit_Framework_TestCase
 
         fclose($serverSocket);
 
+        $this->expectException(\RuntimeException::class);
         $connectionPool->getReadableConnections(0);
     }
 
