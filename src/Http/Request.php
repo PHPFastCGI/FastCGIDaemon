@@ -2,16 +2,20 @@
 
 namespace PHPFastCGI\FastCGIDaemon\Http;
 
+use Interop\Http\Factory\ServerRequestFactoryInterface;
+use Nyholm\Psr7Server\ServerRequestCreatorInterface;
 use Symfony\Component\HttpFoundation\Request as HttpFoundationRequest;
-use function Zend\Diactoros\createUploadedFile;
-use Zend\Diactoros\ServerRequest;
-use Zend\Diactoros\ServerRequestFactory;
 
 /**
  * The default implementation of the RequestInterface.
  */
 final class Request implements RequestInterface
 {
+    /**
+     * @var ServerRequestCreatorInterface|null
+     */
+    private static $serverRequestCreator = null;
+
     /**
      * @var int
      */
@@ -54,6 +58,11 @@ final class Request implements RequestInterface
         $this->stdin  = $stdin;
 
         rewind($this->stdin);
+    }
+
+    public static function setServerRequestCreator(ServerRequestCreatorInterface $serverRequestCreator): void
+    {
+        self::$serverRequestCreator = $serverRequestCreator;
     }
 
     /**
@@ -229,10 +238,11 @@ final class Request implements RequestInterface
      */
     public function getServerRequest()
     {
-        if (!class_exists(ServerRequest::class)) {
-            throw new \RuntimeException('You need to install zendframework/zend-diactoros^1.8 to use PSR-7 requests.');
+        if (null === self::$serverRequestCreator) {
+            throw new \RuntimeException('You need to add an object of \Nyholm\Psr7Server\ServerRequestCreatorInterface to \PHPFastCGI\FastCGIDaemon\Http\Request::setServerRequestCreator to use PSR-7 requests. Please install and read more at https://github.com/nyholm/psr7-server');
         }
 
+        $server  = $this->params;
         $query   = $this->getQuery();
         $post    = $this->getPost();
         $cookies = $this->getCookies();
