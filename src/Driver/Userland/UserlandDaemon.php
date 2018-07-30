@@ -15,7 +15,7 @@ use PHPFastCGI\FastCGIDaemon\KernelInterface;
  * The standard implementation of the DaemonInterface is constructed from a
  * connection pool and a factory class to generate connection handlers.
  */
-class UserlandDaemon implements DaemonInterface
+final class UserlandDaemon implements DaemonInterface
 {
     use DaemonTrait;
 

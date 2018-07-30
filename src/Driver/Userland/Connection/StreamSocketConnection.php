@@ -8,7 +8,7 @@ use PHPFastCGI\FastCGIDaemon\Driver\Userland\Exception\ConnectionException;
  * The default implementation of the ConnectionInterface using stream socket
  * resources.
  */
-class StreamSocketConnection implements ConnectionInterface
+final class StreamSocketConnection implements ConnectionInterface
 {
     /**
      * @var bool

@@ -9,7 +9,7 @@ use Zend\Diactoros\ServerRequestFactory;
 /**
  * The default implementation of the RequestInterface.
  */
-class Request implements RequestInterface
+final class Request implements RequestInterface
 {
     /**
      * @var array

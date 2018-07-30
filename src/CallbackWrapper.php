@@ -8,7 +8,7 @@ use PHPFastCGI\FastCGIDaemon\Http\RequestInterface;
  * Wraps a callback (such as a closure, function or class and method pair) as an
  * implementation of the kernel interface.
  */
-class CallbackWrapper implements KernelInterface
+final class CallbackWrapper implements KernelInterface
 {
     /**
      * @var callable

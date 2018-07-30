@@ -13,7 +13,7 @@ use Symfony\Component\HttpFoundation\Response as HttpFoundationResponse;
 /**
  * The default implementation of the ConnectionHandlerInterface.
  */
-class ConnectionHandler implements ConnectionHandlerInterface
+final class ConnectionHandler implements ConnectionHandlerInterface
 {
     const READ_LENGTH = 4096;
 
