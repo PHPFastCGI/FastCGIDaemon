@@ -282,19 +282,19 @@ final class Request implements RequestInterface
             'size' => filesize($tmpPath),
         ];
 
-        $matches = preg_split('|(\[[^\]]*\])|', $fieldName, -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE);
-        $count = count($matches);
+        $parts = preg_split('|(\[[^\]]*\])|', $fieldName, -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE);
+        $count = count($parts);
         if (1 === $count) {
             $files[$fieldName] = $data;
         } else {
             $current = &$files;
-            foreach ($matches as $i => $match) {
-                if ($match === '[]') {
+            foreach ($parts as $i => $part) {
+                if ($part === '[]') {
                     $current[] = $data;
                     continue;
                 }
 
-                $trimmedMatch = trim($match, '[]');
+                $trimmedMatch = trim($part, '[]');
                 if ($i === $count -1) {
                     $current[$trimmedMatch] = $data;
                 } else {
