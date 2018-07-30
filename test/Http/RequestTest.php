@@ -62,4 +62,67 @@ class RequestTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($expectedCookies,       $httpFoundationRequest->cookies->all());
         $this->assertEquals($content,               $httpFoundationRequest->getContent());
     }
+
+    public function testMultipartContent()
+    {
+        $expectedPost    = ['foo' => 'A normal stream', 'baz' => 'string'];
+
+        // Set up FastCGI params and content
+        $params = [
+            'SERVER_PROTOCOL' => 'HTTP/1.1',
+            'REQUEST_METHOD'  => 'POST',
+            'content_type'    => 'multipart/form-data; boundary="578de3b0e3c46.2334ba3"',
+            'REQUEST_URI'     => '/my-page',
+        ];
+
+        // Set up the FastCGI stdin data stream resource
+        $content = <<<HTTP
+--578de3b0e3c46.2334ba3
+Content-Disposition: form-data; name="foo"
+Content-Length: 15
+
+A normal stream
+--578de3b0e3c46.2334ba3
+Content-Disposition: form-data; name="bar"; filename="bar.png"
+Content-Length: 71
+Content-Type: image/png
+
+?PNG
+
+???
+IHDR??? ??? ?????? ???? IDATxc???51?)?:??????IEND?B`?
+--578de3b0e3c46.2334ba3
+Content-Type: text/plain
+Content-Disposition: form-data; name="baz"
+Content-Length: 6
+
+string
+--578de3b0e3c46.2334ba3--
+HTTP;
+
+        $stream = fopen('php://memory', 'r+');
+        fwrite($stream, $content);
+
+        // Create the request
+        $request = new Request($params, $stream);
+
+        // Check request object
+        $this->assertEquals($expectedPost,    $request->getPost());
+        $this->assertEquals($stream,          $request->getStdin());
+
+        // Check the PSR server request
+        rewind($stream);
+        $serverRequest = $request->getServerRequest();
+        $this->assertEquals($expectedPost, $serverRequest->getParsedBody());
+        $this->assertCount(1,              $serverRequest->getUploadedFiles());
+        $this->assertEquals($content,      $serverRequest->getBody()->__toString());
+
+        // Check the HttpFoundation request
+        rewind($stream);
+        $httpFoundationRequest = $request->getHttpFoundationRequest();
+        $this->assertEquals($expectedPost, $httpFoundationRequest->request->all());
+        $this->assertCount(1,              $httpFoundationRequest->files->all());
+        $this->assertEquals($content,      $httpFoundationRequest->getContent());
+
+    }
 }

@@ -3,6 +3,7 @@
 namespace PHPFastCGI\FastCGIDaemon\Http;
 
 use Symfony\Component\HttpFoundation\Request as HttpFoundationRequest;
+use function Zend\Diactoros\createUploadedFile;
 use Zend\Diactoros\ServerRequest;
 use Zend\Diactoros\ServerRequestFactory;
 
@@ -131,8 +132,8 @@ class Request implements RequestInterface
             $contentType   = $this->params['CONTENT_TYPE'];
 
             if (strcasecmp($requestMethod, 'POST') === 0 && stripos($contentType, 'multipart/form-data') === 0) {
-                if (preg_match('/boundary=(.*)?/', $contentType, $matches)) {
-                    list($postData, $this->uploadedFiles) = $this->parseMultipartFormData($this->stdin, $matches[1]);
+                if (preg_match('/boundary=(?P<quote>[\'"]?)(.*)(?P=quote)/', $contentType, $matches)) {
+                    list($postData, $this->uploadedFiles) = $this->parseMultipartFormData($this->stdin, $matches[2]);
                     parse_str($postData, $post);
 
                     return $post;
@@ -158,41 +159,52 @@ class Request implements RequestInterface
 
         while (!feof($stream)) {
             $getContent = $fieldName && !$inHeader;
-            $buffer = stream_get_line($stream, static::$bufferSize, "\r\n" . ($getContent ? '--'.$boundary : ''));
+            $buffer = stream_get_line($stream, static::$bufferSize,  "\n" . ($getContent ? '--'.$boundary : ''));
+            $buffer = trim($buffer, "\r");
 
+            // Find the empty line between headers and body
             if ($inHeader && strlen($buffer) == 0) {
                 $inHeader = false;
-            } else {
-                if ($getContent) {
-                    if ($fieldType === 'data') {
-                        $post .= (isset($post[0]) ? '&' : '') . $fieldName . "=" . urlencode($buffer);
-                    } elseif ($fieldType === 'file' && $filename) {
-                        $tmp_path = $this->getUploadDir().'/'.substr(md5(rand().time()), 0, 16);
-                        $err = file_put_contents($tmp_path, $buffer);
-                        $files[$fieldName] = [
-                            'type' => $mimeType ?: 'application/octet-stream',
-                            'name' => $filename,
-                            'tmp_name' => $tmp_path,
-                            'error' => ($err === false) ? true : 0,
-                            'size' => filesize($tmp_path),
-                        ];
-                        $filename = $mimeType = null;
-                    }
-                    $fieldName = $fieldType = null;
-                } elseif (strpos($buffer, 'Content-Disposition') === 0) {
-                    $inHeader = true;
-                    if (preg_match('/name=\"([^\"]*)\"/', $buffer, $matches)) {
-                        $fieldName = $matches[1];
-                    }
-                    if ($isFile = preg_match('/filename=\"([^\"]*)\"/', $buffer, $matches)) {
-                        $filename = $matches[1];
-                    }
-                    $fieldType = $isFile ? 'file' : 'data';
-                } elseif (strpos($buffer, 'Content-Type') === 0) {
-                    $inHeader = true;
-                    if (preg_match('/Content-Type: (.*)?/', $buffer, $matches)) {
-                        $mimeType = trim($matches[1]);
-                    }
+
+                continue;
+            }
+
+            if ($getContent) {
+                if ($fieldType === 'data') {
+                    $post .= (isset($post[0]) ? '&' : '') . $fieldName . "=" . urlencode($buffer);
+                } elseif ($fieldType === 'file' && $filename) {
+                    $tmpPath = $this->getUploadDir().'/'.substr(md5(rand().time()), 0, 16);
+                    $err = file_put_contents($tmpPath, $buffer);
+                    $files[$fieldName] = [
+                        'type' => $mimeType ?: 'application/octet-stream',
+                        'name' => $filename,
+                        'tmp_name' => $tmpPath,
+                        'error' => ($err === false) ? true : 0,
+                        'size' => filesize($tmpPath),
+                    ];
+                    $filename = $mimeType = null;
+                }
+                $fieldName = $fieldType = null;
+
+                continue;
+            }
+
+            // Assert: We may be in the header, lets try to find 'Content-Disposition' and 'Content-Type'.
+            if (strpos($buffer, 'Content-Disposition') === 0) {
+                $inHeader = true;
+                if (preg_match('/name=\"([^\"]*)\"/', $buffer, $matches)) {
+                    $fieldName = $matches[1];
+                }
+                if (preg_match('/filename=\"([^\"]*)\"/', $buffer, $matches)) {
+                    $filename = $matches[1];
+                    $fieldType = 'file';
+                } else {
+                    $fieldType = 'data';
+                }
+            } elseif (strpos($buffer, 'Content-Type') === 0) {
+                $inHeader = true;
+                if (preg_match('/Content-Type: (.*)?/', $buffer, $matches)) {
+                    $mimeType = trim($matches[1]);
                 }
             }
         }
@@ -245,7 +257,12 @@ class Request implements RequestInterface
         $uri     = ServerRequestFactory::marshalUriFromServer($server, $headers);
         $method  = ServerRequestFactory::get('REQUEST_METHOD', $server, 'GET');
 
-        $request = new ServerRequest($server, $this->uploadedFiles, $uri, $method, $this->stdin, $headers);
+        $files = [];
+        foreach ($this->uploadedFiles as $file) {
+            $files[] = createUploadedFile($file);
+        }
+
+        $request = new ServerRequest($server, $files, $uri, $method, $this->stdin, $headers);
 
         return $request
             ->withCookieParams($cookies)
