@@ -10,7 +10,7 @@ use Symfony\Component\Console\Application;
 /**
  * The default implementation of the ApplicationFactoryInterface.
  */
-class ApplicationFactory implements ApplicationFactoryInterface
+final class ApplicationFactory implements ApplicationFactoryInterface
 {
     /**
      * @var DriverContainerInterface

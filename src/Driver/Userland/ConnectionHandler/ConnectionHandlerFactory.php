@@ -8,7 +8,7 @@ use PHPFastCGI\FastCGIDaemon\KernelInterface;
 /**
  * The default implementation of the ConnectionHandlerFactoryInterface.
  */
-class ConnectionHandlerFactory implements ConnectionHandlerFactoryInterface
+final class ConnectionHandlerFactory implements ConnectionHandlerFactoryInterface
 {
     /**
      * {@inheritdoc}

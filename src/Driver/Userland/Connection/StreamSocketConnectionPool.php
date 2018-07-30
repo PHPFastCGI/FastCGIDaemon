@@ -6,7 +6,7 @@ namespace PHPFastCGI\FastCGIDaemon\Driver\Userland\Connection;
  * The default implementation of the ConnectionPoolInterface using stream
  * sockets.
  */
-class StreamSocketConnectionPool implements ConnectionPoolInterface
+final class StreamSocketConnectionPool implements ConnectionPoolInterface
 {
     /**
      * @var resource

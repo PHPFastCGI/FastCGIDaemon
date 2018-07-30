@@ -12,7 +12,7 @@ use PHPFastCGI\FastCGIDaemon\KernelInterface;
 /**
  * A factory class for instantiating UserlandDaemon objects.
  */
-class UserlandDaemonFactory implements DaemonFactoryInterface
+final class UserlandDaemonFactory implements DaemonFactoryInterface
 {
     /**
      * Create a FastCGI daemon listening on file descriptor using the

@@ -2,7 +2,7 @@
 
 namespace PHPFastCGI\FastCGIDaemon\Driver;
 
-class DriverContainer implements DriverContainerInterface
+final class DriverContainer implements DriverContainerInterface
 {
     /**
      * @var array
