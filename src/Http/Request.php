@@ -2,7 +2,6 @@
 
 namespace PHPFastCGI\FastCGIDaemon\Http;
 
-use Interop\Http\Factory\ServerRequestFactoryInterface;
 use Nyholm\Psr7Server\ServerRequestCreatorInterface;
 use Symfony\Component\HttpFoundation\Request as HttpFoundationRequest;
 
