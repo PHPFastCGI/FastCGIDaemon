@@ -20,7 +20,7 @@ matrix:
           # Test the latest stable release
         - php: 7.1
         - php: 7.2
-          env: COVERAGE=true TEST_COMMAND="phpunit --coverage-clover build/logs/clover.xml" DEPENDENCIES="satooshi/php-coveralls:^2.1"
+          env: COVERAGE=true TEST_COMMAND="phpunit --coverage-clover build/logs/clover.xml" DEPENDENCIES="php-coveralls/php-coveralls:^2.1"
 
           # Test LTS versions
         - php: 7.2
