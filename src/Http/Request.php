@@ -3,6 +3,7 @@
 namespace PHPFastCGI\FastCGIDaemon\Http;
 
 use Symfony\Component\HttpFoundation\Request as HttpFoundationRequest;
+use function Zend\Diactoros\createUploadedFile;
 use Zend\Diactoros\ServerRequest;
 use Zend\Diactoros\ServerRequestFactory;
 
@@ -11,6 +12,21 @@ use Zend\Diactoros\ServerRequestFactory;
  */
 final class Request implements RequestInterface
 {
+    /**
+     * @var int
+     */
+    private static $bufferSize = 10485760; // 10 MB
+
+    /**
+     * @var string
+     */
+    private static $uploadDir = null;
+
+    /**
+     * @var array
+     */
+    private $uploadedFiles = [];
+
     /**
      * @var array
      */
@@ -49,6 +65,39 @@ final class Request implements RequestInterface
     }
 
     /**
+     * Remove all uploaded files
+     */
+    public function cleanUploadedFiles(): void
+    {
+        foreach ($this->uploadedFiles as $file) {
+            @unlink($file['tmp_name']);
+        }
+    }
+
+    /**
+     * Set a buffer size to read uploaded files
+     */
+    public static function setBufferSize(int $size): void
+    {
+        static::$bufferSize = $size;
+    }
+
+    public static function getBufferSize(): int
+    {
+        return static::$bufferSize;
+    }
+
+    public static function setUploadDir(string $dir): void
+    {
+        static::$uploadDir = $dir;
+    }
+
+    public static function getUploadDir(): string
+    {
+        return static::$uploadDir ?: sys_get_temp_dir();
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function getQuery()
@@ -73,6 +122,15 @@ final class Request implements RequestInterface
             $requestMethod = $this->params['REQUEST_METHOD'];
             $contentType   = $this->params['CONTENT_TYPE'];
 
+            if (strcasecmp($requestMethod, 'POST') === 0 && stripos($contentType, 'multipart/form-data') === 0) {
+                if (preg_match('/boundary=(?P<quote>[\'"]?)(.*)(?P=quote)/', $contentType, $matches)) {
+                    list($postData, $this->uploadedFiles) = $this->parseMultipartFormData($this->stdin, $matches[2]);
+                    parse_str($postData, $post);
+
+                    return $post;
+                }
+            }
+
             if (strcasecmp($requestMethod, 'POST') === 0 && stripos($contentType, 'application/x-www-form-urlencoded') === 0) {
                 $postData = stream_get_contents($this->stdin);
                 rewind($this->stdin);
@@ -82,6 +140,67 @@ final class Request implements RequestInterface
         }
 
         return $post ?: [];
+    }
+
+    private function parseMultipartFormData($stream, $boundary) {
+        $post = "";
+        $files = [];
+        $fieldType = $fieldName = $filename = $mimeType = null;
+        $inHeader = $getContent = false;
+
+        while (!feof($stream)) {
+            $getContent = $fieldName && !$inHeader;
+            $buffer = stream_get_line($stream, static::$bufferSize,  "\n" . ($getContent ? '--'.$boundary : ''));
+            $buffer = trim($buffer, "\r");
+
+            // Find the empty line between headers and body
+            if ($inHeader && strlen($buffer) == 0) {
+                $inHeader = false;
+
+                continue;
+            }
+
+            if ($getContent) {
+                if ($fieldType === 'data') {
+                    $post .= (isset($post[0]) ? '&' : '') . $fieldName . "=" . urlencode($buffer);
+                } elseif ($fieldType === 'file' && $filename) {
+                    $tmpPath = tempnam($this->getUploadDir(), 'fastcgi_upload');
+                    $err = file_put_contents($tmpPath, $buffer);
+                    $files[$fieldName] = [
+                        'type' => $mimeType ?: 'application/octet-stream',
+                        'name' => $filename,
+                        'tmp_name' => $tmpPath,
+                        'error' => ($err === false) ? true : 0,
+                        'size' => filesize($tmpPath),
+                    ];
+                    $filename = $mimeType = null;
+                }
+                $fieldName = $fieldType = null;
+
+                continue;
+            }
+
+            // Assert: We may be in the header, lets try to find 'Content-Disposition' and 'Content-Type'.
+            if (strpos($buffer, 'Content-Disposition') === 0) {
+                $inHeader = true;
+                if (preg_match('/name=\"([^\"]*)\"/', $buffer, $matches)) {
+                    $fieldName = $matches[1];
+                }
+                if (preg_match('/filename=\"([^\"]*)\"/', $buffer, $matches)) {
+                    $filename = $matches[1];
+                    $fieldType = 'file';
+                } else {
+                    $fieldType = 'data';
+                }
+            } elseif (strpos($buffer, 'Content-Type') === 0) {
+                $inHeader = true;
+                if (preg_match('/Content-Type: (.*)?/', $buffer, $matches)) {
+                    $mimeType = trim($matches[1]);
+                }
+            }
+        }
+
+        return [$post, $files];
     }
 
     /**
@@ -129,7 +248,12 @@ final class Request implements RequestInterface
         $uri     = ServerRequestFactory::marshalUriFromServer($server, $headers);
         $method  = ServerRequestFactory::get('REQUEST_METHOD', $server, 'GET');
 
-        $request = new ServerRequest($server, [], $uri, $method, $this->stdin, $headers);
+        $files = [];
+        foreach ($this->uploadedFiles as $file) {
+            $files[] = createUploadedFile($file);
+        }
+
+        $request = new ServerRequest($server, $files, $uri, $method, $this->stdin, $headers);
 
         return $request
             ->withCookieParams($cookies)
@@ -150,6 +274,6 @@ final class Request implements RequestInterface
         $post    = $this->getPost();
         $cookies = $this->getCookies();
 
-        return new HttpFoundationRequest($query, $post, [], $cookies, [], $this->params, $this->stdin);
+        return new HttpFoundationRequest($query, $post, [], $cookies, $this->uploadedFiles, $this->params, $this->stdin);
     }
 }

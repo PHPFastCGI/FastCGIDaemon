@@ -389,7 +389,11 @@ final class ConnectionHandler implements ConnectionHandlerInterface
             $this->requests[$requestId]['stdin']
         );
 
-        $response = $this->kernel->handleRequest($request);
+        try {
+            $response = $this->kernel->handleRequest($request);
+        } finally {
+            $request->cleanUploadedFiles();
+        }
 
         if ($response instanceof ResponseInterface) {
             $this->sendResponse($requestId, $response);
