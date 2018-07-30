@@ -65,7 +65,7 @@ final class ApplicationFactory implements ApplicationFactoryInterface
         if ($kernel instanceof KernelInterface) {
             return $kernel;
         } elseif (is_callable($kernel)) {
-            return new CallbackWrapper($kernel);
+            return new CallbackKernel($kernel);
         }
 
         throw new \InvalidArgumentException('Kernel must be callable or an instance of KernelInterface');
