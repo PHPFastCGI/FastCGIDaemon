@@ -192,7 +192,7 @@ Content-Type: image/png
 ???
 IHDR??? ??? ?????? ???? IDATxc???51?)?:??????IEND?B`?
 --578de3b0e3c46.2334ba3
-Content-Disposition: form-data; name="four[item_a][item_b[]"; filename="foo.png"
+Content-Disposition: form-data; name="four[item_a][item_b][]"; filename="foo.png"
 Content-Length: 71
 Content-Type: image/png
 
@@ -200,7 +200,8 @@ Content-Type: image/png
 
 ???
 IHDR??? ??? ?????? ???? IDATxc???51?)?:??????IEND?B`?
-Content-Disposition: form-data; name="four[item_a][item_b[]"; filename="bar.png"
+--578de3b0e3c46.2334ba3
+Content-Disposition: form-data; name="four[item_a][item_b][]"; filename="bar.png"
 Content-Length: 71
 Content-Type: image/png
 
@@ -246,13 +247,13 @@ HTTP;
         $this->assertNotEmpty($files['four']);
         $this->assertNotEmpty($files['four']['item_a']);
         $this->assertNotEmpty($files['four']['item_a']['item_b']);
-        $this->assertCount(2, $files['three']['item_a']['item_b']);
+        $this->assertCount(2, $files['four']['item_a']['item_b']);
 
         // Check the HttpFoundation request
         rewind($stream);
         $httpFoundationRequest = $request->getHttpFoundationRequest();
         $this->assertEquals($expectedPost, $httpFoundationRequest->request->all());
-        $this->assertCount(7,              $httpFoundationRequest->files->all());
+        $this->assertCount(4,              $httpFoundationRequest->files->all());
 
     }
 }

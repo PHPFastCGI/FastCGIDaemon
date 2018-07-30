@@ -282,21 +282,23 @@ final class Request implements RequestInterface
             'size' => filesize($tmpPath),
         ];
 
-        if (!preg_match('|([^\[]+)(?:\[([^\]]+)\])*(\[\])?|', $fieldName, $matches)) {
+        $matches = preg_split('|(\[[^\]]*\])|', $fieldName, -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE);
+        $count = count($matches);
+        if (1 === $count) {
             $files[$fieldName] = $data;
         } else {
             $current = &$files;
-            $count = count($matches);
-            for ($i = 1; $i < $count; $i++) {
-                if (empty($matches[$i])) {
+            foreach ($matches as $i => $match) {
+                if ($match === '[]') {
+                    $current[] = $data;
                     continue;
                 }
-                if ($matches[$i] === '[]') {
-                    $current[] = $data;
-                } elseif ($i === $count -1) {
-                    $current[$matches[$i]] = $data;
+
+                $trimmedMatch = trim($match, '[]');
+                if ($i === $count -1) {
+                    $current[$trimmedMatch] = $data;
                 } else {
-                    $current = &$current[$matches[$i]];
+                    $current = &$current[$trimmedMatch];
                 }
             }
         }
