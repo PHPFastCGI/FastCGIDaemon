@@ -20,9 +20,9 @@ matrix:
 
           # Test the latest stable release
         - name: "PHP 7.1"
-        - php: 7.1
+          php: 7.1
         - name: "PHP 7.2 with code coverage"
-        - php: 7.2
+          php: 7.2
           env: COVERAGE=true TEST_COMMAND="phpunit --coverage-clover build/logs/clover.xml" DEPENDENCIES="php-coveralls/php-coveralls:^2.1"
 
           # Test LTS versions
