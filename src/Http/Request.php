@@ -164,7 +164,7 @@ final class Request implements RequestInterface
                 if ($fieldType === 'data') {
                     $post .= (isset($post[0]) ? '&' : '') . $fieldName . "=" . urlencode($buffer);
                 } elseif ($fieldType === 'file' && $filename) {
-                    $tmpPath = tempnam($this->getUploadDir(), 'fastcgi_upload');
+                    $tmpPath = @tempnam($this->getUploadDir(), 'fastcgi_upload');
                     $err = file_put_contents($tmpPath, $buffer);
                     $this->addFile($files, $fieldName, $filename, $tmpPath, $mimeType, false === $err);
                     $filename = $mimeType = null;
