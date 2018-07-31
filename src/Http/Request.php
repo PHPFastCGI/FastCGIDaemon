@@ -166,13 +166,7 @@ final class Request implements RequestInterface
                 } elseif ($fieldType === 'file' && $filename) {
                     $tmpPath = tempnam($this->getUploadDir(), 'fastcgi_upload');
                     $err = file_put_contents($tmpPath, $buffer);
-                    $files[$fieldName] = [
-                        'type' => $mimeType ?: 'application/octet-stream',
-                        'name' => $filename,
-                        'tmp_name' => $tmpPath,
-                        'error' => ($err === false) ? true : 0,
-                        'size' => filesize($tmpPath),
-                    ];
+                    $this->addFile($files, $fieldName, $filename, $tmpPath, $mimeType, false === $err);
                     $filename = $mimeType = null;
                 }
                 $fieldName = $fieldType = null;
@@ -248,10 +242,8 @@ final class Request implements RequestInterface
         $uri     = ServerRequestFactory::marshalUriFromServer($server, $headers);
         $method  = ServerRequestFactory::get('REQUEST_METHOD', $server, 'GET');
 
-        $files = [];
-        foreach ($this->uploadedFiles as $file) {
-            $files[] = createUploadedFile($file);
-        }
+        $files = $this->uploadedFiles;
+        $this->preparePsr7UploadedFiles($files);
 
         $request = new ServerRequest($server, $files, $uri, $method, $this->stdin, $headers);
 
@@ -275,5 +267,51 @@ final class Request implements RequestInterface
         $cookies = $this->getCookies();
 
         return new HttpFoundationRequest($query, $post, [], $cookies, $this->uploadedFiles, $this->params, $this->stdin);
+    }
+
+    /**
+     * Add a file to the $files array
+     */
+    private function addFile(array &$files, string $fieldName, string $filename, string $tmpPath, string $mimeType, bool $err): void
+    {
+        $data = [
+            'type' => $mimeType ?: 'application/octet-stream',
+            'name' => $filename,
+            'tmp_name' => $tmpPath,
+            'error' => $err ? UPLOAD_ERR_CANT_WRITE : UPLOAD_ERR_OK,
+            'size' => filesize($tmpPath),
+        ];
+
+        $parts = preg_split('|(\[[^\]]*\])|', $fieldName, -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE);
+        $count = count($parts);
+        if (1 === $count) {
+            $files[$fieldName] = $data;
+        } else {
+            $current = &$files;
+            foreach ($parts as $i => $part) {
+                if ($part === '[]') {
+                    $current[] = $data;
+                    continue;
+                }
+
+                $trimmedMatch = trim($part, '[]');
+                if ($i === $count -1) {
+                    $current[$trimmedMatch] = $data;
+                } else {
+                    $current = &$current[$trimmedMatch];
+                }
+            }
+        }
+    }
+
+    private function preparePsr7UploadedFiles(array &$files)
+    {
+        if (isset($files['tmp_name'])) {
+            $files = createUploadedFile($files);
+        } else {
+            foreach ($files as &$file) {
+                $this->preparePsr7UploadedFiles($file);
+            }
+        }
     }
 }

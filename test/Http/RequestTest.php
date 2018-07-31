@@ -147,4 +147,135 @@ HTTP;
         Request::setUploadDir('/foo/bar');
         $this->assertEquals('/foo/bar', Request::getUploadDir());
     }
+
+    public function testMultipartContentWithMultipleFiles()
+    {
+        $expectedPost    = ['foo' => 'A normal stream', 'baz' => 'string'];
+
+        // Set up FastCGI params and content
+        $params = [
+            'SERVER_PROTOCOL' => 'HTTP/1.1',
+            'REQUEST_METHOD'  => 'POST',
+            'content_type'    => 'multipart/form-data; boundary="578de3b0e3c46.2334ba3"',
+            'REQUEST_URI'     => '/my-page',
+        ];
+
+        // Set up the FastCGI stdin data stream resource
+        $content = <<<HTTP
+--578de3b0e3c46.2334ba3
+Content-Disposition: form-data; name="foo"
+Content-Length: 15
+
+A normal stream
+--578de3b0e3c46.2334ba3
+Content-Disposition: form-data; name="one[]"; filename="foo.png"
+Content-Length: 71
+Content-Type: image/png
+
+?PNG
+
+???
+IHDR??? ??? ?????? ???? IDATxc???51?)?:??????IEND?B`?
+--578de3b0e3c46.2334ba3
+--578de3b0e3c46.2334ba3
+Content-Disposition: form-data; name="one[]"; filename="bar.png"
+Content-Length: 71
+Content-Type: image/png
+
+?PNG
+
+???
+IHDR??? ??? ?????? ???? IDATxc???51?)?:??????IEND?B`?
+--578de3b0e3c46.2334ba3
+Content-Disposition: form-data; name="two[item-a]"; filename="bar.png"
+Content-Length: 71
+Content-Type: image/png
+
+?PNG
+
+???
+IHDR??? ??? ?????? ???? IDATxc???51?)?:??????IEND?B`?
+--578de3b0e3c46.2334ba3
+Content-Disposition: form-data; name="three[item][]"; filename="foo.png"
+Content-Length: 71
+Content-Type: image/png
+
+?PNG
+
+???
+IHDR??? ??? ?????? ???? IDATxc???51?)?:??????IEND?B`?
+--578de3b0e3c46.2334ba3
+Content-Disposition: form-data; name="three[item][]"; filename="bar.png"
+Content-Length: 71
+Content-Type: image/png
+
+?PNG
+
+???
+IHDR??? ??? ?????? ???? IDATxc???51?)?:??????IEND?B`?
+--578de3b0e3c46.2334ba3
+Content-Disposition: form-data; name="four[item_a][item_b][]"; filename="foo.png"
+Content-Length: 71
+Content-Type: image/png
+
+?PNG
+
+???
+IHDR??? ??? ?????? ???? IDATxc???51?)?:??????IEND?B`?
+--578de3b0e3c46.2334ba3
+Content-Disposition: form-data; name="four[item_a][item_b][]"; filename="bar.png"
+Content-Length: 71
+Content-Type: image/png
+
+?PNG
+
+???
+IHDR??? ??? ?????? ???? IDATxc???51?)?:??????IEND?B`?
+--578de3b0e3c46.2334ba3
+Content-Type: text/plain
+Content-Disposition: form-data; name="baz"
+Content-Length: 6
+
+string
+--578de3b0e3c46.2334ba3--
+HTTP;
+
+        $stream = fopen('php://memory', 'r+');
+        fwrite($stream, $content);
+
+        // Create the request
+        $request = new Request($params, $stream);
+
+        // Check request object
+        $this->assertEquals($expectedPost,    $request->getPost());
+        $this->assertEquals($stream,          $request->getStdin());
+
+        // Check the PSR server request
+        rewind($stream);
+        $serverRequest = $request->getServerRequest();
+        $this->assertEquals($expectedPost, $serverRequest->getParsedBody());
+        $files = $serverRequest->getUploadedFiles();
+        $this->assertNotEmpty($files['one']);
+        $this->assertCount(2, $files['one']);
+
+        $this->assertNotEmpty($files['two']);
+        $this->assertCount(1, $files['two']);
+        $this->assertNotEmpty($files['two']['item-a']);
+
+        $this->assertNotEmpty($files['three']);
+        $this->assertCount(1, $files['three']);
+        $this->assertCount(2, $files['three']['item']);
+
+        $this->assertNotEmpty($files['four']);
+        $this->assertNotEmpty($files['four']['item_a']);
+        $this->assertNotEmpty($files['four']['item_a']['item_b']);
+        $this->assertCount(2, $files['four']['item_a']['item_b']);
+
+        // Check the HttpFoundation request
+        rewind($stream);
+        $httpFoundationRequest = $request->getHttpFoundationRequest();
+        $this->assertEquals($expectedPost, $httpFoundationRequest->request->all());
+        $this->assertCount(4,              $httpFoundationRequest->files->all());
+
+    }
 }
