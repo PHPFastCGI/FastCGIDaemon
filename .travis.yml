@@ -23,7 +23,7 @@ matrix:
           php: 7.1
         - name: "PHP 7.2 with code coverage"
           php: 7.2
-          env: COVERAGE=true TEST_COMMAND="phpunit --coverage-clover build/logs/clover.xml"
+          env: COVERAGE=true TEST_COMMAND="phpunit --coverage-clover build/logs/clover.xml" DEPENDENCIES="php-coveralls/php-coveralls:^2.1"
 
           # Test LTS versions
         - name: "PHP 7.2 with Symfony 3 components"
@@ -58,5 +58,5 @@ script:
     - $TEST_COMMAND
 
 after_success:
-    - if [[ $COVERAGE = true ]]; then php vendor/bin/coveralls -v; fi
+    - if [[ $COVERAGE = true ]]; then php vendor/bin/php-coveralls -v; fi
 
