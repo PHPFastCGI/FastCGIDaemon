@@ -246,20 +246,17 @@ final class Request implements RequestInterface
         $post    = $this->getPost();
         $cookies = $this->getCookies();
 
-        $server  = ServerRequestFactory::normalizeServer($this->params);
-        $headers = ServerRequestFactory::marshalHeaders($server);
-        $uri     = ServerRequestFactory::marshalUriFromServer($server, $headers);
-        $method  = ServerRequestFactory::get('REQUEST_METHOD', $server, 'GET');
+        return self::$serverRequestCreator->fromArrays(
+            $server,
+            self::$serverRequestCreator->getHeadersFromServer($server),
+            $cookies,
+            $query,
+            $post,
+            $this->uploadedFiles,
+            $this->stdin
+        );
 
-        $files = $this->uploadedFiles;
-        $this->preparePsr7UploadedFiles($files);
 
-        $request = new ServerRequest($server, $files, $uri, $method, $this->stdin, $headers);
-
-        return $request
-            ->withCookieParams($cookies)
-            ->withQueryParams($query)
-            ->withParsedBody($post);
     }
 
     /**
@@ -309,17 +306,6 @@ final class Request implements RequestInterface
                 } else {
                     $current = &$current[$trimmedMatch];
                 }
-            }
-        }
-    }
-
-    private function preparePsr7UploadedFiles(array &$files)
-    {
-        if (isset($files['tmp_name'])) {
-            $files = createUploadedFile($files);
-        } else {
-            foreach ($files as &$file) {
-                $this->preparePsr7UploadedFiles($file);
             }
         }
     }
