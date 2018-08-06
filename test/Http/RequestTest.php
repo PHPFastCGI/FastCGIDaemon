@@ -2,6 +2,11 @@
 
 namespace PHPFastCGI\Test\FastCGIDaemon\Http;
 
+use Http\Factory\Diactoros\ServerRequestFactory;
+use Http\Factory\Diactoros\StreamFactory;
+use Http\Factory\Diactoros\UploadedFileFactory;
+use Http\Factory\Diactoros\UriFactory;
+use Nyholm\Psr7Server\ServerRequestCreator;
 use PHPFastCGI\FastCGIDaemon\Http\Request;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -12,6 +17,17 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
  */
 class RequestTest extends TestCase
 {
+    public static function setUpBeforeClass()
+    {
+        parent::setUpBeforeClass();
+        Request::setServerRequestCreator(new ServerRequestCreator(
+            new ServerRequestFactory(),
+            new UriFactory(),
+            new UploadedFileFactory(),
+            new StreamFactory()
+        ));
+    }
+
     /**
      * Test that the request builder is correctly building the request messages.
      */

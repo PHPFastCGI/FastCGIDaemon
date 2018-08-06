@@ -2,16 +2,19 @@
 
 namespace PHPFastCGI\FastCGIDaemon\Http;
 
+use Nyholm\Psr7Server\ServerRequestCreatorInterface;
 use Symfony\Component\HttpFoundation\Request as HttpFoundationRequest;
-use function Zend\Diactoros\createUploadedFile;
-use Zend\Diactoros\ServerRequest;
-use Zend\Diactoros\ServerRequestFactory;
 
 /**
  * The default implementation of the RequestInterface.
  */
 final class Request implements RequestInterface
 {
+    /**
+     * @var ServerRequestCreatorInterface|null
+     */
+    private static $serverRequestCreator = null;
+
     /**
      * @var int
      */
@@ -54,6 +57,11 @@ final class Request implements RequestInterface
         $this->stdin  = $stdin;
 
         rewind($this->stdin);
+    }
+
+    public static function setServerRequestCreator(ServerRequestCreatorInterface $serverRequestCreator): void
+    {
+        self::$serverRequestCreator = $serverRequestCreator;
     }
 
     /**
@@ -229,28 +237,26 @@ final class Request implements RequestInterface
      */
     public function getServerRequest()
     {
-        if (!class_exists(ServerRequest::class)) {
-            throw new \RuntimeException('You need to install zendframework/zend-diactoros^1.8 to use PSR-7 requests.');
+        if (null === self::$serverRequestCreator) {
+            throw new \RuntimeException('You need to add an object of \Nyholm\Psr7Server\ServerRequestCreatorInterface to \PHPFastCGI\FastCGIDaemon\Http\Request::setServerRequestCreator to use PSR-7 requests. Please install and read more at https://github.com/nyholm/psr7-server');
         }
 
+        $server  = $this->params;
         $query   = $this->getQuery();
         $post    = $this->getPost();
         $cookies = $this->getCookies();
 
-        $server  = ServerRequestFactory::normalizeServer($this->params);
-        $headers = ServerRequestFactory::marshalHeaders($server);
-        $uri     = ServerRequestFactory::marshalUriFromServer($server, $headers);
-        $method  = ServerRequestFactory::get('REQUEST_METHOD', $server, 'GET');
+        return self::$serverRequestCreator->fromArrays(
+            $server,
+            self::$serverRequestCreator->getHeadersFromServer($server),
+            $cookies,
+            $query,
+            $post,
+            $this->uploadedFiles,
+            $this->stdin
+        );
 
-        $files = $this->uploadedFiles;
-        $this->preparePsr7UploadedFiles($files);
 
-        $request = new ServerRequest($server, $files, $uri, $method, $this->stdin, $headers);
-
-        return $request
-            ->withCookieParams($cookies)
-            ->withQueryParams($query)
-            ->withParsedBody($post);
     }
 
     /**
@@ -300,17 +306,6 @@ final class Request implements RequestInterface
                 } else {
                     $current = &$current[$trimmedMatch];
                 }
-            }
-        }
-    }
-
-    private function preparePsr7UploadedFiles(array &$files)
-    {
-        if (isset($files['tmp_name'])) {
-            $files = createUploadedFile($files);
-        } else {
-            foreach ($files as &$file) {
-                $this->preparePsr7UploadedFiles($file);
             }
         }
     }
