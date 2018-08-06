@@ -30,7 +30,7 @@ Contributions and suggestions are welcome.
 
 ## Usage
 
-Below is an example of a simple 'Hello, World!' FastCGI application in PHP.
+Below is an example of a simple 'Hello, World!' FastCGI application in PHP with Symfony HTTP Foundation. 
 
 ```php
 <?php // fastCGI_app.php
@@ -40,13 +40,13 @@ require_once dirname(__FILE__) . '/../vendor/autoload.php';
 
 use PHPFastCGI\FastCGIDaemon\ApplicationFactory;
 use PHPFastCGI\FastCGIDaemon\Http\RequestInterface;
-use Zend\Diactoros\Response\HtmlResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 // A simple kernel. This is the core of your application
 $kernel = function (RequestInterface $request) {
-    // $request->getServerRequest()         returns PSR-7 server request object
-    // $request->getHttpFoundationRequest() returns HTTP foundation request object
-    return new HtmlResponse('<h1>Hello, World!</h1>');
+    $sfRequest = $request->getHttpFoundationRequest() // returns HTTP Foundation request object
+    
+    return new Response('<h1>Hello, World!</h1>' . $sfRequest->getUri());
 };
 
 // Create your Symfony console application using the factory
@@ -55,6 +55,50 @@ $application = (new ApplicationFactory)->createApplication($kernel);
 // Run the Symfony console application
 $application->run();
 ```
+
+Here is the same example but with PSR7 HTTP objects. First you need to install any PSR17 (HTTP Factory) implementation
+and then a PSR17 utility library ([nyholm/psr7-server](https://github.com/nyholm/psr7-server)).  
+
+```
+composer require http-interop/http-factory-diactoros nyholm/psr7-server
+```
+
+```php
+<?php // command.php
+
+// Include the composer autoloader
+require_once dirname(__FILE__) . '/../vendor/autoload.php';
+
+use Http\Factory\Diactoros;
+use Nyholm\Psr7Server\ServerRequestCreator;
+use PHPFastCGI\FastCGIDaemon\ApplicationFactory;
+use PHPFastCGI\FastCGIDaemon\Http\Request;
+use PHPFastCGI\FastCGIDaemon\Http\RequestInterface;
+use Zend\Diactoros\Response\HtmlResponse;
+
+// Give the Request an instance of ServerRequestCreatorInterface filled with PSR17 factories. 
+// This is how we are independent of any PSR7 implementation. 
+Request::setServerRequestCreator(new ServerRequestCreator(
+    new Diactoros\ServerRequestFactory,
+    new Diactoros\UriFactory,
+    new Diactoros\UploadedFileFactory,
+    new Diactoros\StreamFactory
+));
+
+// A simple kernel. This is the core of your application
+$kernel = function (RequestInterface $request) {
+    $psr7Request = $request->getServerRequest(); // returns PSR7 ServerRequestInterface
+    
+    return new HtmlResponse('<h1>Hello, World!</h1>' . $psr7Request->getRequestTarget());
+};
+
+// Create your Symfony console application using the factory
+$application = (new ApplicationFactory)->createApplication($kernel);
+
+// Run the Symfony console application
+$application->run();
+```
+
 
 ## Server Configuration
 
