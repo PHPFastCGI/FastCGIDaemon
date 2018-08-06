@@ -230,5 +230,5 @@ Increases the log output in the console.
 ### Example run
 
 ```bash
-./bin/console speedfony:run fastcgi-daemon:run --port=5000 --host=127.0.0.1 -v
+./bin/console fastcgi-daemon:run --port=5000 --host=127.0.0.1 -v
 ```
