@@ -78,24 +78,19 @@ composer require symfony/http-foundation
 ```php
 <?php // fastCGI_app.php
 
-// Include the composer autoloader
 require_once dirname(__FILE__) . '/../vendor/autoload.php';
 
 use PHPFastCGI\FastCGIDaemon\ApplicationFactory;
 use PHPFastCGI\FastCGIDaemon\Http\RequestInterface;
 use Symfony\Component\HttpFoundation\Response;
 
-// A simple kernel. This is the core of your application
 $kernel = function (RequestInterface $request) {
     $sfRequest = $request->getHttpFoundationRequest(); // returns HTTP Foundation request object
     
     return new Response('<h1>Hello, World!</h1>' . $sfRequest->getUri());
 };
 
-// Create your Symfony console application using the factory
 $application = (new ApplicationFactory)->createApplication($kernel);
-
-// Run the Symfony console application
 $application->run();
 ```
 
@@ -111,7 +106,6 @@ composer require http-interop/http-factory-diactoros nyholm/psr7-server
 ```php
 <?php // fastCGI_app.php
 
-// Include the composer autoloader
 require_once dirname(__FILE__) . '/../vendor/autoload.php';
 
 use Http\Factory\Diactoros;
@@ -130,17 +124,13 @@ Request::setServerRequestCreator(new ServerRequestCreator(
     new Diactoros\StreamFactory
 ));
 
-// A simple kernel. This is the core of your application
 $kernel = function (RequestInterface $request) {
     $psr7Request = $request->getServerRequest(); // returns PSR-7 ServerRequestInterface
     
     return new HtmlResponse('<h1>Hello, World!</h1>' . $psr7Request->getRequestTarget());
 };
 
-// Create your Symfony console application using the factory
 $application = (new ApplicationFactory)->createApplication($kernel);
-
-// Run the Symfony console application
 $application->run();
 ```
 
