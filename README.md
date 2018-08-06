@@ -30,7 +30,50 @@ Contributions and suggestions are welcome.
 
 ## Usage
 
-Below is an example of a simple 'Hello, World!' FastCGI application in PHP with Symfony HTTP Foundation. 
+Below is an example of a simple 'Hello, World!' FastCGI application. There are
+3 examples. One with the PHPFastCGI request, one with Symfony HTTP Foundation request
+and one with PSR-7 Request. 
+
+### PHPFastCGI request
+
+Using the pure PHPFastCGI is the fastest method since it does not involve any converting
+of requests. 
+
+We need a PSR-7 implementation's response object. 
+
+```
+composer require composer require zendframework/zend-diactoros
+```
+
+```php
+<?php // fastCGI_app.php
+
+// Include the composer autoloader
+require_once dirname(__FILE__) . '/../vendor/autoload.php';
+
+use PHPFastCGI\FastCGIDaemon\ApplicationFactory;
+use PHPFastCGI\FastCGIDaemon\Http\RequestInterface;
+use Zend\Diactoros\Response\HtmlResponse;
+
+// A simple kernel. This is the core of your application
+$kernel = function (RequestInterface $request) {    
+    return new HtmlResponse('<h1>Hello, World!</h1>');
+};
+
+// Create your Symfony console application using the factory
+$application = (new ApplicationFactory)->createApplication($kernel);
+
+// Run the Symfony console application
+$application->run();
+```
+
+### Symfony HTTP Foundation Request
+
+Use this when your application is taking advantage of the Symfony echosystem. 
+
+```
+composer require symfony/http-foundation
+```
 
 ```php
 <?php // fastCGI_app.php
@@ -44,7 +87,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 // A simple kernel. This is the core of your application
 $kernel = function (RequestInterface $request) {
-    $sfRequest = $request->getHttpFoundationRequest() // returns HTTP Foundation request object
+    $sfRequest = $request->getHttpFoundationRequest(); // returns HTTP Foundation request object
     
     return new Response('<h1>Hello, World!</h1>' . $sfRequest->getUri());
 };
@@ -56,15 +99,17 @@ $application = (new ApplicationFactory)->createApplication($kernel);
 $application->run();
 ```
 
-Here is the same example but with PSR7 HTTP objects. First you need to install any PSR17 (HTTP Factory) implementation
-and then a PSR17 utility library ([nyholm/psr7-server](https://github.com/nyholm/psr7-server)).  
+### PSR-7 Request
+
+Here is the same example but with PSR-7 HTTP objects. First you need to install any PSR-17 (HTTP Factory) implementation
+and then a PSR-17 utility library ([nyholm/psr7-server](https://github.com/nyholm/psr7-server)).  
 
 ```
 composer require http-interop/http-factory-diactoros nyholm/psr7-server
 ```
 
 ```php
-<?php // command.php
+<?php // fastCGI_app.php
 
 // Include the composer autoloader
 require_once dirname(__FILE__) . '/../vendor/autoload.php';
@@ -76,8 +121,8 @@ use PHPFastCGI\FastCGIDaemon\Http\Request;
 use PHPFastCGI\FastCGIDaemon\Http\RequestInterface;
 use Zend\Diactoros\Response\HtmlResponse;
 
-// Give the Request an instance of ServerRequestCreatorInterface filled with PSR17 factories. 
-// This is how we are independent of any PSR7 implementation. 
+// Give the Request an instance of ServerRequestCreatorInterface filled with PSR-17 factories. 
+// This is how we are independent of any PSR-7 implementation. 
 Request::setServerRequestCreator(new ServerRequestCreator(
     new Diactoros\ServerRequestFactory,
     new Diactoros\UriFactory,
@@ -87,7 +132,7 @@ Request::setServerRequestCreator(new ServerRequestCreator(
 
 // A simple kernel. This is the core of your application
 $kernel = function (RequestInterface $request) {
-    $psr7Request = $request->getServerRequest(); // returns PSR7 ServerRequestInterface
+    $psr7Request = $request->getServerRequest(); // returns PSR-7 ServerRequestInterface
     
     return new HtmlResponse('<h1>Hello, World!</h1>' . $psr7Request->getRequestTarget());
 };
@@ -98,7 +143,6 @@ $application = (new ApplicationFactory)->createApplication($kernel);
 // Run the Symfony console application
 $application->run();
 ```
-
 
 ## Server Configuration
 
