@@ -68,6 +68,7 @@ final class UserlandDaemon implements DaemonInterface
     public function run()
     {
         $this->setupDaemon($this->daemonOptions);
+        $this->daemonOptions->getOption(DaemonOptions::LOGGER)->notice('Deamon is running. Started to accept connections');
 
         try {
             while (1) {
