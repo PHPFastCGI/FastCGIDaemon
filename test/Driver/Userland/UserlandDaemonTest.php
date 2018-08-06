@@ -30,7 +30,7 @@ class UserlandDaemonTest extends TestCase
         $context['daemon']->flagShutdown();
         $context['daemon']->run();
 
-        $this->assertEquals('Daemon flagged for shutdown', $context['logger']->getMessages()[0]['message']);
+        $this->assertEquals('Daemon flagged for shutdown', $context['logger']->getMessages()[1]['message']);
     }
 
     /**
@@ -50,7 +50,7 @@ class UserlandDaemonTest extends TestCase
 
         fclose($socket);
 
-        $this->assertEquals('Daemon request limit reached (1 of 1)', $context['logger']->getMessages()[0]['message']);
+        $this->assertEquals('Daemon request limit reached (1 of 1)', $context['logger']->getMessages()[1]['message']);
     }
 
     /**
@@ -69,7 +69,7 @@ class UserlandDaemonTest extends TestCase
 
         fclose($socket);
 
-        $this->assertContains('Daemon memory limit reached', $context['logger']->getMessages()[0]['message']);
+        $this->assertContains('Daemon memory limit reached', $context['logger']->getMessages()[1]['message']);
     }
 
     /**
@@ -81,7 +81,7 @@ class UserlandDaemonTest extends TestCase
 
         $context['daemon']->run();
 
-        $this->assertContains('Daemon time limit reached', $context['logger']->getMessages()[0]['message']);
+        $this->assertContains('Daemon time limit reached', $context['logger']->getMessages()[1]['message']);
     }
 
     /**
@@ -102,7 +102,7 @@ class UserlandDaemonTest extends TestCase
             $this->assertEquals('boo', $exception->getMessage());
         }
 
-        $this->assertContains('boo', $context['logger']->getMessages()[0]['message']);
+        $this->assertContains('boo', $context['logger']->getMessages()[1]['message']);
     }
 
     /**
@@ -123,7 +123,7 @@ class UserlandDaemonTest extends TestCase
 
         $context['daemon']->run();
 
-        $this->assertContains('boo',  $context['logger']->getMessages()[0]['message']);
+        $this->assertContains('boo',  $context['logger']->getMessages()[1]['message']);
     }
 
     /**
@@ -140,7 +140,7 @@ class UserlandDaemonTest extends TestCase
 
         $context['daemon']->run();
 
-        $this->assertEquals('Daemon shutdown requested (received SIGINT)', $context['logger']->getMessages()[0]['message']);
+        $this->assertEquals('Daemon shutdown requested (received SIGINT)', $context['logger']->getMessages()[1]['message']);
     }
 
     /**
@@ -160,7 +160,7 @@ class UserlandDaemonTest extends TestCase
 
         $context['daemon']->run();
 
-        $this->assertEquals('Automatic shutdown following status code: 500', $context['logger']->getMessages()[0]['message']);
+        $this->assertEquals('Automatic shutdown following status code: 500', $context['logger']->getMessages()[1]['message']);
     }
 
     private function createTestingContext($requestLimit = DaemonOptions::NO_LIMIT, $memoryLimit = DaemonOptions::NO_LIMIT, $timeLimit = DaemonOptions::NO_LIMIT, $autoShutdown = false)
