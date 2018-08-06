@@ -139,7 +139,7 @@ FastCgiServer /path/to/script.fcgi
 ## Running the server
 
 Depending on your setup, you will have different ways of running the server. In
-a normal PHP application where you have created your own `fastCGI_app.php` ((see how)[#usage]),
+a normal PHP application where you have created your own `fastCGI_app.php` ([see how](#usage)),
 you may start the server simply by: 
 
 ```bash
@@ -151,7 +151,7 @@ you may just run:
 
 ```bash
 # If installed with Symfony Flex
-./bin/console speedfony:run fastcgi-daemon:run
+./bin/console fastcgi-daemon:run
 
 # If you use https://github.com/PHPFastCGI/SpeedfonyBundle (deprecated)
 ./bin/console speedfony:run 
@@ -197,9 +197,9 @@ The memory limit on the daemon instance before shutting down.
 
 TCP port to listen on (if not present, daemon will listen on FCGI_LISTENSOCK_FILENO).
 
-#### Quite
+#### Quiet
 
-`--quite` 
+`--quiet` 
 
 Reduces the number of log output in the console. 
 
@@ -208,12 +208,6 @@ Reduces the number of log output in the console.
 `--request-limit 56` 
 
 The maximum number of requests to handle before shutting down.
-
-#### Time limit
-
-`--time-limit 120` 
-
-The time limit on the daemon in seconds before shutting down.
 
 #### Time limit
 
