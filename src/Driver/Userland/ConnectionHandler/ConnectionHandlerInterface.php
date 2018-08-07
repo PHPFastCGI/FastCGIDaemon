@@ -16,18 +16,18 @@ interface ConnectionHandlerInterface
      *
      * @return int[] The status codes of requests dispatched during the function call
      */
-    public function ready();
+    public function ready(): array;
 
     /**
      * Gracefully shutdown the connection being handled.
      */
-    public function shutdown();
+    public function shutdown(): void;
 
     /**
      * Closes the connection handler and free's associated resources. Calling
      * this method must also close the connection object that was being handled.
      */
-    public function close();
+    public function close(): void;
 
     /**
      * Returns true if the connection handler has been closed and false if it
@@ -35,5 +35,5 @@ interface ConnectionHandlerInterface
      *
      * @return bool
      */
-    public function isClosed();
+    public function isClosed(): bool;
 }

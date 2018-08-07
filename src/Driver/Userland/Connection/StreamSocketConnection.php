@@ -39,7 +39,7 @@ final class StreamSocketConnection implements ConnectionInterface
      *
      * @return ConnectionException
      */
-    protected function createExceptionFromLastError($function)
+    protected function createExceptionFromLastError(string $function): ConnectionException
     {
         $this->close();
 
@@ -49,7 +49,7 @@ final class StreamSocketConnection implements ConnectionInterface
     /**
      * {@inheritdoc}
      */
-    public function read($length)
+    public function read(int $length): string
     {
         if ($this->isClosed()) {
             throw new ConnectionException('Connection has been closed');
@@ -71,7 +71,7 @@ final class StreamSocketConnection implements ConnectionInterface
     /**
      * {@inheritdoc}
      */
-    public function write($buffer)
+    public function write(string $buffer): void
     {
         if ($this->isClosed()) {
             throw new ConnectionException('Connection has been closed');
@@ -85,7 +85,7 @@ final class StreamSocketConnection implements ConnectionInterface
     /**
      * {@inheritdoc}
      */
-    public function isClosed()
+    public function isClosed(): bool
     {
         return $this->closed;
     }
@@ -93,7 +93,7 @@ final class StreamSocketConnection implements ConnectionInterface
     /**
      * {@inheritdoc}
      */
-    public function close()
+    public function close(): void
     {
         if (!$this->isClosed()) {
             fclose($this->socket);

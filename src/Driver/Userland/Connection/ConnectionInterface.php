@@ -19,7 +19,7 @@ interface ConnectionInterface
      *
      * @throws ConnectionException On failure
      */
-    public function read($length);
+    public function read(int $length): string;
 
     /**
      * Write data to the connection.
@@ -28,17 +28,17 @@ interface ConnectionInterface
      *
      * @throws ConnectionException On failure
      */
-    public function write($buffer);
+    public function write(string $buffer): void;
 
     /**
      * Tests to see if the connection has been closed.
      *
      * @return bool True if the connection has been closed, false otherwise
      */
-    public function isClosed();
+    public function isClosed(): bool;
 
     /**
      * Closes the connection it from the pool.
      */
-    public function close();
+    public function close(): void;
 }

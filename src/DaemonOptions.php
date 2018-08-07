@@ -19,13 +19,13 @@ final class DaemonOptions implements DaemonOptionsInterface
      * Constructor.
      *
      * The value of the LOGGER option must implement the PSR-3 LoggerInterface.
-     * 
+     *
      * For the REQUEST_LIMIT, MEMORY_LIMIT and TIME_LIMIT options, NO_LIMIT can
      * be used to specify that these metrics should not cause the daemon to
      * shutdown.
      *
      * @param array $options The options to configure the daemon with
-     * 
+     *
      * @throws \InvalidArgumentException On unrecognised option
      */
     public function __construct(array $options = [])
@@ -52,7 +52,7 @@ final class DaemonOptions implements DaemonOptionsInterface
         }
     }
 
-    public function getOption($option)
+    public function getOption(string $option)
     {
         if (!isset($this->options[$option])) {
             throw new \InvalidArgumentException('Unknown option: '.$option);

@@ -6,6 +6,7 @@ use PHPFastCGI\FastCGIDaemon\DaemonInterface;
 use PHPFastCGI\FastCGIDaemon\DaemonOptions;
 use PHPFastCGI\FastCGIDaemon\DaemonTrait;
 use PHPFastCGI\FastCGIDaemon\Driver\Userland\Connection\ConnectionPoolInterface;
+use PHPFastCGI\FastCGIDaemon\Driver\Userland\ConnectionHandler\ConnectionHandler;
 use PHPFastCGI\FastCGIDaemon\Driver\Userland\ConnectionHandler\ConnectionHandlerFactoryInterface;
 use PHPFastCGI\FastCGIDaemon\Driver\Userland\Exception\UserlandDaemonException;
 use PHPFastCGI\FastCGIDaemon\Exception\ShutdownException;
@@ -65,7 +66,7 @@ final class UserlandDaemon implements DaemonInterface
     /**
      * {@inheritdoc}
      */
-    public function run()
+    public function run(): void
     {
         $this->setupDaemon($this->daemonOptions);
         $this->daemonOptions->getOption(DaemonOptions::LOGGER)->notice('Daemon is running and ready to accept connections');
@@ -93,8 +94,10 @@ final class UserlandDaemon implements DaemonInterface
      * Wait for connections in the pool to become readable. Create connection
      * handlers for new connections and trigger the ready method when there is
      * data for the handlers to receive. Clean up closed connections.
+     *
+     * @throws \Exception
      */
-    private function processConnectionPool()
+    private function processConnectionPool(): void
     {
         $readableConnections = $this->connectionPool->getReadableConnections(5);
 
@@ -118,8 +121,10 @@ final class UserlandDaemon implements DaemonInterface
 
     /**
      * Gracefully shutdown the daemon.
+     *
+     * @throws \Exception
      */
-    private function shutdown()
+    private function shutdown(): void
     {
         $this->connectionPool->shutdown();
 

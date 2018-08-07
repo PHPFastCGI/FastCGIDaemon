@@ -6,6 +6,7 @@ use PHPFastCGI\FastCGIDaemon\Command\DaemonRunCommand;
 use PHPFastCGI\FastCGIDaemon\Driver\DriverContainer;
 use PHPFastCGI\FastCGIDaemon\Driver\DriverContainerInterface;
 use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Command\Command;
 
 /**
  * The default implementation of the ApplicationFactoryInterface.
@@ -30,7 +31,7 @@ final class ApplicationFactory implements ApplicationFactoryInterface
     /**
      * {@inheritdoc}
      */
-    public function createApplication($kernel, $commandName = null, $commandDescription = null)
+    public function createApplication($kernel, string $commandName = null, string $commandDescription = null): Application
     {
         $command = $this->createCommand($kernel, $commandName, $commandDescription);
 
@@ -43,7 +44,7 @@ final class ApplicationFactory implements ApplicationFactoryInterface
     /**
      * {@inheritdoc}
      */
-    public function createCommand($kernel, $commandName = null, $commandDescription = null)
+    public function createCommand($kernel, string $commandName = null, string $commandDescription = null): Command
     {
         $kernelObject = $this->getKernelObject($kernel);
 
@@ -60,7 +61,7 @@ final class ApplicationFactory implements ApplicationFactoryInterface
      *
      * @return KernelInterface The kernel as an object implementing the KernelInterface
      */
-    private function getKernelObject($kernel)
+    private function getKernelObject($kernel): KernelInterface
     {
         if ($kernel instanceof KernelInterface) {
             return $kernel;

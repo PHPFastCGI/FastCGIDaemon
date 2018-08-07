@@ -22,5 +22,5 @@ interface DaemonOptionsInterface
      *
      * @throws \InvalidArgumentException On unrecognised option
      */
-    public function getOption($option);
+    public function getOption(string $option);
 }

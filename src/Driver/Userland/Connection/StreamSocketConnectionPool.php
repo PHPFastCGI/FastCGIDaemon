@@ -19,7 +19,7 @@ final class StreamSocketConnectionPool implements ConnectionPoolInterface
     private $clientSockets;
 
     /**
-     * @var Connection[]
+     * @var ConnectionInterface[]
      */
     private $connections;
 
@@ -47,7 +47,7 @@ final class StreamSocketConnectionPool implements ConnectionPoolInterface
     /**
      * {@inheritdoc}
      */
-    public function getReadableConnections($timeout)
+    public function getReadableConnections(int $timeout): array
     {
         $this->removeClosedConnections();
 
@@ -76,7 +76,7 @@ final class StreamSocketConnectionPool implements ConnectionPoolInterface
     /**
      * {@inheritdoc}
      */
-    public function count()
+    public function count(): int
     {
         $this->removeClosedConnections();
 
@@ -86,7 +86,7 @@ final class StreamSocketConnectionPool implements ConnectionPoolInterface
     /**
      * {@inheritdoc}
      */
-    public function shutdown()
+    public function shutdown(): void
     {
         $this->shutdown = true;
     }
@@ -94,7 +94,7 @@ final class StreamSocketConnectionPool implements ConnectionPoolInterface
     /**
      * {@inheritdoc}
      */
-    public function close()
+    public function close(): void
     {
         $this->removeClosedConnections();
 
@@ -115,7 +115,7 @@ final class StreamSocketConnectionPool implements ConnectionPoolInterface
      * @param resource[] $readSockets The sockets to test for readability (output parameter)
      * @param int        $timeout     The stream select call timeout
      */
-    private function selectConnections(&$readSockets, $timeout)
+    private function selectConnections(&$readSockets, int $timeout): void
     {
         // stream_select will not always preserve array keys
         // call it with a (deep) copy so the original is preserved
@@ -145,7 +145,7 @@ final class StreamSocketConnectionPool implements ConnectionPoolInterface
     /**
      * Accept incoming connections from the server stream socket.
      */
-    private function acceptConnection()
+    private function acceptConnection(): void
     {
         $clientSocket = @stream_socket_accept($this->serverSocket);
 
@@ -161,10 +161,7 @@ final class StreamSocketConnectionPool implements ConnectionPoolInterface
         }
     }
 
-    /**
-     * Remove connections.
-     */
-    private function removeClosedConnections()
+    private function removeClosedConnections(): void
     {
         foreach ($this->connections as $id => $connection) {
             if ($connection->isClosed()) {

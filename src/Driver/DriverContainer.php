@@ -2,6 +2,8 @@
 
 namespace PHPFastCGI\FastCGIDaemon\Driver;
 
+use PHPFastCGI\FastCGIDaemon\DaemonFactoryInterface;
+
 final class DriverContainer implements DriverContainerInterface
 {
     /**
@@ -25,7 +27,7 @@ final class DriverContainer implements DriverContainerInterface
     /**
      * {@inheritdoc}
      */
-    public function getFactory($driver)
+    public function getFactory(string $driver): DaemonFactoryInterface
     {
         if (!isset($this->drivers[$driver])) {
             throw new \InvalidArgumentException('Unknown driver: '.$driver);

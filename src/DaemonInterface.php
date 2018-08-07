@@ -46,13 +46,13 @@ interface DaemonInterface
      *
      * @throws \Exception On fatal error
      */
-    public function run();
+    public function run(): void;
 
     /**
      * Flag the daemon for shutting down. This will stop it from accepting
      * requests.
-     * 
+     *
      * @param string|null Optional message.
      */
-    public function flagShutdown($message = null);
+    public function flagShutdown(string $message = null): void;
 }

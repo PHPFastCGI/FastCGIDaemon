@@ -3,6 +3,7 @@
 namespace PHPFastCGI\FastCGIDaemon\Http;
 
 use Nyholm\Psr7Server\ServerRequestCreatorInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Symfony\Component\HttpFoundation\Request as HttpFoundationRequest;
 
 /**
@@ -67,7 +68,7 @@ final class Request implements RequestInterface
     /**
      * {@inheritdoc}
      */
-    public function getParams()
+    public function getParams(): array
     {
         return $this->params;
     }
@@ -108,7 +109,7 @@ final class Request implements RequestInterface
     /**
      * {@inheritdoc}
      */
-    public function getQuery()
+    public function getQuery(): array
     {
         $query = null;
 
@@ -122,7 +123,7 @@ final class Request implements RequestInterface
     /**
      * {@inheritdoc}
      */
-    public function getPost()
+    public function getPost(): array
     {
         $post = null;
 
@@ -150,7 +151,7 @@ final class Request implements RequestInterface
         return $post ?: [];
     }
 
-    private function parseMultipartFormData($stream, $boundary) {
+    private function parseMultipartFormData($stream, string $boundary): array {
         $post = "";
         $files = [];
         $fieldType = $fieldName = $filename = $mimeType = null;
@@ -208,7 +209,7 @@ final class Request implements RequestInterface
     /**
      * {@inheritdoc}
      */
-    public function getCookies()
+    public function getCookies(): array
     {
         $cookies = [];
 
@@ -235,7 +236,7 @@ final class Request implements RequestInterface
     /**
      * {@inheritdoc}
      */
-    public function getServerRequest()
+    public function getServerRequest(): ServerRequestInterface
     {
         if (null === self::$serverRequestCreator) {
             throw new \RuntimeException('You need to add an object of \Nyholm\Psr7Server\ServerRequestCreatorInterface to \PHPFastCGI\FastCGIDaemon\Http\Request::setServerRequestCreator to use PSR-7 requests. Please install and read more at https://github.com/nyholm/psr7-server');
@@ -262,7 +263,7 @@ final class Request implements RequestInterface
     /**
      * {@inheritdoc}
      */
-    public function getHttpFoundationRequest()
+    public function getHttpFoundationRequest(): HttpFoundationRequest
     {
         if (!class_exists(HttpFoundationRequest::class)) {
             throw new \RuntimeException('You need to install symfony/http-foundation:^4.0 to use HttpFoundation requests.');

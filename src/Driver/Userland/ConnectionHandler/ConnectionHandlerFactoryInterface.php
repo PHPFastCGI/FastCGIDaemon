@@ -19,5 +19,5 @@ interface ConnectionHandlerFactoryInterface
      *
      * @return ConnectionHandlerInterface The connection handler
      */
-    public function createConnectionHandler(KernelInterface $kernel, ConnectionInterface $connection);
+    public function createConnectionHandler(KernelInterface $kernel, ConnectionInterface $connection): ConnectionHandlerInterface;
 }
