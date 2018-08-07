@@ -24,7 +24,7 @@ There is also an un-official [ZF2 Adapter](https://github.com/Okeanrst/FastCGIZF
 
 ## Current Status
 
-This project is currently in early stages of development and not considered stable. Importantly, this library currently lacks support for uploaded files.
+This project is currently in early stages of development and not considered stable.
 
 Contributions and suggestions are welcome.
 
