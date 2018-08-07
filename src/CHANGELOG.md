@@ -8,7 +8,6 @@ chronological order by release.
 ### Added
 
 - Added support for Symfony4
-- All classes are final
 - `DaemonOptionsInterface`
 - Added support for file uploads and multiple file uploads
 - Added support for any PSR-7 implementation by using a PSR-17 HTTP Factory.  
@@ -16,6 +15,7 @@ chronological order by release.
 ### Changed
 
 - Renamed `CallbackWrapper` to `CallbackKernel`.
+- All classes are final
 
 ### Removed
 
@@ -27,7 +27,6 @@ chronological order by release.
 ### Fixed
 
 - Large POST request should not fail
-
 
 ## 0.10.0
 
