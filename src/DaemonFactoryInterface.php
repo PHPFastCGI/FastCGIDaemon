@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PHPFastCGI\FastCGIDaemon;
 
 /**
@@ -18,7 +20,7 @@ interface DaemonFactoryInterface
      *
      * @return DaemonInterface The FastCGI daemon
      */
-    public function createDaemon(KernelInterface $kernel, DaemonOptions $options, $fd = DaemonInterface::FCGI_LISTENSOCK_FILENO);
+    public function createDaemon(KernelInterface $kernel, DaemonOptions $options, int $fd = DaemonInterface::FCGI_LISTENSOCK_FILENO): DaemonInterface;
 
     /**
      * Create a FastCGI daemon listening on a given address. The default host is
@@ -31,5 +33,5 @@ interface DaemonFactoryInterface
      *
      * @return DaemonInterface The FastCGI daemon
      */
-    public function createTcpDaemon(KernelInterface $kernel, DaemonOptions $options, $host, $port);
+    public function createTcpDaemon(KernelInterface $kernel, DaemonOptions $options, string $host, int $port): DaemonInterface;
 }

@@ -9,23 +9,23 @@ class MockConnectionPool implements ConnectionPoolInterface
 {
     use MockerTrait;
 
-    public function getReadableConnections($timeout)
+    public function getReadableConnections(int $timeout): array
     {
         return $this->delegateCall('getReadableConnections', func_get_args());
     }
 
-    public function count()
+    public function count(): int
     {
         return $this->delegateCall('count', func_get_args());
     }
 
-    public function shutdown()
+    public function shutdown(): void
     {
-        return $this->delegateCall('shutdown', func_get_args());
+        $this->delegateCall('shutdown', func_get_args());
     }
 
-    public function close()
+    public function close(): void
     {
-        return $this->delegateCall('close', func_get_args());
+        $this->delegateCall('close', func_get_args());
     }
 }

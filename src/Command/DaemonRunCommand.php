@@ -1,9 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PHPFastCGI\FastCGIDaemon\Command;
 
 use PHPFastCGI\FastCGIDaemon\DaemonInterface;
 use PHPFastCGI\FastCGIDaemon\DaemonOptions;
+use PHPFastCGI\FastCGIDaemon\DaemonOptionsInterface;
 use PHPFastCGI\FastCGIDaemon\Driver\DriverContainerInterface;
 use PHPFastCGI\FastCGIDaemon\KernelInterface;
 use Symfony\Component\Console\Command\Command;
@@ -70,9 +73,9 @@ class DaemonRunCommand extends Command
      * @param InputInterface  $input  The  Symfony command input
      * @param OutputInterface $output The Symfony command output
      *
-     * @return DaemonOptions The daemon configuration
+     * @return DaemonOptionsInterface The daemon configuration
      */
-    private function getDaemonOptions(InputInterface $input, OutputInterface $output)
+    private function getDaemonOptions(InputInterface $input, OutputInterface $output): DaemonOptionsInterface
     {
         $logger = new ConsoleLogger($output);
 

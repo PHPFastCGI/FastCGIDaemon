@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PHPFastCGI\FastCGIDaemon\Driver\Userland\Connection;
 
 /**
@@ -19,7 +21,7 @@ final class StreamSocketConnectionPool implements ConnectionPoolInterface
     private $clientSockets;
 
     /**
-     * @var Connection[]
+     * @var ConnectionInterface[]
      */
     private $connections;
 
@@ -35,7 +37,7 @@ final class StreamSocketConnectionPool implements ConnectionPoolInterface
      */
     public function __construct($socket)
     {
-        stream_set_blocking($socket, 0);
+        stream_set_blocking($socket, false);
 
         $this->serverSocket  = $socket;
         $this->clientSockets = [];
@@ -47,7 +49,7 @@ final class StreamSocketConnectionPool implements ConnectionPoolInterface
     /**
      * {@inheritdoc}
      */
-    public function getReadableConnections($timeout)
+    public function getReadableConnections(int $timeout): array
     {
         $this->removeClosedConnections();
 
@@ -76,7 +78,7 @@ final class StreamSocketConnectionPool implements ConnectionPoolInterface
     /**
      * {@inheritdoc}
      */
-    public function count()
+    public function count(): int
     {
         $this->removeClosedConnections();
 
@@ -86,7 +88,7 @@ final class StreamSocketConnectionPool implements ConnectionPoolInterface
     /**
      * {@inheritdoc}
      */
-    public function shutdown()
+    public function shutdown(): void
     {
         $this->shutdown = true;
     }
@@ -94,7 +96,7 @@ final class StreamSocketConnectionPool implements ConnectionPoolInterface
     /**
      * {@inheritdoc}
      */
-    public function close()
+    public function close(): void
     {
         $this->removeClosedConnections();
 
@@ -115,7 +117,7 @@ final class StreamSocketConnectionPool implements ConnectionPoolInterface
      * @param resource[] $readSockets The sockets to test for readability (output parameter)
      * @param int        $timeout     The stream select call timeout
      */
-    private function selectConnections(&$readSockets, $timeout)
+    private function selectConnections(&$readSockets, int $timeout): void
     {
         // stream_select will not always preserve array keys
         // call it with a (deep) copy so the original is preserved
@@ -145,12 +147,12 @@ final class StreamSocketConnectionPool implements ConnectionPoolInterface
     /**
      * Accept incoming connections from the server stream socket.
      */
-    private function acceptConnection()
+    private function acceptConnection(): void
     {
         $clientSocket = @stream_socket_accept($this->serverSocket);
 
         if (false !== $clientSocket) {
-            stream_set_blocking($clientSocket, 0);
+            stream_set_blocking($clientSocket, false);
 
             $connection = new StreamSocketConnection($clientSocket);
 
@@ -161,10 +163,7 @@ final class StreamSocketConnectionPool implements ConnectionPoolInterface
         }
     }
 
-    /**
-     * Remove connections.
-     */
-    private function removeClosedConnections()
+    private function removeClosedConnections(): void
     {
         foreach ($this->connections as $id => $connection) {
             if ($connection->isClosed()) {

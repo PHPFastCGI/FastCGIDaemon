@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PHPFastCGI\FastCGIDaemon\Driver\Userland;
 
 use PHPFastCGI\FastCGIDaemon\DaemonInterface;
@@ -26,7 +28,7 @@ final class UserlandDaemonFactory implements DaemonFactoryInterface
      *
      * @codeCoverageIgnore The FastCGI daemon
      */
-    public function createDaemon(KernelInterface $kernel, DaemonOptions $options, $fd = DaemonInterface::FCGI_LISTENSOCK_FILENO)
+    public function createDaemon(KernelInterface $kernel, DaemonOptions $options, int $fd = DaemonInterface::FCGI_LISTENSOCK_FILENO): DaemonInterface
     {
         $socket = fopen('php://fd/'.$fd, 'r');
 
@@ -51,7 +53,7 @@ final class UserlandDaemonFactory implements DaemonFactoryInterface
      *
      * @codeCoverageIgnore
      */
-    public function createTcpDaemon(KernelInterface $kernel, DaemonOptions $options, $host, $port)
+    public function createTcpDaemon(KernelInterface $kernel, DaemonOptions $options, string $host, int $port): DaemonInterface
     {
         $address = 'tcp://'.$host.':'.$port;
         $socket  = stream_socket_server($address);
@@ -73,7 +75,7 @@ final class UserlandDaemonFactory implements DaemonFactoryInterface
      *
      * @return UserlandDaemon The FastCGI daemon
      */
-    public function createDaemonFromStreamSocket(KernelInterface $kernel, DaemonOptions $options, $socket)
+    public function createDaemonFromStreamSocket(KernelInterface $kernel, DaemonOptions $options, $socket): DaemonInterface
     {
         $connectionPool           = new StreamSocketConnectionPool($socket);
         $connectionHandlerFactory = new ConnectionHandlerFactory();

@@ -18,7 +18,7 @@ class CallbackKernelTest extends TestCase
      */
     public function testInvalidArgumentException()
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(\TypeError::class);
         new CallbackKernel('not a callable function');
     }
 

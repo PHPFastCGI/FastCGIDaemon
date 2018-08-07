@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PHPFastCGI\FastCGIDaemon;
 
 interface DaemonOptionsInterface
@@ -22,5 +24,5 @@ interface DaemonOptionsInterface
      *
      * @throws \InvalidArgumentException On unrecognised option
      */
-    public function getOption($option);
+    public function getOption(string $option);
 }

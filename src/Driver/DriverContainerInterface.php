@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PHPFastCGI\FastCGIDaemon\Driver;
 
 use PHPFastCGI\FastCGIDaemon\DaemonFactoryInterface;
@@ -13,5 +15,5 @@ interface DriverContainerInterface
      *
      * @return DaemonFactoryInterface The daemon factory for the driver
      */
-    public function getFactory($driver);
+    public function getFactory(string $driver): DaemonFactoryInterface;
 }

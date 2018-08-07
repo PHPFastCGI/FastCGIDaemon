@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PHPFastCGI\FastCGIDaemon\Http;
 
 use Psr\Http\Message\ServerRequestInterface;
@@ -16,28 +18,22 @@ interface RequestInterface
      *
      * @return array Associative array of FastCGI request params
      */
-    public function getParams();
+    public function getParams(): array;
 
     /**
      * Returns expected contents of $_GET superglobal array.
-     *
-     * @return array
      */
-    public function getQuery();
+    public function getQuery(): array;
 
     /**
      * Returns expected contents of $_POST superglobal array.
-     *
-     * @return array
      */
-    public function getPost();
+    public function getPost(): array;
 
     /**
      * Returns expected contents of $_COOKIES superglobal.
-     *
-     * @return array
      */
-    public function getCookies();
+    public function getCookies(): array;
 
     /**
      * Get the FastCGI stdin data.
@@ -48,15 +44,11 @@ interface RequestInterface
 
     /**
      * Get the request as a PSR-7 server request.
-     *
-     * @return ServerRequestInterface The request object
      */
-    public function getServerRequest();
+    public function getServerRequest(): ServerRequestInterface;
 
     /**
      * Get the request as a Symfony HttpFoundation request.
-     *
-     * @return HttpFoundationRequest The request object
      */
-    public function getHttpFoundationRequest();
+    public function getHttpFoundationRequest(): HttpFoundationRequest;
 }

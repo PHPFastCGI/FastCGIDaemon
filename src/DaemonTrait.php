@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PHPFastCGI\FastCGIDaemon;
 
 use PHPFastCGI\FastCGIDaemon\Exception\ShutdownException;
@@ -38,10 +40,10 @@ trait DaemonTrait
 
     /**
      * Flags the daemon for shutting down.
-     * 
+     *
      * @param string $message Optional shutdown message
      */
-    public function flagShutdown($message = null)
+    public function flagShutdown(string $message = null): void
     {
         $this->isShutdown = true;
         $this->shutdownMessage = (null === $message ? 'Daemon flagged for shutdown' : $message);
@@ -51,9 +53,9 @@ trait DaemonTrait
      * Loads to configuration from the daemon options and installs signal
      * handlers.
      *
-     * @param DaemonOptions $daemonOptions
+     * @param DaemonOptionsInterface $daemonOptions
      */
-    private function setupDaemon(DaemonOptions $daemonOptions)
+    private function setupDaemon(DaemonOptionsInterface $daemonOptions): void
     {
         $this->requestCount = 0;
         $this->requestLimit = $daemonOptions->getOption(DaemonOptions::REQUEST_LIMIT);
@@ -74,7 +76,7 @@ trait DaemonTrait
      *
      * @param int[] $statusCodes The status codes of sent responses
      */
-    private function considerStatusCodes($statusCodes)
+    private function considerStatusCodes(array $statusCodes): void
     {
         $this->requestCount += count($statusCodes);
 
@@ -94,7 +96,7 @@ trait DaemonTrait
      *
      * @throws ShutdownException On receiving a SIGINT or SIGALRM
      */
-    private function installSignalHandlers()
+    private function installSignalHandlers(): void
     {
         declare (ticks = 1);
 
@@ -114,7 +116,7 @@ trait DaemonTrait
      *
      * @throws ShutdownException When limits in the daemon options are exceeded
      */
-    private function checkDaemonLimits()
+    private function checkDaemonLimits(): void
     {
         if ($this->isShutdown) {
             throw new ShutdownException($this->shutdownMessage);

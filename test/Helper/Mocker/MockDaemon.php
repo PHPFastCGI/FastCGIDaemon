@@ -8,13 +8,13 @@ class MockDaemon implements DaemonInterface
 {
     use MockerTrait;
 
-    public function run()
+    public function run(): void
     {
-        return $this->delegateCall('run', func_get_args());
+        $this->delegateCall('run', func_get_args());
     }
 
-    public function flagShutdown($message = null)
+    public function flagShutdown(string $message = null): void
     {
-        return $this->delegateCall('flagShutdown', func_get_args());
+        $this->delegateCall('flagShutdown', func_get_args());
     }
 }

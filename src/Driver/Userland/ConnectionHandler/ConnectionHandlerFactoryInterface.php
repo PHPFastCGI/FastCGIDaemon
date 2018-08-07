@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PHPFastCGI\FastCGIDaemon\Driver\Userland\ConnectionHandler;
 
 use PHPFastCGI\FastCGIDaemon\Driver\Userland\Connection\ConnectionInterface;
@@ -19,5 +21,5 @@ interface ConnectionHandlerFactoryInterface
      *
      * @return ConnectionHandlerInterface The connection handler
      */
-    public function createConnectionHandler(KernelInterface $kernel, ConnectionInterface $connection);
+    public function createConnectionHandler(KernelInterface $kernel, ConnectionInterface $connection): ConnectionHandlerInterface;
 }

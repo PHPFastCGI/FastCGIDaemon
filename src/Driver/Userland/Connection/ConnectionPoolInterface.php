@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PHPFastCGI\FastCGIDaemon\Driver\Userland\Connection;
 
 /**
@@ -19,25 +21,25 @@ interface ConnectionPoolInterface
      * @param int $timeout Upper bound on the amount of time to wair for readable connections
      *
      * @return ConnectionInterface[]
-     * 
+     *
      * @throws \RuntimeException On encountering fatal error
      */
-    public function getReadableConnections($timeout);
+    public function getReadableConnections(int $timeout): array;
 
     /**
      * Returns the number of active connections in the pool.
      *
      * @return int
      */
-    public function count();
+    public function count(): int;
 
     /**
      * Stop the connection pool from accepting new connections.
      */
-    public function shutdown();
+    public function shutdown(): void;
 
     /**
      * Close the connection pool and free any associated resources.
      */
-    public function close();
+    public function close(): void;
 }

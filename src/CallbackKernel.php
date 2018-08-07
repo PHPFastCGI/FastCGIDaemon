@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PHPFastCGI\FastCGIDaemon;
 
 use PHPFastCGI\FastCGIDaemon\Http\RequestInterface;
@@ -22,7 +24,7 @@ final class CallbackKernel implements KernelInterface
      *
      * @throws \InvalidArgumentException When not given callable callback
      */
-    public function __construct($handler)
+    public function __construct(callable $handler)
     {
         if (!is_callable($handler)) {
             throw new \InvalidArgumentException('Handler callback is not callable');

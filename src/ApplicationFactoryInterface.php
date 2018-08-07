@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PHPFastCGI\FastCGIDaemon;
 
 use Symfony\Component\Console\Application;
@@ -20,7 +22,7 @@ interface ApplicationFactoryInterface
      *
      * @return Application The Symfony console application
      */
-    public function createApplication($kernel, $commandName = null, $commandDescription = null);
+    public function createApplication($kernel, string $commandName = null, string $commandDescription = null): Application;
 
     /**
      * Create a Symfony console command.
@@ -31,5 +33,5 @@ interface ApplicationFactoryInterface
      *
      * @return Command The Symfony console command
      */
-    public function createCommand($kernel, $commandName = null, $commandDescription = null);
+    public function createCommand($kernel, string $commandName = null, string $commandDescription = null): Command;
 }

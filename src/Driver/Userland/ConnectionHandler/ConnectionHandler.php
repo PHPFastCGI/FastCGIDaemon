@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PHPFastCGI\FastCGIDaemon\Driver\Userland\ConnectionHandler;
 
 use PHPFastCGI\FastCGIDaemon\DaemonInterface;
@@ -73,7 +75,7 @@ final class ConnectionHandler implements ConnectionHandlerInterface
     /**
      * {@inheritdoc}
      */
-    public function ready()
+    public function ready(): array
     {
         try {
             $data = $this->connection->read(self::READ_LENGTH);
@@ -85,10 +87,10 @@ final class ConnectionHandler implements ConnectionHandlerInterface
 
             $statusCodes = [];
 
-            while (null !== ($record = $this->readRecord())) {
+            while (!empty($record = $this->readRecord())) {
                 $statusCode = $this->processRecord($record);
 
-                if (null != $statusCode) {
+                if (null !== $statusCode) {
                     $statusCodes[] = $statusCode;
                 }
             }
@@ -104,7 +106,7 @@ final class ConnectionHandler implements ConnectionHandlerInterface
     /**
      * {@inheritdoc}
      */
-    public function shutdown()
+    public function shutdown(): void
     {
         $this->shutdown = true;
     }
@@ -112,7 +114,7 @@ final class ConnectionHandler implements ConnectionHandlerInterface
     /**
      * {@inheritdoc}
      */
-    public function close()
+    public function close(): void
     {
         $this->buffer       = null;
         $this->bufferLength = 0;
@@ -131,7 +133,7 @@ final class ConnectionHandler implements ConnectionHandlerInterface
     /**
      * {@inheritdoc}
      */
-    public function isClosed()
+    public function isClosed(): bool
     {
         return $this->closed;
     }
@@ -142,13 +144,13 @@ final class ConnectionHandler implements ConnectionHandlerInterface
     /**
      * Read a record from the connection.
      *
-     * @return array|null The record that has been read
+     * @return array The record that has been read
      */
-    private function readRecord()
+    private function readRecord(): array
     {
         // Not enough data to read header
         if ($this->bufferLength < 8) {
-            return;
+            return [];
         }
 
         $headerData = substr($this->buffer, 0, 8);
@@ -159,7 +161,7 @@ final class ConnectionHandler implements ConnectionHandlerInterface
 
         // Not enough data to read rest of record
         if ($this->bufferLength - 8 < $record['contentLength'] + $record['paddingLength']) {
-            return;
+            return [];
         }
 
         $record['contentData'] = substr($this->buffer, 8, $record['contentLength']);
@@ -178,11 +180,11 @@ final class ConnectionHandler implements ConnectionHandlerInterface
      *
      * @param array $record The record that has been read
      *
-     * @return int Number of dispatched requests
+     * @return null|int Number of dispatched requests
      *
      * @throws ProtocolException If the client sends an unexpected record.
      */
-    private function processRecord(array $record)
+    private function processRecord(array $record): ?int
     {
         $requestId = $record['requestId'];
 
@@ -193,7 +195,7 @@ final class ConnectionHandler implements ConnectionHandlerInterface
         } elseif (!isset($this->requests[$requestId])) {
             throw new ProtocolException('Invalid request id for record of type: '.$record['type']);
         } elseif (DaemonInterface::FCGI_PARAMS === $record['type']) {
-            while (strlen($content) > 0) {
+            while (null !== $content && strlen($content) > 0) {
                 $this->readNameValuePair($requestId, $content);
             }
         } elseif (DaemonInterface::FCGI_STDIN === $record['type']) {
@@ -216,11 +218,11 @@ final class ConnectionHandler implements ConnectionHandlerInterface
      * Process a FCGI_BEGIN_REQUEST record.
      *
      * @param int    $requestId   The request id sending the record
-     * @param string $contentData The content of the record
+     * @param null|string $contentData The content of the record
      *
      * @throws ProtocolException If the FCGI_BEGIN_REQUEST record is unexpected
      */
-    private function processBeginRequestRecord($requestId, $contentData)
+    private function processBeginRequestRecord(int $requestId, ?string $contentData): void
     {
         if (isset($this->requests[$requestId])) {
             throw new ProtocolException('Unexpected FCGI_BEGIN_REQUEST record');
@@ -255,9 +257,9 @@ final class ConnectionHandler implements ConnectionHandlerInterface
      * Read a FastCGI name-value pair from a buffer and add it to the request params.
      *
      * @param int    $requestId The request id that sent the name-value pair
-     * @param string $buffer    The buffer to read the pair from (pass by reference)
+     * @param null|string $buffer    The buffer to read the pair from (pass by reference)
      */
-    private function readNameValuePair($requestId, &$buffer)
+    private function readNameValuePair(int $requestId, ?string &$buffer): void
     {
         $nameLength  = $this->readFieldLength($buffer);
         $valueLength = $this->readFieldLength($buffer);
@@ -280,7 +282,7 @@ final class ConnectionHandler implements ConnectionHandlerInterface
      *
      * @return int The length of the field
      */
-    private function readFieldLength(&$buffer)
+    private function readFieldLength(string &$buffer): int
     {
         $block  = unpack('C4', $buffer);
 
@@ -306,7 +308,7 @@ final class ConnectionHandler implements ConnectionHandlerInterface
      * @param int $appStatus      The application status to declare
      * @param int $protocolStatus The protocol status to declare
      */
-    private function endRequest($requestId, $appStatus = 0, $protocolStatus = DaemonInterface::FCGI_REQUEST_COMPLETE)
+    private function endRequest(int $requestId, int $appStatus = 0, int $protocolStatus = DaemonInterface::FCGI_REQUEST_COMPLETE): void
     {
         $content = pack('NCx3', $appStatus, $protocolStatus);
         $this->writeRecord($requestId, DaemonInterface::FCGI_END_REQUEST, $content);
@@ -329,7 +331,7 @@ final class ConnectionHandler implements ConnectionHandlerInterface
      * @param int    $type      The type of record
      * @param string $content   The content of the record
      */
-    private function writeRecord($requestId, $type, $content = null)
+    private function writeRecord(int $requestId, int $type, string $content = null): void
     {
         $contentLength = null === $content ? 0 : strlen($content);
 
@@ -349,7 +351,7 @@ final class ConnectionHandler implements ConnectionHandlerInterface
      * @param string   $headerData The header -data to write (including terminating CRLFCRLF)
      * @param resource $stream     The stream to write
      */
-    private function writeResponse($requestId, $headerData, $stream)
+    private function writeResponse(int $requestId, string $headerData, $stream): void
     {
         $data = $headerData;
         $eof  = false;
@@ -380,9 +382,11 @@ final class ConnectionHandler implements ConnectionHandlerInterface
      *
      * @param int $requestId The request id that is ready to dispatch
      *
+     * @return int status code from the response.
+     *
      * @throws \LogicException If the kernel doesn't return a valid response
      */
-    private function dispatchRequest($requestId)
+    private function dispatchRequest(int $requestId): int
     {
         $request = new Request(
             $this->requests[$requestId]['params'],
@@ -415,7 +419,7 @@ final class ConnectionHandler implements ConnectionHandlerInterface
      * @param int               $requestId The request id to respond to
      * @param ResponseInterface $response  The PSR-7 HTTP response message
      */
-    private function sendResponse($requestId, ResponseInterface $response)
+    private function sendResponse(int $requestId, ResponseInterface $response): void
     {
         $statusCode   = $response->getStatusCode();
         $reasonPhrase = $response->getReasonPhrase();
@@ -437,7 +441,7 @@ final class ConnectionHandler implements ConnectionHandlerInterface
      * @param int                    $requestId The request id to respond to
      * @param HttpFoundationResponse $response  The HTTP foundation response message
      */
-    private function sendHttpFoundationResponse($requestId, HttpFoundationResponse $response)
+    private function sendHttpFoundationResponse(int $requestId, HttpFoundationResponse $response): void
     {
         $statusCode = $response->getStatusCode();
 
