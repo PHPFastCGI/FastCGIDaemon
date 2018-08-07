@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PHPFastCGI\FastCGIDaemon\Driver;
 
 use PHPFastCGI\FastCGIDaemon\DaemonFactoryInterface;

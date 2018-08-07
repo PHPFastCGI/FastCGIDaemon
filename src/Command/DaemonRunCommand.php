@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PHPFastCGI\FastCGIDaemon\Command;
 
 use PHPFastCGI\FastCGIDaemon\DaemonInterface;
