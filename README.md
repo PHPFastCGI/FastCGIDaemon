@@ -33,7 +33,7 @@ Contributions and suggestions are welcome.
 Below is an example of a simple 'Hello, World!' FastCGI application in PHP.
 
 ```php
-<?php // command.php
+<?php // fastCGI_app.php
 
 // Include the composer autoloader
 require_once dirname(__FILE__) . '/../vendor/autoload.php';
@@ -60,9 +60,14 @@ $application->run();
 
 ### NGINX
 
-With NGINX, you need to use a process manager such as [supervisord](http://supervisord.org/) to manage instances of your application. Have a look at [AstroSplash](http://astrosplash.com/) for an [example supervisord configuration](https://github.com/AndrewCarterUK/AstroSplash/blob/master/supervisord.conf).
+With NGINX, you need to use a process manager such as [supervisord](http://supervisord.org/)
+to manage instances of your application. Have a look at [AstroSplash](http://astrosplash.com/)
+for an [example supervisord configuration](https://github.com/AndrewCarterUK/AstroSplash/blob/master/supervisord.conf).
 
-Below is an example of the modification that you would make to the [Symfony NGINX configuration](https://www.nginx.com/resources/wiki/start/topics/recipes/symfony/). The core principle is to replace the PHP-FPM reference with one to a cluster of workers.
+Below is an example of the modification that you would make to the 
+[Symfony NGINX configuration](https://www.nginx.com/resources/wiki/start/topics/recipes/symfony/). 
+The core principle is to replace the PHP-FPM reference with one to a cluster of 
+workers.
 
 ```nginx
 # This shows the modifications that you would make to the Symfony NGINX configuration
@@ -91,16 +96,8 @@ server {
 
 If you are using Apache 2.4.10 or later you need to use [mod_proxy_fcgi](https://httpd.apache.org/docs/2.4/mod/mod_proxy_fcgi.html). 
 You need to use a process manager such as [supervisord](http://supervisord.org/) to manage instances of your application.
-For development you only need to start you application with:
-
-```sh
-php /path/to/application.php run --port=5000 --host=localhost
-
-# Or with Symfony:
-php /path/to/bin/console speedfony:run --env=prod --port=5000 --host=localhost
-```
-
-Then add the following to your VirtualHost config: 
+For development you only need to start you application (see [Running the server](#running-the-server))  then add the 
+following to your VirtualHost config: 
 
 ```
 <FilesMatch ^index\.php$>
@@ -114,41 +111,118 @@ to exist but could be an empty file.
 
 ### Apache 2.0 - 2.2
 
-If you wish to configure your FastCGI application to work with the apache web server, you can use the apache FastCGI module to process manage your application.
+If you wish to configure your FastCGI application to work with the apache web server, 
+you can use the apache FastCGI module to process manage your application.
 
-This can be done by creating a FCGI script that launches your application and inserting a FastCgiServer directive into your virtual host configuration.
+This can be done by creating a FCGI script that launches your application and inserting 
+a FastCgiServer directive into your virtual host configuration.
 
 Here is an example `script.fcgi`:
 
 ```sh
 #!/bin/bash
+
+# Run the server
 php /path/to/application.php run
 ```
 
-Or with Symfony:
+See other commands to run the server [here](#running-the-server).
 
-```sh
-#!/bin/bash
-php /path/to/bin/console speedfony:run --env=prod
-```
 
-In your configuration, you can use the [FastCgiServer](https://web.archive.org/web/20150913190020/http://www.fastcgi.com/mod_fastcgi/docs/mod_fastcgi.html#FastCgiServer) directive to inform Apache of your application.
+In your configuration, you can use the [FastCgiServer](https://web.archive.org/web/20150913190020/http://www.fastcgi.com/mod_fastcgi/docs/mod_fastcgi.html#FastCgiServer) 
+directive to inform Apache of your application.
 
 ```
 FastCgiServer /path/to/script.fcgi
 ```
 
-By default, the daemon will listen on FCGI_LISTENSOCK_FILENO, but it can also be configured to listen on a TCP address. For example:
+## Running the server
 
+Depending on your setup, you will have different ways of running the server. In
+a normal PHP application where you have created your own `fastCGI_app.php` ([see how](#usage)),
+you may start the server simply by: 
 
-```sh
-#!/bin/bash
-php /path/to/application.php run --port=5000 --host=localhost
+```bash
+php /path/to/fastCGI_app.php run
 ```
 
-Or with Symfony:
+In a Symfony application where you have registered `DaemonRunCommand` as a service, 
+you may just run: 
 
-```sh
-#!/bin/bash
-php /path/to/bin/console speedfony:run --env=prod --port=5000 --host=localhost
+```bash
+# If installed with Symfony Flex
+./bin/console fastcgi-daemon:run
+
+# If you use https://github.com/PHPFastCGI/SpeedfonyBundle (deprecated)
+./bin/console speedfony:run 
+```
+
+### Command options
+
+When you run the command you have a few option you could pass to it. 
+
+#### Auto shutdown
+
+`--auto-shutdown` 
+
+Perform a graceful shutdown after receiving a 5XX HTTP status code.
+
+#### Driver
+
+`--driver userland` 
+
+The implementation of the FastCGI protocol to use.
+
+#### File descriptor
+
+`--fd 4711` 
+
+File descriptor to listen on - defaults to FCGI_LISTENSOCK_FILENO.
+
+#### Host
+
+`--host 127.0.0.1` 
+
+TCP host to listen on.
+
+#### Memory Limit
+
+`--memory-limit 256m` 
+
+The memory limit on the daemon instance before shutting down.
+
+#### Port
+
+`--port 5000` 
+
+TCP port to listen on (if not present, daemon will listen on FCGI_LISTENSOCK_FILENO).
+
+#### Quiet
+
+`--quiet` 
+
+Reduces the number of log output in the console. 
+
+#### Request limit
+
+`--request-limit 56` 
+
+The maximum number of requests to handle before shutting down.
+
+#### Time limit
+
+`--time-limit 120` 
+
+The time limit on the daemon in seconds before shutting down.
+
+#### Verbose
+
+`--verbose` or `-v`
+
+Increases the log output in the console. 
+
+### Example run
+
+```bash
+./bin/console fastcgi-daemon:run --port=5000 --host=127.0.0.1 -v
 ```
