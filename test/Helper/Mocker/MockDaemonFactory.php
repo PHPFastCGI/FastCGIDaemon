@@ -11,12 +11,12 @@ class MockDaemonFactory implements DaemonFactoryInterface
 {
     use MockerTrait;
 
-    public function createDaemon(KernelInterface $kernel, DaemonOptions $options, $fd = DaemonInterface::FCGI_LISTENSOCK_FILENO)
+    public function createDaemon(KernelInterface $kernel, DaemonOptions $options, int $fd = DaemonInterface::FCGI_LISTENSOCK_FILENO): DaemonInterface
     {
         return $this->delegateCall('createDaemon', func_get_args());
     }
 
-    public function createTcpDaemon(KernelInterface $kernel, DaemonOptions $options, $port, $host = 'localhost')
+    public function createTcpDaemon(KernelInterface $kernel, DaemonOptions $options, string $host = 'localhost', int $port): DaemonInterface
     {
         return $this->delegateCall('createTcpDaemon', func_get_args());
     }

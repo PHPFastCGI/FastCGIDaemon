@@ -37,7 +37,7 @@ final class StreamSocketConnectionPool implements ConnectionPoolInterface
      */
     public function __construct($socket)
     {
-        stream_set_blocking($socket, 0);
+        stream_set_blocking($socket, false);
 
         $this->serverSocket  = $socket;
         $this->clientSockets = [];
@@ -152,7 +152,7 @@ final class StreamSocketConnectionPool implements ConnectionPoolInterface
         $clientSocket = @stream_socket_accept($this->serverSocket);
 
         if (false !== $clientSocket) {
-            stream_set_blocking($clientSocket, 0);
+            stream_set_blocking($clientSocket, false);
 
             $connection = new StreamSocketConnection($clientSocket);
 

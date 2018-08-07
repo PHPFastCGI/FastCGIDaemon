@@ -9,22 +9,22 @@ class MockConnectionHandler implements ConnectionHandlerInterface
 {
     use MockerTrait;
 
-    public function ready()
+    public function ready(): array
     {
         return $this->delegateCall('ready', func_get_args());
     }
 
-    public function shutdown()
+    public function shutdown(): void
     {
-        return $this->delegateCall('shutdown', func_get_args());
+        $this->delegateCall('shutdown', func_get_args());
     }
 
-    public function close()
+    public function close(): void
     {
-        return $this->delegateCall('close', func_get_args());
+        $this->delegateCall('close', func_get_args());
     }
 
-    public function isClosed()
+    public function isClosed(): bool
     {
         return $this->delegateCall('isClosed', func_get_args());
     }

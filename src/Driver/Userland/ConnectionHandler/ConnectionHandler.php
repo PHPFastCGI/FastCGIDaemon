@@ -90,7 +90,7 @@ final class ConnectionHandler implements ConnectionHandlerInterface
             while (!empty($record = $this->readRecord())) {
                 $statusCode = $this->processRecord($record);
 
-                if (null != $statusCode) {
+                if (null !== $statusCode) {
                     $statusCodes[] = $statusCode;
                 }
             }
@@ -180,11 +180,11 @@ final class ConnectionHandler implements ConnectionHandlerInterface
      *
      * @param array $record The record that has been read
      *
-     * @return int Number of dispatched requests
+     * @return null|int Number of dispatched requests
      *
      * @throws ProtocolException If the client sends an unexpected record.
      */
-    private function processRecord(array $record): int
+    private function processRecord(array $record): ?int
     {
         $requestId = $record['requestId'];
 
@@ -195,7 +195,7 @@ final class ConnectionHandler implements ConnectionHandlerInterface
         } elseif (!isset($this->requests[$requestId])) {
             throw new ProtocolException('Invalid request id for record of type: '.$record['type']);
         } elseif (DaemonInterface::FCGI_PARAMS === $record['type']) {
-            while (strlen($content) > 0) {
+            while (null !== $content && strlen($content) > 0) {
                 $this->readNameValuePair($requestId, $content);
             }
         } elseif (DaemonInterface::FCGI_STDIN === $record['type']) {
@@ -218,11 +218,11 @@ final class ConnectionHandler implements ConnectionHandlerInterface
      * Process a FCGI_BEGIN_REQUEST record.
      *
      * @param int    $requestId   The request id sending the record
-     * @param string $contentData The content of the record
+     * @param null|string $contentData The content of the record
      *
      * @throws ProtocolException If the FCGI_BEGIN_REQUEST record is unexpected
      */
-    private function processBeginRequestRecord(int $requestId, string $contentData): void
+    private function processBeginRequestRecord(int $requestId, ?string $contentData): void
     {
         if (isset($this->requests[$requestId])) {
             throw new ProtocolException('Unexpected FCGI_BEGIN_REQUEST record');
@@ -257,9 +257,9 @@ final class ConnectionHandler implements ConnectionHandlerInterface
      * Read a FastCGI name-value pair from a buffer and add it to the request params.
      *
      * @param int    $requestId The request id that sent the name-value pair
-     * @param string $buffer    The buffer to read the pair from (pass by reference)
+     * @param null|string $buffer    The buffer to read the pair from (pass by reference)
      */
-    private function readNameValuePair(int $requestId, string &$buffer): void
+    private function readNameValuePair(int $requestId, ?string &$buffer): void
     {
         $nameLength  = $this->readFieldLength($buffer);
         $valueLength = $this->readFieldLength($buffer);

@@ -41,7 +41,7 @@ trait MockerTrait
      *
      * @throws \InvalidArgumentException When no callback is set for the method
      */
-    protected function delegateCall($method, $arguments)
+    protected function delegateCall(string $method, array $arguments)
     {
         if (!isset($this->callbacks[$method])) {
             throw new \InvalidArgumentException('Method not configured: '.$method);
@@ -61,7 +61,7 @@ trait MockerTrait
      *
      * @return array The delegated call list
      */
-    public function getDelegatedCalls()
+    public function getDelegatedCalls(): array
     {
         return $this->delegatedCalls;
     }

@@ -9,23 +9,23 @@ class MockConnection implements ConnectionInterface
 {
     use MockerTrait;
 
-    public function read($length)
+    public function read(int $length): string
     {
-        return $this->delegateCall('read', func_get_args());
+        $this->delegateCall('read', func_get_args());
     }
 
-    public function write($buffer)
+    public function write(string $buffer): void
     {
-        return $this->delegateCall('write', func_get_args());
+        $this->delegateCall('write', func_get_args());
     }
 
-    public function isClosed()
+    public function isClosed(): bool
     {
         return $this->delegateCall('isClosed', func_get_args());
     }
 
-    public function close()
+    public function close(): void
     {
-        return $this->delegateCall('close', func_get_args());
+        $this->delegateCall('close', func_get_args());
     }
 }

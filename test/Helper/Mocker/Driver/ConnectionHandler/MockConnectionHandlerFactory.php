@@ -2,6 +2,7 @@
 
 namespace PHPFastCGI\Test\FastCGIDaemon\Helper\Mocker\Driver\ConnectionHandler;
 
+use PHPFastCGI\FastCGIDaemon\Driver\Userland\ConnectionHandler\ConnectionHandlerInterface;
 use PHPFastCGI\FastCGIDaemon\KernelInterface;
 use PHPFastCGI\FastCGIDaemon\Driver\Userland\Connection\ConnectionInterface;
 use PHPFastCGI\FastCGIDaemon\Driver\Userland\ConnectionHandler\ConnectionHandlerFactoryInterface;
@@ -11,7 +12,7 @@ class MockConnectionHandlerFactory implements ConnectionHandlerFactoryInterface
 {
     use MockerTrait;
 
-    public function createConnectionHandler(KernelInterface $kernel, ConnectionInterface $connection)
+    public function createConnectionHandler(KernelInterface $kernel, ConnectionInterface $connection): ConnectionHandlerInterface
     {
         return $this->delegateCall('createConnectionHandler', func_get_args());
     }
