@@ -21,7 +21,7 @@ class MockDaemonFactory implements DaemonFactoryInterface
         return $this->delegateCall('createTcpDaemon', func_get_args());
     }
 
-    public function createDaemonFromStreamSocket(KernelInterface $kernel, DaemonOptions $options, int $socket): DaemonInterface
+    public function createDaemonFromStreamSocket(KernelInterface $kernel, DaemonOptions $options, $socket): DaemonInterface
     {
         return $this->delegateCall('createDaemonFromStreamSocket', func_get_args());
     }

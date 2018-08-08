@@ -45,5 +45,5 @@ interface DaemonFactoryInterface
      *
      * @return DaemonInterface The FastCGI daemon
      */
-    public function createDaemonFromStreamSocket(KernelInterface $kernel, DaemonOptions $options, int $socket): DaemonInterface;
+    public function createDaemonFromStreamSocket(KernelInterface $kernel, DaemonOptions $options, $socket): DaemonInterface;
 }
