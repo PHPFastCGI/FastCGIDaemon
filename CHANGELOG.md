@@ -9,7 +9,6 @@ chronological order by release.
 
 - Added support for Symfony4
 - `DaemonOptionsInterface`
-- `DaemonFactoryInterface::createDaemonFromStreamSocket`
 - Added support for file uploads and multiple file uploads
 - Added support for any PSR-7 implementation by using a PSR-17 HTTP Factory.  
 
