@@ -109,7 +109,7 @@ class DaemonRunCommand extends Command
 
         if (null !== $port) {
             // If we have the port, create a TCP daemon
-            $this->daemon = $daemonFactory->createTcpDaemon($this->kernel, $daemonOptions, $host ?: 'localhost', $port);
+            $this->daemon = $daemonFactory->createTcpDaemon($this->kernel, $daemonOptions, $host ?: 'localhost', (int) $port);
         } elseif (null !== $host) {
             // If we have the host but not the port, we cant create a TCP daemon - throw exception
             throw new \InvalidArgumentException('TCP port option must be set if host option is set');
