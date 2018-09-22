@@ -98,7 +98,7 @@ class DaemonRunCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $port = $input->getOption('port');
+        $port = (int) $input->getOption('port');
         $host = $input->getOption('host');
         $fd = $input->getOption('fd');
 
