@@ -115,7 +115,7 @@ class DaemonRunCommand extends Command
             throw new \InvalidArgumentException('TCP port option must be set if host option is set');
         } else {
             // With no host or port, listen on FCGI_LISTENSOCK_FILENO (default)
-            $this->daemon = $daemonFactory->createDaemon($this->kernel, $daemonOptions, $fd);
+            $this->daemon = $daemonFactory->createDaemon($this->kernel, $daemonOptions, (int) $fd);
         }
 
         $this->daemon->run();

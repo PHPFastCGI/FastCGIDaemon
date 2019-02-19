@@ -58,11 +58,11 @@ trait DaemonTrait
     private function setupDaemon(DaemonOptionsInterface $daemonOptions): void
     {
         $this->requestCount = 0;
-        $this->requestLimit = $daemonOptions->getOption(DaemonOptions::REQUEST_LIMIT);
-        $this->memoryLimit  = $daemonOptions->getOption(DaemonOptions::MEMORY_LIMIT);
-        $this->autoShutdown = $daemonOptions->getOption(DaemonOptions::AUTO_SHUTDOWN);
+        $this->requestLimit = (int) $daemonOptions->getOption(DaemonOptions::REQUEST_LIMIT);
+        $this->memoryLimit  = (int) $daemonOptions->getOption(DaemonOptions::MEMORY_LIMIT);
+        $this->autoShutdown = (bool) $daemonOptions->getOption(DaemonOptions::AUTO_SHUTDOWN);
 
-        $timeLimit = $daemonOptions->getOption(DaemonOptions::TIME_LIMIT);
+        $timeLimit = (int) $daemonOptions->getOption(DaemonOptions::TIME_LIMIT);
 
         if (DaemonOptions::NO_LIMIT !== $timeLimit) {
             pcntl_alarm($timeLimit);
